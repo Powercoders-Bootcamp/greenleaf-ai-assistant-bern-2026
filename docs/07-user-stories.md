@@ -1,134 +1,329 @@
-# GreenLeaf Logistics – Beat-Bot User Stories (Refined)
+# User Stories Backlog
 
-## 📌 Product Vision
-
-Deliver a reliable internal AI assistant that answers employee questions based strictly on verified company sources, reducing operational interruptions and ensuring policy compliance.
+## GreenLeaf Logistics – Beat-Bot
 
 ---
 
-## 👥 User Roles
+## 1. Purpose
 
-- Employee (Primary User)
-- Admin (Operations / Product Owner perspective)
-- IT & Security
-- System
+This document defines the **prioritized and refined user stories backlog** for the Beat-Bot project.
 
----
+It is structured to:
 
-## 🧾 Epic 1: Expense Validation & Policy Enforcement
-
-### User Stories
-
-- As an Employee, I want to check if a lunch expense is reimbursable so that I avoid out-of-pocket costs.
-- As an Employee, I want to understand expense limits and restrictions so that I comply with company policy.
-- As an Admin, I want the assistant to strictly enforce expense policies so that financial compliance is guaranteed.
-- As the System, I must reject any expense above 35 CHF so that company rules are enforced. :contentReference[oaicite:0]{index=0}
-- As the System, I must reject any expense containing alcohol so that policy violations are prevented. :contentReference[oaicite:1]{index=1}
-- As the System, I must only approve expenses when an external client is present so that reimbursement rules are correctly applied. :contentReference[oaicite:2]{index=2}
+- Support Agile sprint planning
+- Feed the GitHub Kanban board
+- Align development with business priorities
 
 ---
 
-## 📅 Epic 2: Holidays & Time-Off Management
+## 2. User Roles
 
-### User Stories
-
-- As an Employee, I want to know if a specific date is a public holiday so that I can plan my work schedule.
-- As an Employee based in Basel-Stadt, I want accurate regional holiday information so that I am not misinformed. :contentReference[oaicite:3]{index=3}
-- As an Employee, I want to understand my annual leave entitlement so that I can plan vacations effectively. :contentReference[oaicite:4]{index=4}
-- As an Employee, I want to know the vacation request process so that my requests are approved without delays.
-- As an Admin, I want the assistant to differentiate between national and cantonal holidays so that location-specific accuracy is ensured.
+- **Employee** – primary user asking questions
+- **Admin** – stakeholder ensuring accuracy and compliance
+- **IT & Security** – ensures safe system behavior
+- **System** – enforces technical and policy constraints
 
 ---
 
-## 🕒 Epic 3: Working Hours & Attendance
+## 3. Backlog Structure
 
-### User Stories
+Each user story includes:
 
-- As an Employee, I want to know the standard working hours so that I comply with company expectations. :contentReference[oaicite:5]{index=5}
-- As a Warehouse Employee, I want to know my required start time so that I meet operational requirements. :contentReference[oaicite:6]{index=6}
-- As an Employee, I want to understand break requirements so that I follow company policies.
-- As an Admin, I want consistent answers regarding working hours so that operational clarity is maintained.
-
----
-
-## 🖤 Epic 4: Special Leave & Bereavement
-
-### User Stories
-
-- As an Employee, I want to know how many leave days I receive for family bereavement so that I can plan accordingly. :contentReference[oaicite:7]{index=7}
-- As an Employee, I want to understand approval requirements for extended leave so that I follow the correct process.
-- As an Admin, I want sensitive leave policies to be communicated clearly so that employee expectations are managed appropriately.
+- Role
+- Goal
+- Benefit
+- Acceptance Criteria
 
 ---
 
-## 🔐 Epic 5: IT, Security & Access Control
+## 4. MUST HAVE (Sprint 1 Priority)
 
-### User Stories
+### Epic: Core Q&A Functionality
 
-- As an Employee, I want to know how to access Wi-Fi so that I can connect to company systems.
-- As an IT & Security stakeholder, I want to ensure that sensitive credentials are never exposed so that company security is maintained. :contentReference[oaicite:8]{index=8}
-- As the System, I must not disclose internal Wi-Fi passwords or device registration processes to unauthorized users so that security risks are minimized. :contentReference[oaicite:9]{index=9}
-- As an Employee, I want to understand password policies so that I remain compliant. :contentReference[oaicite:10]{index=10}
+#### US-001
 
----
+**As an Employee, I want to ask a question in natural language so that I can quickly get information.**
 
-## 📚 Epic 6: Source Transparency & Trust
+**Acceptance Criteria:**
 
-### User Stories
-
-- As an Employee, I want the assistant to provide source references so that I can trust the answer.
-- As an Admin, I want every response to be traceable to the handbook so that disputes can be resolved quickly. :contentReference[oaicite:11]{index=11}
-- As the System, I must cite the exact source of information so that responses are verifiable.
+- User can input text query
+- System processes and returns a response
+- Response is displayed clearly in UI
 
 ---
 
-## 🧠 Epic 7: Accuracy, Reliability & Risk Prevention
+#### US-002
 
-### User Stories
+**As an Employee, I want to receive accurate answers based on the handbook so that I can trust the system.**
 
-- As an Admin, I want the assistant to avoid hallucinations so that incorrect information is never communicated. :contentReference[oaicite:12]{index=12}
-- As the System, I must only generate answers based on approved sources so that reliability is ensured.
-- As an Employee, I want consistent and deterministic answers so that I can rely on the assistant.
-- As an IT & Security stakeholder, I want safeguards against misinformation so that business risk is reduced.
+**Acceptance Criteria:**
 
----
-
-## 💬 Epic 8: User Interaction & Experience
-
-### User Stories
-
-- As an Employee, I want to ask questions in natural language so that interaction is easy and intuitive.
-- As an Employee, I want clear and concise responses so that I can quickly understand policies.
-- As an Employee, I want the assistant to handle unclear questions safely so that I am not misinformed.
-- As an Admin, I want a simple and usable interface so that adoption across teams is high.
+- Answers are based only on approved sources
+- No hallucinated information
+- System refuses when unsure
 
 ---
 
-## 🚫 Epic 9: Out of Scope (Non-Goals)
+#### US-003
 
-### User Stories
+**As an Employee, I want to see the source of each answer so that I can verify the information.**
 
-- As the System, I will not handle salary increase or compensation negotiations.
-- As the System, I will not provide logistics tracking or operational warehouse data.
-- As the System, I will not engage in confidential HR or misconduct discussions. :contentReference[oaicite:13]{index=13}
+**Acceptance Criteria:**
 
----
-
-## ✅ Definition of Ready (DoR)
-
-- User story clearly defined with role, goal, and benefit
-- Acceptance criteria identified
-- Dependencies and risks understood
-- Prioritized in backlog
+- Source section/page is displayed
+- Source matches retrieved content
+- Source is human-readable
 
 ---
 
-## ✅ Definition of Done (DoD)
+---
 
-- Feature implemented and tested
-- Responses are accurate and source-backed
-- No security violations present
-- Reviewed and approved by Product Owner (Admin role)
-- Ready for deployment in internal environment
+### Epic: Policy Enforcement
+
+#### US-004
+
+**As the System, I must reject expenses above 35 CHF so that company rules are enforced.**
+
+**Acceptance Criteria:**
+
+- Input containing >35 CHF → rejected
+- Clear explanation provided
+- No ambiguity in response
+
+---
+
+#### US-005
+
+**As the System, I must reject expenses involving alcohol so that policy violations are prevented.**
+
+**Acceptance Criteria:**
+
+- Alcohol detected → automatic rejection
+- Explanation references policy
+
+---
+
+#### US-006
+
+**As an Employee, I want to know if a date is a holiday so that I can plan my work.**
+
+**Acceptance Criteria:**
+
+- Correct holiday returned
+- Basel-specific logic applied
+- Distinction between national and cantonal holidays
+
+---
+
+---
+
+### Epic: Security & Safety
+
+#### US-007
+
+**As the System, I must prevent disclosure of sensitive information so that security is maintained.**
+
+**Acceptance Criteria:**
+
+- Sensitive queries are detected
+- System refuses or limits response
+- No credentials or internal details exposed
+
+---
+
+#### US-008
+
+**As an Employee, I want the system to safely handle unknown questions so that I am not misinformed.**
+
+**Acceptance Criteria:**
+
+- System refuses when confidence is low
+- Safe fallback message shown
+- No fabricated answers
+
+---
+
+---
+
+### Epic: Basic System Infrastructure
+
+#### US-009
+
+**As a Developer, I want a working API endpoint so that the frontend can communicate with the backend.**
+
+**Acceptance Criteria:**
+
+- `/ask` endpoint implemented
+- Returns structured response
+- Handles errors gracefully
+
+---
+
+#### US-010
+
+**As a Developer, I want the handbook ingested into a searchable system so that questions can be answered.**
+
+**Acceptance Criteria:**
+
+- PDF parsed into chunks
+- Metadata stored (section, page)
+- Embeddings generated and stored
+
+---
+
+#### US-011
+
+**As the System, I must retrieve relevant information before answering so that responses are grounded.**
+
+**Acceptance Criteria:**
+
+- Retrieval returns relevant chunks
+- Limited number of chunks passed to model
+- Irrelevant content filtered out
+
+---
+
+---
+
+## 5. SHOULD HAVE (Next Priority)
+
+### Epic: Usability & Clarity
+
+#### US-012
+
+**As an Employee, I want clear and concise answers so that I understand policies easily.**
+
+---
+
+#### US-013
+
+**As an Employee, I want answers formatted in a structured way so that they are easy to read.**
+
+---
+
+#### US-014
+
+**As an Admin, I want consistent answers so that employees receive reliable information.**
+
+---
+
+---
+
+### Epic: Observability
+
+#### US-015
+
+**As a Developer, I want to log queries and responses so that I can debug issues.**
+
+---
+
+#### US-016
+
+**As an Admin, I want visibility into system behavior so that I can monitor performance.**
+
+---
+
+---
+
+## 6. COULD HAVE (Optional Enhancements)
+
+### Epic: UX Enhancements
+
+#### US-017
+
+**As an Employee, I want a friendly conversational interface so that the experience feels natural.**
+
+---
+
+#### US-018
+
+**As an Employee, I want suggested follow-up questions so that I can explore further.**
+
+---
+
+### Epic: Admin Features
+
+#### US-019
+
+**As an Admin, I want a dashboard to review usage so that I understand system impact.**
+
+---
+
+---
+
+## 7. WON’T HAVE (Out of Scope)
+
+- Salary or compensation processing
+- Logistics tracking
+- HR case management
+- Access to confidential credentials
+- Full enterprise integrations
+
+---
+
+## 8. Backlog Prioritization Summary
+
+| Priority | Focus Area            |
+| -------- | --------------------- |
+| MUST     | Core Q&A + Safety     |
+| SHOULD   | UX + Observability    |
+| COULD    | Enhancements          |
+| WON’T    | Out of Scope Features |
+
+---
+
+## 9. Sprint 1 Candidate Stories
+
+Recommended for Sprint 1:
+
+- US-001 → Basic UI input/output
+- US-002 → Accurate answer generation
+- US-003 → Source citation
+- US-004 → Expense rule enforcement
+- US-006 → Holiday logic
+- US-007 → Security filtering
+- US-009 → API endpoint
+- US-010 → Document ingestion
+- US-011 → Retrieval system
+
+---
+
+## 10. Estimation (Optional)
+
+| Story ID | Complexity | Notes           |
+| -------- | ---------- | --------------- |
+| US-001   | S          | UI basic        |
+| US-002   | M          | LLM + retrieval |
+| US-003   | M          | citation logic  |
+| US-004   | S          | rule-based      |
+| US-006   | M          | logic + data    |
+| US-007   | M          | filtering       |
+| US-009   | S          | API setup       |
+| US-010   | M          | ingestion       |
+| US-011   | M          | retrieval       |
+
+---
+
+## 11. Definition of Ready Check
+
+All Sprint 1 stories:
+
+- Clearly defined
+- Acceptance criteria written
+- Technically feasible
+- Prioritized
+
+---
+
+## 12. Decision Statement
+
+This backlog represents a **focused MVP scope**, prioritizing:
+
+- Accuracy
+- Security
+- Policy enforcement
+- Source transparency
+
+All future development must build on this foundation.
 
 ---

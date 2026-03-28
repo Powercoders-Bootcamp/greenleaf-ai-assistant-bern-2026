@@ -1,0 +1,261 @@
+# Requirements Specification
+
+## GreenLeaf Logistics – Beat-Bot
+
+---
+
+## 1. Purpose
+
+This document defines the **functional and non-functional requirements** for the Beat-Bot system. It serves as the foundation for design, development, testing, and validation.
+
+The system must meet strict expectations around **accuracy, security, and reliability**, as defined by stakeholder requirements.
+
+---
+
+## 2. Scope Summary
+
+The system will provide an internal AI-powered assistant that:
+
+- Answers employee questions using approved internal documents
+- Enforces business rules where applicable
+- Provides source-backed responses
+- Prevents unsafe or unauthorized disclosures
+
+---
+
+## 3. Functional Requirements
+
+### 3.1 Question Handling
+
+- The system shall accept natural language questions from users
+- The system shall process both simple and moderately complex queries
+- The system shall support single-turn and basic multi-turn interactions
+
+---
+
+### 3.2 Knowledge Retrieval
+
+- The system shall retrieve relevant information from:
+  - Employee handbook
+  - Approved policy documents
+- The system shall use metadata (e.g., section, topic) to improve retrieval accuracy
+- The system shall limit responses to retrieved and verified content only
+
+---
+
+### 3.3 Answer Generation
+
+- The system shall generate clear, concise, and understandable answers
+- The system shall only answer when sufficient information is available
+- The system shall refuse to answer if confidence is low
+
+---
+
+### 3.4 Source Referencing
+
+- The system shall include references to source documents in each response
+- The system shall indicate where the answer was derived from (e.g., section, page)
+- The system shall ensure that references are accurate and verifiable
+
+---
+
+### 3.5 Policy Enforcement
+
+- The system shall enforce predefined business rules, including:
+
+#### Expense Rules
+
+- Reject expenses above 35 CHF per person
+- Reject expenses involving alcohol
+- Approve expenses only when conditions are met
+
+#### Holiday Rules
+
+- Provide accurate holiday information based on region (Basel-Stadt)
+- Differentiate between national and cantonal holidays
+
+---
+
+### 3.6 Security & Access Control
+
+- The system shall restrict access to sensitive information
+- The system shall prevent disclosure of:
+  - Internal credentials
+  - System configurations
+  - Sensitive HR data
+- The system shall support role-based access control (RBAC)
+
+---
+
+### 3.7 Refusal & Fallback Handling
+
+- The system shall refuse to answer:
+  - When information is not available
+  - When the query is unsafe or restricted
+- The system shall provide a safe fallback message
+- The system shall redirect users for sensitive topics (e.g., misconduct)
+
+---
+
+### 3.8 Logging & Monitoring
+
+- The system shall log:
+  - User queries
+  - Retrieved sources
+  - Generated responses
+  - Errors and refusals
+- The system shall support basic monitoring for debugging and evaluation
+
+---
+
+## 4. Non-Functional Requirements
+
+### 4.1 Accuracy
+
+- The system must provide correct answers aligned with company policies
+- The system must avoid hallucinations
+- The system must prioritize correctness over completeness
+
+---
+
+### 4.2 Reliability
+
+- The system must behave consistently for the same input
+- The system must handle edge cases gracefully
+- The system must fail safely when uncertain
+
+---
+
+### 4.3 Security
+
+- The system must prevent unauthorized data exposure
+- The system must enforce strict data access rules
+- The system must not leak sensitive information under any circumstances
+
+---
+
+### 4.4 Performance
+
+- The system should respond within acceptable time (e.g., <3 seconds for MVP)
+- The system should handle multiple concurrent users (basic scalability)
+
+---
+
+### 4.5 Usability
+
+- The system must be easy to use
+- Responses must be clear and easy to understand
+- The interface must be intuitive
+
+---
+
+### 4.6 Maintainability
+
+- The system must support updates to documents and rules
+- The architecture must allow modular improvements
+- Code must be clean and well-documented
+
+---
+
+### 4.7 Auditability
+
+- All responses must be traceable
+- The system must provide logs for debugging and review
+- The system must allow investigation of incorrect responses
+
+---
+
+## 5. Business Rules
+
+### Expense Policy
+
+- Maximum reimbursement: 35 CHF per person
+- Alcohol is not reimbursable
+- External client presence required
+
+---
+
+### Holiday Policy
+
+- National holidays apply to all employees
+- Cantonal holidays vary by region
+- Basel-Stadt rules must be correctly applied
+
+---
+
+### Security Rules
+
+- Internal credentials must never be disclosed
+- Sensitive topics must trigger refusal or redirection
+
+---
+
+## 6. Assumptions
+
+- The handbook is the primary source of truth
+- Users will ask common, repetitive questions
+- The MVP does not need full enterprise integration
+- Policies are relatively stable during the project timeline
+
+---
+
+## 7. Constraints
+
+- Limited time for development
+- Limited data sources initially
+- High expectation for correctness
+- Need for secure and controlled behavior
+
+---
+
+## 8. Acceptance Criteria (High-Level)
+
+The system is acceptable if:
+
+- It answers key policy questions correctly
+- It provides source-backed responses
+- It enforces business rules deterministically
+- It prevents unsafe disclosures
+- It handles uncertainty appropriately
+
+---
+
+## 9. Traceability
+
+Each requirement must be traceable to:
+
+- Stakeholder expectations
+- User stories
+- Acceptance criteria
+- Test cases
+
+---
+
+## 10. Validation Approach
+
+The system will be validated using:
+
+- Predefined test questions (golden set)
+- Manual review of responses
+- Edge case testing
+- Security validation scenarios
+
+---
+
+## 11. Requirement Prioritization
+
+Requirements are aligned with MoSCoW prioritization:
+
+- Must Have → Core functionality and safety
+- Should Have → Usability and clarity improvements
+- Could Have → Enhancements and integrations
+
+---
+
+## 12. Decision Statement
+
+The Beat-Bot system must meet strict functional and non-functional requirements to ensure it operates as a **trusted, secure, and policy-aligned assistant**.
+
+All implementation decisions must support these requirements.
+
+---
