@@ -1,261 +1,128 @@
 # Requirements Specification
 
-## GreenLeaf Logistics – Beat-Bot
-
----
+## GreenLeaf Logistics - Beat-Bot
 
 ## 1. Purpose
 
-This document defines the **functional and non-functional requirements** for the Beat-Bot system. It serves as the foundation for design, development, testing, and validation.
+This document defines the functional and non-functional requirements for Beat-Bot based on the handbook, the stakeholder briefing, and the holiday CSV.
 
-The system must meet strict expectations around **accuracy, security, and reliability**, as defined by stakeholder requirements.
+## 2. Functional Requirements
 
----
+### 2.1 Question Handling
 
-## 2. Scope Summary
+- The system shall accept natural-language questions from users
+- The system shall support single-turn interactions and limited clarification turns
+- The system shall validate incoming requests before processing
+- The system shall classify each question before policy, retrieval, or generation steps run
 
-The system will provide an internal AI-powered assistant that:
+### 2.1.1 Query Classification
 
-- Answers employee questions using approved internal documents
-- Enforces business rules where applicable
-- Provides source-backed responses
-- Prevents unsafe or unauthorized disclosures
+- The system shall use a hybrid classification approach
+- The first classification pass shall use deterministic rules, keywords, and pattern matching
+- If the first pass is uncertain, the system may use a lightweight classifier step to choose from a fixed label set
+- Classification shall assign at least:
+  - domain
+  - question type
+  - sensitivity flag
+  - whether clarification is likely needed
+- Classification shall route questions into deterministic policy handling, retrieval plus generation, refusal, or redirection
 
----
+### 2.1.2 Response Strategy by Question Type
 
-## 3. Functional Requirements
+- The system shall use template-based clarification messages for rule-heavy domains when required fields are missing
+- The system shall use template-based refusal and redirection messages for sensitive or restricted topics
+- The system shall use retrieval plus generation primarily for supported handbook explanation questions
+- The system shall avoid using free-form generation for deterministic decisions when a rule or template can provide the response safely
 
-### 3.1 Question Handling
+### 2.2 Source-Limited Answering
 
-- The system shall accept natural language questions from users
-- The system shall process both simple and moderately complex queries
-- The system shall support single-turn and basic multi-turn interactions
+- The system shall answer only from approved internal sources
+- The system shall refuse when sufficient evidence is not available
+- The system shall not invent policy details or citations
 
----
+### 2.3 Source Referencing
 
-### 3.2 Knowledge Retrieval
+- The system shall include source references in trusted responses
+- The system shall identify the section or source used
+- The system shall validate citations before returning the answer
 
-- The system shall retrieve relevant information from:
-  - Employee handbook
-  - Approved policy documents
-- The system shall use metadata (e.g., section, topic) to improve retrieval accuracy
-- The system shall limit responses to retrieved and verified content only
+### 2.4 Expense Policy Enforcement
 
----
+- The system shall reject expense requests above 35 CHF per person
+- The system shall reject expense requests involving alcohol
+- The system shall explain the relevant policy rule in the response
+- The system shall request clarification when expense-critical fields are missing, such as amount, person count, alcohol status, or external client presence
 
-### 3.3 Answer Generation
+### 2.5 Holiday Policy Enforcement
 
-- The system shall generate clear, concise, and understandable answers
-- The system shall only answer when sufficient information is available
-- The system shall refuse to answer if confidence is low
+- The system shall answer Swiss national holidays correctly
+- The system shall apply Basel-Stadt-specific handling for Labor Day on May 1
+- The system shall distinguish national and cantonal holiday rules
 
----
+### 2.6 Sensitive Topic Handling
 
-### 3.4 Source Referencing
+- The system shall refuse to disclose internal Wi-Fi credentials
+- The system shall refuse to disclose guest Wi-Fi passwords in the MVP
+- The system shall refuse to disclose MAC address registration details
+- The system shall redirect users to IT when safe process guidance is appropriate
 
-- The system shall include references to source documents in each response
-- The system shall indicate where the answer was derived from (e.g., section, page)
-- The system shall ensure that references are accurate and verifiable
+### 2.7 Misconduct Redirection
 
----
+- The system shall not handle harassment, bullying, or whistleblowing as normal Q&A
+- The system shall redirect those cases to the approved ombudsman process
 
-### 3.5 Policy Enforcement
+### 2.8 Data Ingestion
 
-- The system shall enforce predefined business rules, including:
+- The system shall ingest the handbook into a searchable structure
+- The system shall ingest the 2026 holiday CSV for deterministic use
+- The system shall preserve metadata needed for citations and filtering
 
-#### Expense Rules
+### 2.9 Logging and Traceability
 
-- Reject expenses above 35 CHF per person
-- Reject expenses involving alcohol
-- Approve expenses only when conditions are met
+- The system shall log query handling steps needed for debugging and evaluation
+- The system shall make applied rules and retrieved sources traceable
 
-#### Holiday Rules
+## 3. Non-Functional Requirements
 
-- Provide accurate holiday information based on region (Basel-Stadt)
-- Differentiate between national and cantonal holidays
+### 3.1 Accuracy
 
----
-
-### 3.6 Security & Access Control
-
-- The system shall restrict access to sensitive information
-- The system shall prevent disclosure of:
-  - Internal credentials
-  - System configurations
-  - Sensitive HR data
-- The system shall support role-based access control (RBAC)
-
----
-
-### 3.7 Refusal & Fallback Handling
-
-- The system shall refuse to answer:
-  - When information is not available
-  - When the query is unsafe or restricted
-- The system shall provide a safe fallback message
-- The system shall redirect users for sensitive topics (e.g., misconduct)
-
----
-
-### 3.8 Logging & Monitoring
-
-- The system shall log:
-  - User queries
-  - Retrieved sources
-  - Generated responses
-  - Errors and refusals
-- The system shall support basic monitoring for debugging and evaluation
-
----
-
-## 4. Non-Functional Requirements
-
-### 4.1 Accuracy
-
-- The system must provide correct answers aligned with company policies
-- The system must avoid hallucinations
 - The system must prioritize correctness over completeness
+- The system must avoid hallucinations
+- The system must behave reliably on critical business scenarios
 
----
+### 3.2 Security
 
-### 4.2 Reliability
+- The system must prevent disclosure of restricted technical access information
+- The system must fail safely when policy or evidence is unclear
+- The system must not expose secrets in code or logs
 
-- The system must behave consistently for the same input
-- The system must handle edge cases gracefully
-- The system must fail safely when uncertain
+### 3.3 Reliability
 
----
+- The system must behave consistently for equivalent inputs
+- The system must handle unsupported requests safely
 
-### 4.3 Security
+### 3.4 Performance
 
-- The system must prevent unauthorized data exposure
-- The system must enforce strict data access rules
-- The system must not leak sensitive information under any circumstances
+- The MVP should return responses within an acceptable user-facing time
+- The system should remain responsive for basic internal usage
 
----
+### 3.5 Auditability
 
-### 4.4 Performance
+- Every trusted answer must be traceable to supporting evidence
+- Critical decisions and refusals must be inspectable
 
-- The system should respond within acceptable time (e.g., <3 seconds for MVP)
-- The system should handle multiple concurrent users (basic scalability)
+## 4. Product Interpretation Notes
 
----
+- Presence of a fact in a source document does not automatically mean the bot may disclose it to every user
+- Stakeholder security expectations override broad source recall for sensitive IT-access topics
+- Query classification should not rely on LLM judgment alone for high-risk routing decisions when deterministic signals are already sufficient
 
-### 4.5 Usability
+## 5. Acceptance Criteria at Product Level
 
-- The system must be easy to use
-- Responses must be clear and easy to understand
-- The interface must be intuitive
+The system is acceptable if it:
 
----
-
-### 4.6 Maintainability
-
-- The system must support updates to documents and rules
-- The architecture must allow modular improvements
-- Code must be clean and well-documented
-
----
-
-### 4.7 Auditability
-
-- All responses must be traceable
-- The system must provide logs for debugging and review
-- The system must allow investigation of incorrect responses
-
----
-
-## 5. Business Rules
-
-### Expense Policy
-
-- Maximum reimbursement: 35 CHF per person
-- Alcohol is not reimbursable
-- External client presence required
-
----
-
-### Holiday Policy
-
-- National holidays apply to all employees
-- Cantonal holidays vary by region
-- Basel-Stadt rules must be correctly applied
-
----
-
-### Security Rules
-
-- Internal credentials must never be disclosed
-- Sensitive topics must trigger refusal or redirection
-
----
-
-## 6. Assumptions
-
-- The handbook is the primary source of truth
-- Users will ask common, repetitive questions
-- The MVP does not need full enterprise integration
-- Policies are relatively stable during the project timeline
-
----
-
-## 7. Constraints
-
-- Limited time for development
-- Limited data sources initially
-- High expectation for correctness
-- Need for secure and controlled behavior
-
----
-
-## 8. Acceptance Criteria (High-Level)
-
-The system is acceptable if:
-
-- It answers key policy questions correctly
-- It provides source-backed responses
-- It enforces business rules deterministically
-- It prevents unsafe disclosures
-- It handles uncertainty appropriately
-
----
-
-## 9. Traceability
-
-Each requirement must be traceable to:
-
-- Stakeholder expectations
-- User stories
-- Acceptance criteria
-- Test cases
-
----
-
-## 10. Validation Approach
-
-The system will be validated using:
-
-- Predefined test questions (golden set)
-- Manual review of responses
-- Edge case testing
-- Security validation scenarios
-
----
-
-## 11. Requirement Prioritization
-
-Requirements are aligned with MoSCoW prioritization:
-
-- Must Have → Core functionality and safety
-- Should Have → Usability and clarity improvements
-- Could Have → Enhancements and integrations
-
----
-
-## 12. Decision Statement
-
-The Beat-Bot system must meet strict functional and non-functional requirements to ensure it operates as a **trusted, secure, and policy-aligned assistant**.
-
-All implementation decisions must support these requirements.
-
----
+- rejects invalid expense scenarios
+- answers Basel holiday questions correctly
+- returns source-backed answers for supported policy questions
+- refuses sensitive access questions safely
+- redirects misconduct questions correctly

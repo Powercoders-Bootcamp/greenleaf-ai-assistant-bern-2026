@@ -1,252 +1,78 @@
-# Stakeholder Analysis & MoSCoW Prioritization
+# Scope and MoSCoW Prioritization
 
-## GreenLeaf Logistics – Beat-Bot
+## GreenLeaf Logistics - Beat-Bot
 
----
+## 1. Scope Position
 
-## 1. Stakeholder Overview
+Beat-Bot is a narrow internal policy assistant. It is not a full HR system, not a help desk replacement, and not a general conversational bot.
 
-The Beat-Bot project involves multiple stakeholders with different expectations, levels of influence, and areas of concern. Understanding these stakeholders is critical to defining product scope, priorities, and success criteria.
+## 2. Must Have
 
----
+- Ask a question in natural language through a simple UI
+- Return source-backed answers from approved documents
+- Enforce expense rules deterministically
+- Enforce Basel-Stadt holiday logic deterministically
+- Refuse low-confidence or unsupported questions
+- Refuse sensitive IT and credential-related questions
+- Redirect harassment, bullying, and whistleblowing questions to the ombudsman
+- Return structured answers with citations
 
-## 2. Key Stakeholders
+## 3. Should Have
 
-### 2.1 Employees (Primary Users)
+- Basic authentication
+- Basic role-aware behavior
+- Clear refusal and redirection UX
+- Query and response logging
+- Basic evaluation with golden questions
 
-**Role:** End users of the system  
-**Description:**  
-Employees across departments (warehouse, office, support) who need quick and reliable answers to company policies.
+## 4. Could Have
 
-**Needs:**
-
-- Fast and accurate answers
-- Simple and intuitive interaction
-- Clear explanations of policies
-- Trustworthy and consistent responses
-
-**Pain Points:**
-
-- Difficulty finding information in the handbook
-- Repetitive manual clarification from Admin
-- Uncertainty about policies (expenses, holidays, leave)
-
----
-
-### 2.2 Admin (Operations / Product Owner Perspective)
-
-**Role:** Primary stakeholder and decision-maker  
-**Description:**  
-Represents operational leadership responsible for enforcing company rules and reducing repetitive workload.
-
-**Needs:**
-
-- Reduction of repetitive employee questions
-- Strict enforcement of company policies
-- High accuracy and reliability
-- Control over system behavior
-
-**Critical Expectations:**
-
-- No guessing on financial matters
-- Basel-Stadt specific holiday accuracy
-- No leakage of sensitive information
-- Ability to reference exact source of answers
-
----
-
-### 2.3 IT & Security
-
-**Role:** Security and compliance authority  
-**Description:**  
-Responsible for ensuring that company systems do not expose sensitive or restricted information.
-
-**Needs:**
-
-- Secure handling of data
-- Controlled access to sensitive information
-- Prevention of credential leakage
-- Compliance with internal security standards
-
-**Concerns:**
-
-- Unauthorized access to internal data
-- Exposure of credentials or system details
-- Misuse of AI-generated responses
-
----
-
-### 2.4 Project Team
-
-**Role:** Delivery and implementation  
-**Description:**  
-Responsible for designing, building, and delivering the solution.
-
-**Needs:**
-
-- Clear requirements and scope
-- Defined priorities
-- Manageable workload within sprint cycles
-- Alignment with stakeholder expectations
-
----
-
-## 3. Stakeholder Influence vs Interest
-
-| Stakeholder   | Influence | Interest | Priority Level |
-| ------------- | --------- | -------- | -------------- |
-| Admin         | High      | High     | Critical       |
-| Employees     | Medium    | High     | High           |
-| IT & Security | High      | Medium   | High           |
-| Project Team  | Medium    | High     | High           |
-
----
-
-## 4. MoSCoW Prioritization
-
-The MoSCoW method is used to define feature priority:
-
-- **Must Have** → Critical for MVP success
-- **Should Have** → Important but not blocking
-- **Could Have** → Nice-to-have enhancements
-- **Won’t Have** → Explicitly out of scope
-
----
-
-## 5. Must Have (Critical Features)
-
-These features are mandatory for the system to be usable and accepted.
-
-### Core Functionality
-
-- Answer employee questions based on handbook content
-- Provide accurate and consistent responses
-- Include source references for each answer
-
-### Policy Enforcement
-
-- Enforce expense rules:
-  - Maximum 35 CHF per person
-  - No alcohol reimbursement
-- Correct handling of holiday logic (Basel-Stadt specific)
-
-### Security
-
-- Prevent disclosure of sensitive information
-- Block unsafe or restricted queries
-- Implement basic access control
-
-### Reliability
-
-- Avoid hallucinations (no guessing)
-- Only answer when sufficient information is available
-- Provide safe fallback or refusal when uncertain
-
----
-
-## 6. Should Have (Important Features)
-
-These features improve usability and trust but are not strictly required for MVP.
-
-- Natural language interaction
-- Clear and concise answer formatting
-- Highlighted source references
-- Basic role-based access control
-- Structured responses (answer + source + confidence)
-- Logging of queries and responses
-
----
-
-## 7. Could Have (Optional Enhancements)
-
-These features enhance the product but are not required in early stages.
-
-- Friendly conversational tone
-- Slack or external integrations
-- Admin dashboard for monitoring usage
-- Analytics on common questions
+- Friendly conversational polish
+- Limited multi-turn clarification
+- Admin review visibility
+- Usage analytics
 - Suggested follow-up questions
-- Multi-language support
 
----
+## 5. Won't Have
 
-## 8. Won’t Have (Out of Scope)
+- Salary or compensation processing
+- Full HR case management
+- Logistics tracking
+- External system integrations
+- Self-service Wi-Fi password disclosure
+- MAC registration detail disclosure
+- Autonomous workflow execution
 
-The following features are explicitly excluded from the project scope:
+## 6. Included Topic Areas for MVP
 
-- Salary increase processing
-- Compensation or payroll discussions
-- Logistics tracking or warehouse operations
-- Handling of misconduct or HR complaints
-- Access to confidential credentials or internal technical details
-- Full enterprise system integrations
-- Real-time data synchronization with external systems
+- Expenses and travel
+- Holidays
+- Vacation and special leave
+- Basic attendance and office policy questions
+- Security refusal cases
 
----
+## 7. Excluded or Restricted Topic Areas
 
-## 9. Scope Boundaries
+- Internal credentials
+- Device-registration details
+- Sensitive misconduct handling
+- Legal judgments outside the handbook
+- Complex case-by-case HR decisions
 
-### Included
+## 8. Scope Guardrails
 
-- Internal AI assistant
-- Handbook-based knowledge system
-- Question-answer functionality
-- Source-backed responses
-- Basic UI and backend system
-- Initial security filtering
+- When in doubt, do not answer
+- If the topic is deterministic, use rules instead of LLM judgment
+- If the topic is sensitive, refuse or redirect
+- If the answer cannot be cited, do not treat it as trusted
 
-### Excluded
+## 9. MVP Cut Line
 
-- Full HR system automation
-- Operational system integration
-- Complex workflow automation
-- Advanced reporting tools
+For the 3-week delivery window, the team should optimize for:
 
----
+- expense correctness
+- Basel holiday correctness
+- source citation quality
+- refusal safety
 
-## 10. Key Risks Identified
-
-### Technical Risk
-
-- Retrieval may fail to provide relevant context for accurate answers
-
-### Product Risk
-
-- Incorrect answers may reduce trust in the system
-
-### Security Risk
-
-- Potential exposure of sensitive information if not properly filtered
-
-### Team Risk
-
-- Misalignment on priorities or scope creep
-
----
-
-## 11. Risk Mitigation Strategy
-
-- Implement strict policy-based validation rules
-- Use controlled retrieval and source verification
-- Apply security filters and refusal mechanisms
-- Maintain a clearly prioritized backlog
-- Validate system with real test scenarios
-
----
-
-## 12. Key Takeaways
-
-- Accuracy, security, and trust are the highest priorities
-- The system must behave deterministically for critical rules
-- Scope discipline is essential for MVP success
-- Not all features are needed in the first version
-
----
-
-## 13. Decision Statement
-
-The Beat-Bot MVP will focus on **policy-accurate, source-backed question answering** with strict enforcement of business rules and security constraints.
-
-All additional features will be considered only after core reliability is proven.
-
----
+UI polish and advanced access-control depth should come after these.

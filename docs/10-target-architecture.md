@@ -1,258 +1,187 @@
 # Target Architecture
 
-## GreenLeaf Logistics – Beat-Bot
+## GreenLeaf Logistics - Beat-Bot
 
----
+## 1. Architectural Goal
 
-## 1. Purpose
+Beat-Bot should behave as a trusted internal policy assistant, not as a general-purpose chatbot.
 
-This document defines the target system architecture for the Beat-Bot MVP.
+The architecture must optimize for:
 
-It explains:
+- source grounding
+- deterministic policy enforcement
+- security-first behavior
+- refusal safety
+- traceability
 
-- The major system components
-- Their responsibilities
-- The end-to-end request flow
-- Security and policy enforcement points
-- Architectural constraints and design principles
+## 2. High-Level Architecture
 
-The target architecture is designed to support a **trusted internal policy assistant** rather than a general-purpose chatbot. This distinction is critical because the stakeholder requires strict policy accuracy, Basel-specific holiday handling, protection of sensitive information, and proof of source in every trustworthy answer. :contentReference[oaicite:0]{index=0}
+- `Frontend`: Next.js + TypeScript web UI
+- `Backend`: FastAPI orchestration layer
+- `Knowledge Base`: PostgreSQL + pgvector
+- `LLM Layer`: OpenAI API
+- `Policy Layer`: deterministic rules and refusal logic
+- `Audit Layer`: logging and traceability
 
----
+## 3. Key Architectural Principle
 
-## 2. Architectural Goal
+Policy comes before generation.
 
-The goal of the architecture is to deliver a system that is:
+If a question can be answered deterministically or must be refused for security reasons, the system should not defer that decision to the LLM.
 
-- **Accurate** in answering policy-related questions
-- **Grounded** in approved internal sources
-- **Deterministic** where rules are explicit
-- **Secure** in handling sensitive topics
-- **Auditable** in its reasoning path and outputs
-- **Simple enough** for MVP delivery, but extensible for future iterations
+## 4. Main Processing Paths
 
----
+### Deterministic Path
 
-## 3. Architectural Style
+Used for:
 
-The Beat-Bot follows a **modular web-based RAG architecture with rule-based policy enforcement**.
+- expense checks
+- holiday checks
+- sensitive-topic refusal
+- misconduct redirection
 
-This means:
+### Retrieval + Generation Path
 
-- Users interact through a custom web UI
-- The backend orchestrates retrieval, rules, and answer generation
-- Approved documents are ingested into a searchable knowledge base
-- A policy layer handles deterministic and sensitive decisions
-- The LLM is used only where retrieval and rules allow it
+Used for:
 
-This architectural style is intentionally chosen to reduce hallucination risk and enforce trust boundaries.
+- vacation policy questions
+- handbook explanations
+- office policy questions
+- other supported handbook content with citations
 
----
+## 4.2 Response Strategy Design
 
-## 4. High-Level System Components
+Beat-Bot should also use a hybrid response strategy.
 
-### 4.1 Presentation Layer
+### Template-Based Responses
 
-**Technology:** Next.js + TypeScript
+Templates should be used for:
 
-**Responsibilities:**
+- clarification requests in rule-heavy domains
+- deterministic rule outcomes
+- refusal messages
+- redirect messages
 
-- User login and session handling
-- Question input
-- Response rendering
-- Citation display
-- Refusal/fallback display
-- Admin-facing visibility for controlled review in later phases
+Examples:
 
----
+- expense clarification when amount or person count is missing
+- holiday clarification when date or location is missing
+- refusal for Wi-Fi password requests
+- redirect for harassment-related questions
 
-### 4.2 API / Orchestration Layer
+### Retrieval Plus Generation Responses
 
-**Technology:** FastAPI (Python)
+Retrieval plus generation should be used for:
 
-**Responsibilities:**
+- handbook explanations
+- policy summaries
+- source-backed answers where natural-language explanation is useful
 
-- Accept and validate incoming requests
-- Coordinate downstream services
-- Trigger policy and security checks
-- Trigger retrieval and answer generation
-- Return structured responses to the UI
-- Log requests and outputs
+### Why This Matters
 
----
+Using templates for clarification, refusal, redirect, and deterministic rule messages improves:
 
-### 4.3 Authentication & Authorization Layer
+- consistency
+- safety
+- auditability
+- predictability in MVP behavior
 
-**Technology:** Email-based login or OIDC provider
+Generation should be reserved mainly for evidence-backed explanation, not for inventing control flow or policy decisions.
 
-**Responsibilities:**
+## 4.1 Query Classification Design
 
-- Authenticate users
-- Assign roles (e.g., Employee, Admin)
-- Enforce role-based access rules
-- Ensure only authorized users can use protected features
+Beat-Bot should use a hybrid query-classification layer before policy routing.
 
----
+### First Pass: Deterministic Classification
 
-### 4.4 Query Classification Layer
+The first pass should use:
 
-**Responsibilities:**
+- keyword matching
+- phrase and pattern rules
+- simple heuristics
 
-- Detect the likely business domain of the question
-- Identify whether the question is:
-  - informational
-  - rule-based
-  - sensitive
-  - unsupported
-- Route the query appropriately
+Examples:
 
-**Example domains:**
+- `expense`, `receipt`, `lunch`, `CHF`, `alcohol` -> likely `expense`
+- `holiday`, `May 1`, `Basel`, `vacation day` -> likely `holiday` or `leave`
+- `Wi-Fi`, `password`, `MAC`, `device registration` -> likely `IT/security`
+- `harassment`, `bullying`, `whistleblowing`, `ombudsman` -> likely `sensitive conduct`
 
-- Expenses
-- Holidays
-- Leave
-- Attendance
-- IT/Security
-- Sensitive Conduct
+### Second Pass: Lightweight Classifier
 
----
+If deterministic signals are weak or conflicting, the system may call a lightweight classifier that chooses only from a fixed label set.
 
-### 4.5 Policy Decision Layer
+The classifier should not generate answers. It should only assign routing labels such as:
 
-**Responsibilities:**
+- `domain`
+- `question_type`
+- `sensitive`
+- `needs_clarification`
 
-- Evaluate hard business rules
-- Detect restricted topics
-- Trigger refusal or redirect logic
-- Decide whether a question should:
-  - be answered deterministically
-  - be answered through retrieval + LLM
-  - be refused
-  - be escalated
-
-This is a critical component because some requirements must never depend on probabilistic interpretation. For example, handbook rules explicitly define that client lunches are reimbursable only under certain conditions, that the maximum is 35 CHF per person, and that alcohol is not reimbursable. :contentReference[oaicite:1]{index=1}
-
----
-
-### 4.6 Retrieval Layer
-
-**Technology:** PostgreSQL + pgvector + metadata filtering
-
-**Responsibilities:**
-
-- Retrieve the most relevant content chunks from approved sources
-- Apply metadata filters such as:
-  - section
-  - topic
-  - sensitivity
-  - location scope
-  - document version
-- Rank and return the most relevant chunks
-
----
-
-### 4.7 LLM Response Generation Layer
-
-**Technology:** OpenAI API
-
-**Responsibilities:**
-
-- Generate answers using only retrieved context
-- Produce structured outputs
-- Avoid unsupported synthesis
-- Respect refusal and answer constraints from upstream layers
-
-**Required output structure:**
-
-- answer
-- citations
-- confidence
-- refusal_flag
-- escalation_target
-- policy_rule_applied
-
----
-
-### 4.8 Knowledge Ingestion Layer
-
-**Responsibilities:**
-
-- Parse approved documents
-- Split them into semantically useful chunks
-- Enrich chunks with metadata
-- Generate embeddings
-- Store chunks in the knowledge base
-
----
-
-### 4.9 Audit & Logging Layer
-
-**Responsibilities:**
-
-- Log every request and response lifecycle
-- Store:
-  - user role
-  - query
-  - classification result
-  - rules triggered
-  - retrieved chunks
-  - generated answer
-  - refusal reason
-  - document version
-- Support evaluation, debugging, and incident review
-
----
-
-## 5. High-Level Architecture Diagram (Logical View)
-
-```text
-+----------------------+
-|      Web UI          |
-|  (Next.js Frontend)  |
-+----------+-----------+
-           |
-           v
-+----------------------+
-|   API / Orchestrator |
-|   (FastAPI Backend)  |
-+----------+-----------+
-           |
-           v
-+----------------------+        +----------------------+
-| Authentication /     |        |   Audit & Logging    |
-| Authorization Layer  |        |      Layer           |
-+----------------------+        +----------------------+
-           |
-           v
-+----------------------+
-| Query Classification |
-+----------+-----------+
-           |
-           v
-+----------------------+
-| Policy Decision Layer|
-+----+------------+----+
-     |            |
-     |            +--------------------------+
-     |                                       |
-     v                                       v
-+----------------------+        +----------------------+
-| Deterministic Rules  |        |  Retrieval Layer     |
-| (hard-coded logic)   |        | (Postgres + pgvector)|
-+----------------------+        +----------+-----------+
-                                           |
-                                           v
-                                +----------------------+
-                                | LLM Response Engine  |
-                                +----------+-----------+
-                                           |
-                                           v
-                                +----------------------+
-                                | Structured Response  |
-                                +----------+-----------+
-                                           |
-                                           v
-                                +----------------------+
-                                |      Web UI          |
-                                +----------------------+
-```
+### Why Hybrid Classification
+
+This project should not rely on pure keyword logic for every case, and it should not rely on full LLM judgment for every routing decision either.
+
+Hybrid classification gives:
+
+- speed and determinism on obvious cases
+- flexibility for paraphrased questions
+- lower cost and lower risk than full free-form model routing
+
+## 5. Sensitive IT Handling Design
+
+The architecture must explicitly support a conservative access policy.
+
+For MVP:
+
+- internal Wi-Fi credential requests are refused
+- guest Wi-Fi password requests are refused
+- MAC registration detail requests are refused
+- process guidance such as "contact Sarah Muller in IT" is allowed
+
+This means the policy layer must evaluate topic sensitivity before retrieval and generation.
+
+## 6. Approved Data Sources
+
+- Handbook v2.1
+- Stakeholder briefing
+- Holiday CSV for deterministic logic
+
+## 7. Retrieval Design
+
+The retrieval layer should:
+
+- operate on section-aware chunks
+- preserve metadata for section title and source
+- support domain and sensitivity filtering
+- keep only a small number of relevant chunks
+
+## 8. Structured Output Contract
+
+Trusted answers should return:
+
+- `answer`
+- `citations`
+- `confidence`
+- `refusal_flag`
+- `policy_rule_applied`
+- `redirect_target`
+
+Classification output inside the backend may also include:
+
+- `domain`
+- `question_type`
+- `sensitive`
+- `needs_clarification`
+- `routing_path`
+
+## 9. Why This Architecture Fits the Problem
+
+This design matches the problem because the project has:
+
+- a narrow document set
+- clear deterministic rules
+- strict safety expectations
+- strong need for proof of source
+
+RAG alone is not enough. The project needs `RAG + deterministic policy guardrails`.

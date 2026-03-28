@@ -1,329 +1,132 @@
 # User Stories Backlog
 
-## GreenLeaf Logistics – Beat-Bot
+## GreenLeaf Logistics - Beat-Bot
 
----
+## 1. Core Roles
 
-## 1. Purpose
+- Employee
+- Admin
+- System
 
-This document defines the **prioritized and refined user stories backlog** for the Beat-Bot project.
+## 2. MVP User Stories
 
-It is structured to:
+### US-001
 
-- Support Agile sprint planning
-- Feed the GitHub Kanban board
-- Align development with business priorities
+As an Employee, I want to ask a policy question in natural language so that I can get an answer quickly.
 
----
+**Acceptance Criteria**
+- User can submit a text question
+- The system returns a structured response
+- The response is visible in the UI
 
-## 2. User Roles
+### US-002
 
-- **Employee** – primary user asking questions
-- **Admin** – stakeholder ensuring accuracy and compliance
-- **IT & Security** – ensures safe system behavior
-- **System** – enforces technical and policy constraints
+As an Employee, I want trusted answers from the handbook so that I can rely on the assistant.
 
----
+**Acceptance Criteria**
+- Answers are grounded in approved sources only
+- The system refuses when it cannot answer safely
+- The system does not invent policy details
 
-## 3. Backlog Structure
+### US-003
 
-Each user story includes:
+As an Employee, I want to see the source of an answer so that I can verify it myself.
 
-- Role
-- Goal
-- Benefit
-- Acceptance Criteria
+**Acceptance Criteria**
+- Responses include a human-readable citation
+- Citation points to the supporting section or document
 
----
+### US-004
 
-## 4. MUST HAVE (Sprint 1 Priority)
+As the System, I must reject expenses above 35 CHF per person so that company policy is enforced.
 
-### Epic: Core Q&A Functionality
+**Acceptance Criteria**
+- Expense values above 35 CHF are rejected
+- The response explains the rule
 
-#### US-001
+### US-005
 
-**As an Employee, I want to ask a question in natural language so that I can quickly get information.**
+As the System, I must reject alcohol expenses so that company policy is enforced.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
+- Alcohol-related expense requests are rejected
+- The response explains the rule
 
-- User can input text query
-- System processes and returns a response
-- Response is displayed clearly in UI
+### US-006
 
----
+As an Employee, I want correct holiday answers for Basel-Stadt so that I can plan my work.
 
-#### US-002
+**Acceptance Criteria**
+- May 1 is treated correctly for Basel-Stadt
+- National and cantonal holidays are handled correctly
 
-**As an Employee, I want to receive accurate answers based on the handbook so that I can trust the system.**
+### US-007
 
-**Acceptance Criteria:**
+As the System, I must refuse sensitive IT questions so that restricted information is protected.
 
-- Answers are based only on approved sources
-- No hallucinated information
-- System refuses when unsure
+**Acceptance Criteria**
+- Internal Wi-Fi password requests are refused
+- Guest Wi-Fi password requests are refused in the MVP
+- MAC registration detail requests are refused
+- Safe redirection to IT is available
 
----
+### US-008
 
-#### US-003
+As an Employee, I want misconduct-related questions redirected safely so that I use the correct process.
 
-**As an Employee, I want to see the source of each answer so that I can verify the information.**
+**Acceptance Criteria**
+- Harassment and bullying are not handled as standard Q&A
+- Whistleblowing is redirected to the ombudsman path
 
-**Acceptance Criteria:**
+### US-009
 
-- Source section/page is displayed
-- Source matches retrieved content
-- Source is human-readable
+As a Developer, I want a working `/ask` endpoint so that the frontend can communicate with the backend.
 
----
+**Acceptance Criteria**
+- Endpoint exists
+- Request and response schemas are defined
+- Invalid input is handled safely
 
----
+### US-010
 
-### Epic: Policy Enforcement
+As the System, I want approved documents ingested into a searchable store so that the assistant can retrieve evidence.
 
-#### US-004
+**Acceptance Criteria**
+- Handbook content is chunked and stored
+- Holiday CSV is loaded
+- Metadata is available for retrieval and citation
 
-**As the System, I must reject expenses above 35 CHF so that company rules are enforced.**
+### US-011
 
-**Acceptance Criteria:**
+As the System, I must retrieve relevant content before answering so that the answer is grounded.
 
-- Input containing >35 CHF → rejected
-- Clear explanation provided
-- No ambiguity in response
-
----
-
-#### US-005
-
-**As the System, I must reject expenses involving alcohol so that policy violations are prevented.**
-
-**Acceptance Criteria:**
-
-- Alcohol detected → automatic rejection
-- Explanation references policy
-
----
-
-#### US-006
-
-**As an Employee, I want to know if a date is a holiday so that I can plan my work.**
-
-**Acceptance Criteria:**
-
-- Correct holiday returned
-- Basel-specific logic applied
-- Distinction between national and cantonal holidays
-
----
-
----
-
-### Epic: Security & Safety
-
-#### US-007
-
-**As the System, I must prevent disclosure of sensitive information so that security is maintained.**
-
-**Acceptance Criteria:**
-
-- Sensitive queries are detected
-- System refuses or limits response
-- No credentials or internal details exposed
-
----
-
-#### US-008
-
-**As an Employee, I want the system to safely handle unknown questions so that I am not misinformed.**
-
-**Acceptance Criteria:**
-
-- System refuses when confidence is low
-- Safe fallback message shown
-- No fabricated answers
-
----
-
----
-
-### Epic: Basic System Infrastructure
-
-#### US-009
-
-**As a Developer, I want a working API endpoint so that the frontend can communicate with the backend.**
-
-**Acceptance Criteria:**
-
-- `/ask` endpoint implemented
-- Returns structured response
-- Handles errors gracefully
-
----
-
-#### US-010
-
-**As a Developer, I want the handbook ingested into a searchable system so that questions can be answered.**
-
-**Acceptance Criteria:**
-
-- PDF parsed into chunks
-- Metadata stored (section, page)
-- Embeddings generated and stored
-
----
-
-#### US-011
-
-**As the System, I must retrieve relevant information before answering so that responses are grounded.**
-
-**Acceptance Criteria:**
-
+**Acceptance Criteria**
 - Retrieval returns relevant chunks
-- Limited number of chunks passed to model
-- Irrelevant content filtered out
+- Irrelevant content is limited
+- Retrieved context can be cited
 
----
+## 3. Lower-Priority Stories
 
----
+### US-012
 
-## 5. SHOULD HAVE (Next Priority)
+As an Employee, I want clear answer formatting so that the response is easy to scan.
 
-### Epic: Usability & Clarity
+### US-013
 
-#### US-012
+As an Admin, I want consistent answers so that employees receive reliable guidance.
 
-**As an Employee, I want clear and concise answers so that I understand policies easily.**
+### US-014
 
----
+As a Developer, I want logs for questions and responses so that I can debug and evaluate behavior.
 
-#### US-013
+### US-015
 
-**As an Employee, I want answers formatted in a structured way so that they are easy to read.**
+As an Admin, I want basic visibility into system behavior so that I can review reliability.
 
----
+## 4. Out of Scope Stories
 
-#### US-014
-
-**As an Admin, I want consistent answers so that employees receive reliable information.**
-
----
-
----
-
-### Epic: Observability
-
-#### US-015
-
-**As a Developer, I want to log queries and responses so that I can debug issues.**
-
----
-
-#### US-016
-
-**As an Admin, I want visibility into system behavior so that I can monitor performance.**
-
----
-
----
-
-## 6. COULD HAVE (Optional Enhancements)
-
-### Epic: UX Enhancements
-
-#### US-017
-
-**As an Employee, I want a friendly conversational interface so that the experience feels natural.**
-
----
-
-#### US-018
-
-**As an Employee, I want suggested follow-up questions so that I can explore further.**
-
----
-
-### Epic: Admin Features
-
-#### US-019
-
-**As an Admin, I want a dashboard to review usage so that I understand system impact.**
-
----
-
----
-
-## 7. WON’T HAVE (Out of Scope)
-
-- Salary or compensation processing
-- Logistics tracking
+- salary increase workflows
+- payroll discussions
 - HR case management
-- Access to confidential credentials
-- Full enterprise integrations
-
----
-
-## 8. Backlog Prioritization Summary
-
-| Priority | Focus Area            |
-| -------- | --------------------- |
-| MUST     | Core Q&A + Safety     |
-| SHOULD   | UX + Observability    |
-| COULD    | Enhancements          |
-| WON’T    | Out of Scope Features |
-
----
-
-## 9. Sprint 1 Candidate Stories
-
-Recommended for Sprint 1:
-
-- US-001 → Basic UI input/output
-- US-002 → Accurate answer generation
-- US-003 → Source citation
-- US-004 → Expense rule enforcement
-- US-006 → Holiday logic
-- US-007 → Security filtering
-- US-009 → API endpoint
-- US-010 → Document ingestion
-- US-011 → Retrieval system
-
----
-
-## 10. Estimation (Optional)
-
-| Story ID | Complexity | Notes           |
-| -------- | ---------- | --------------- |
-| US-001   | S          | UI basic        |
-| US-002   | M          | LLM + retrieval |
-| US-003   | M          | citation logic  |
-| US-004   | S          | rule-based      |
-| US-006   | M          | logic + data    |
-| US-007   | M          | filtering       |
-| US-009   | S          | API setup       |
-| US-010   | M          | ingestion       |
-| US-011   | M          | retrieval       |
-
----
-
-## 11. Definition of Ready Check
-
-All Sprint 1 stories:
-
-- Clearly defined
-- Acceptance criteria written
-- Technically feasible
-- Prioritized
-
----
-
-## 12. Decision Statement
-
-This backlog represents a **focused MVP scope**, prioritizing:
-
-- Accuracy
-- Security
-- Policy enforcement
-- Source transparency
-
-All future development must build on this foundation.
-
----
+- logistics tracking
+- self-service disclosure of sensitive technical access details

@@ -1,407 +1,149 @@
-## 6. End-to-End Request Flow
+# End-to-End Request Flow
 
-### Step 1: User submits a question
+## GreenLeaf Logistics - Beat-Bot
 
-The user enters a question into the custom web interface.
+## 1. Step 1 - User submits a question
 
-**Example:**  
-“Can I expense a 36 CHF lunch?”
+The user asks a question in the web UI.
 
----
+Examples:
 
-### Step 2: API receives the request
+- "Can I expense a 36 CHF lunch?"
+- "Is May 1st a holiday in Basel-Stadt?"
+- "What is the internal Wi-Fi password?"
 
-The backend receives the question and validates:
+## 2. Step 2 - API validates the request
 
-- authentication
-- session
-- input format
-- basic request integrity
+The backend validates:
 
----
+- request format
+- session information if enabled
+- basic input safety rules
 
-### Step 3: Query classification runs
+## 3. Step 3 - Query classification
 
-The system classifies the query into a policy domain and determines whether it is likely:
+The system classifies the question into one of the key domains:
 
-- answerable via retrieval
-- deterministic
-- sensitive
+- expenses
+- holidays
+- leave and handbook policy
+- IT/security
+- sensitive conduct
 - unsupported
 
----
+The recommended implementation is a hybrid flow:
 
-### Step 4: Policy decision layer evaluates the request
+1. deterministic keyword and pattern pass
+2. lightweight classifier pass only when the first pass is uncertain
+3. routing decision based on the classification result
 
-The system checks:
+Example for an expense question:
 
-- Is this a hard-rule scenario?
-- Is the query restricted?
-- Should this be refused or redirected?
-- Is the question eligible for LLM-based answering?
+- user asks: "Can you tell me whether I can expense my lunch receipt?"
+- first pass detects signals like `expense`, `lunch`, and `receipt`
+- system classifies the query as `expense`
+- system marks it as `rule-based`
+- system routes it to policy checks rather than direct answer generation
 
-For example:
+## 4. Step 4 - Policy decision layer
 
-- An expense question with 36 CHF should be handled deterministically.
-- A request for internal credentials should be refused.
-- A harassment-related question should be redirected rather than answered through general Q&A. The handbook explicitly states that harassment, bullying, and whistleblowing matters should not be discussed with the internal bot and should instead go to the external confidential ombudsman. :contentReference[oaicite:0]{index=0}
+Before retrieval or generation, the policy layer decides whether the question should be:
 
----
+- answered deterministically
+- answered through retrieval plus generation
+- refused
+- redirected
 
-### Step 5A: Deterministic answer path
+Example internal classification output:
 
-If the query matches a known business rule, the system answers through rule logic.
+```json
+{
+  "domain": "expense",
+  "question_type": "rule_based",
+  "sensitive": false,
+  "needs_clarification": true,
+  "routing_path": "policy_first"
+}
+```
 
-**Examples:**
+## 5. Step 5A - Deterministic answer path
 
-- Expense above 35 CHF → reject
-- Alcohol included → reject
-- Unsafe request → refuse
+This path handles:
 
-This path does not depend on probabilistic reasoning.
+- lunch above 35 CHF
+- alcohol expenses
+- May 1 in Basel-Stadt
+- sensitive IT access questions
+- misconduct redirection
 
----
+Examples:
 
-### Step 5B: Retrieval path
+- "Can I expense a 36 CHF lunch?" -> reject
+- "Can I expense alcohol?" -> reject
+- "What is the guest Wi-Fi password?" -> refuse in MVP
+- "How do I report harassment?" -> redirect
 
-If the question requires document-supported explanation, the system:
+If required fields are missing in a rule-heavy domain, the system should return a template-based clarification request instead of a free-form generated answer.
 
-- retrieves relevant chunks
-- filters by domain and metadata
-- passes only top-ranked context onward
+Example:
 
----
+- user asks: "Can you tell me whether I can expense my lunch receipt?"
+- system classifies the question as `expense`
+- system detects missing decision fields
+- system returns a clarification template asking for amount, person count, alcohol status, and client presence
 
-### Step 6: LLM generation
+## 6. Step 5B - Retrieval path
+
+If the question is a supported handbook question and not blocked by policy:
+
+- retrieve relevant chunks
+- apply domain and sensitivity filters
+- pass only the selected evidence onward
+
+## 7. Step 6 - LLM generation
 
 The LLM receives:
 
 - the user question
-- the approved retrieved context
-- system rules for output format
-- constraints against unsupported guessing
+- approved retrieved context
+- strict prompt instructions to avoid unsupported guessing
+- a structured output requirement
 
-The model then produces a structured response.
-
----
-
-### Step 7: Response validation
+## 8. Step 7 - Response validation
 
 The backend validates:
 
-- that citations exist
-- that citation references match retrieved chunks
-- that the output format is valid
-- that refusal logic is respected
-- that no restricted content is exposed
+- citation presence
+- citation-to-source consistency
+- output schema correctness
+- refusal and redirect flags
 
----
+It should also validate that:
 
-### Step 8: Response returned to UI
+- rule-domain clarification messages came from approved template logic
+- refusal and redirect messages followed the approved response strategy
 
-The user receives:
+## 9. Step 8 - UI response
 
-- a clear answer
-- source references
-- refusal/redirection if necessary
+The UI renders one of the following:
 
----
+- trusted answer with citations
+- refusal
+- redirection
 
-### Step 9: Audit trail recorded
+## 10. Step 9 - Audit trail
 
-All relevant metadata is stored for:
+The system stores enough metadata to review:
 
-- debugging
-- QA review
-- regression evaluation
-- stakeholder demonstrations
+- the query classification
+- any rule triggered
+- retrieved evidence
+- final output type
 
----
+## 11. Design Note
 
-## 7. Component Responsibilities in Detail
+The system should never treat "present in source" as the only permission check for sensitive information. Sensitive access topics must be evaluated through policy, not retrieval alone.
 
-### 7.1 Frontend Responsibilities
+The same principle applies to routing: the system should not rely on free-form generation to decide where a question belongs when classification can be handled through deterministic signals or a constrained classifier.
 
-The frontend should:
-
-- provide a simple chat-like interaction
-- render citations clearly
-- differentiate between:
-  - standard answers
-  - refusals
-  - redirections
-- handle errors gracefully
-- remain lightweight in MVP
-
----
-
-### 7.2 Backend Responsibilities
-
-The backend should:
-
-- act as the single orchestration layer
-- centralize decision flow
-- prevent direct UI-to-model coupling
-- encapsulate security, retrieval, and validation logic
-
-This is essential for maintaining control over trust and compliance behavior.
-
----
-
-### 7.3 Knowledge Base Responsibilities
-
-The knowledge base must:
-
-- store chunked source content
-- preserve source metadata
-- support retrieval by relevance and filters
-- distinguish content by version and sensitivity
-
----
-
-## 8. Data Model Concept
-
-Each document chunk should include at least the following fields:
-
-- `chunk_id`
-- `document_name`
-- `document_version`
-- `section_title`
-- `page_number`
-- `chunk_text`
-- `embedding`
-- `policy_domain`
-- `location_scope`
-- `audience`
-- `sensitivity_level`
-- `is_active`
-
-This is important because the handbook contains content that varies by domain and sensitivity, including holiday rules, expenses, security, and sensitive misconduct guidance. :contentReference[oaicite:1]{index=1}
-
----
-
-## 9. Document Ingestion Design
-
-### 9.1 Source Types
-
-Initial MVP sources:
-
-- Employee Handbook
-- Structured business rule supplements
-- Approved holiday logic source
-
-The stakeholder brief includes Basel-specific holiday expectations and a structured holiday logic example, including Labor Day on May 1st for Basel-Stadt only. :contentReference[oaicite:2]{index=2}
-
----
-
-### 9.2 Ingestion Steps
-
-1. Parse PDF or structured source
-2. Detect section boundaries
-3. Chunk content by semantic section
-4. Attach metadata
-5. Generate embeddings
-6. Store in knowledge base
-
----
-
-### 9.3 Chunking Strategy
-
-The system should use **section-aware chunking**, not naive fixed-size chunking.
-
-Preferred examples:
-
-- 4. Time Off (Vacation & Holidays)
-- 6. IT, Security & Connectivity
-- 7. Expenses & Travel
-- 9. Sensitive Matters & Conduct
-
-This improves:
-
-- retrieval quality
-- citation quality
-- explainability
-
----
-
-## 10. Security Architecture
-
-### 10.1 Security Objectives
-
-The system must:
-
-- protect sensitive internal information
-- prevent misuse
-- restrict disclosures based on topic and role
-- fail safely when uncertain
-
----
-
-### 10.2 Security Controls
-
-Recommended controls:
-
-- authenticated access only
-- RBAC
-- input validation
-- sensitive topic detection
-- refusal/redirection layer
-- server-side logging
-- secret management for infrastructure
-
----
-
-### 10.3 Sensitive Topic Handling
-
-Sensitive topics must be explicitly classified.
-
-Example categories:
-
-- internal credentials
-- MAC/device registration details
-- serious misconduct
-- whistleblowing
-- confidential HR matters
-
-The handbook and stakeholder brief both indicate that not all internal information should be disclosed freely. The stakeholder explicitly requires that internal Wi-Fi passwords or MAC address details not be given out “to just anyone.” :contentReference[oaicite:3]{index=3}
-
----
-
-## 11. Reliability & Safety Controls
-
-The architecture includes the following safety mechanisms:
-
-- Rule-first evaluation for deterministic cases
-- Retrieval before generation
-- Approved-source-only answering
-- Refusal when evidence is insufficient
-- Citation validation
-- Audit logging
-- Regression testing with golden questions
-
----
-
-## 12. Non-Functional Architectural Qualities
-
-### Accuracy
-
-Achieved through:
-
-- domain-aware retrieval
-- deterministic rule engine
-- source-backed generation
-
-### Security
-
-Achieved through:
-
-- authentication
-- authorization
-- sensitive-topic filtering
-- refusal behavior
-
-### Maintainability
-
-Achieved through:
-
-- modular service boundaries
-- structured response contracts
-- independent ingestion and retrieval layers
-
-### Auditability
-
-Achieved through:
-
-- full request logging
-- source traceability
-- document version tracking
-
-### Extensibility
-
-The architecture can later support:
-
-- more source documents
-- admin dashboards
-- analytics
-- additional communication channels
-- advanced review workflows
-
----
-
-## 13. Deployment View (MVP)
-
-### Frontend
-
-- Hosted as a web application
-
-### Backend
-
-- Hosted as a containerized API service
-
-### Database
-
-- PostgreSQL with pgvector extension
-
-### External Services
-
-- LLM / embedding provider
-- optional identity provider
-
----
-
-## 14. MVP Architectural Constraints
-
-For the first project phase, the architecture intentionally excludes:
-
-- complex microservices decomposition
-- event-driven architecture
-- real-time external integrations
-- autonomous workflow execution
-- broad enterprise system connectivity
-
-This is deliberate to keep the MVP focused, testable, and deliverable within the available timeline.
-
----
-
-## 15. Architectural Risks
-
-### Risk 1: Weak retrieval quality
-
-**Impact:** Incorrect or incomplete answers  
-**Mitigation:** Metadata-aware retrieval, golden question testing, chunk strategy refinement
-
-### Risk 2: Policy violations through generation
-
-**Impact:** Loss of trust and possible rejection by stakeholder  
-**Mitigation:** Rule-first policy layer, output validation, refusal mechanisms
-
-### Risk 3: Unsafe disclosure of internal information
-
-**Impact:** Security breach  
-**Mitigation:** Sensitive topic classification, authorization, response filtering
-
-### Risk 4: Over-engineering MVP
-
-**Impact:** Delayed delivery  
-**Mitigation:** Single orchestrator backend, minimal number of services, focused scope
-
----
-
-## 16. Architectural Principles
-
-The system must follow these principles:
-
-- **Policy before language generation**
-- **Grounded answers only**
-- **Trust over convenience**
-- **Secure by default**
-- **Simple architecture, strong controls**
-- **Human escalation for sensitive cases**
-
----
-
-## 17. Decision Statement
-
-The target architecture for Beat-Bot is a **modular, web-based, policy-aware RAG system** with deterministic rule enforcement, controlled LLM usage, and full source traceability.
-
-This architecture is appropriate for the problem because the product must behave as a **trusted policy assistant**, not as a generic conversational AI tool.
+The same principle also applies to response generation: clarification, refusal, redirect, and deterministic rule messages should default to policy-controlled templates instead of free-form generation.
