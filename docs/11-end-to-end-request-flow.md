@@ -20,6 +20,12 @@ The backend validates:
 - session information if enabled
 - basic input safety rules
 
+If optional helper processing is enabled in later phases, the request may also pass through:
+
+- language detection
+- translation into the system's working language
+- transcription if the input started as audio
+
 ## 3. Step 3 - Query classification
 
 The system classifies the question into one of the key domains:
@@ -44,6 +50,8 @@ Example for an expense question:
 - system classifies the query as `expense`
 - system marks it as `rule-based`
 - system routes it to policy checks rather than direct answer generation
+
+If deterministic classification is weak, a helper AI classification step may assign routing labels from a fixed schema before policy routing continues.
 
 ## 4. Step 4 - Policy decision layer
 
@@ -99,6 +107,8 @@ If the question is a supported handbook question and not blocked by policy:
 - retrieve relevant chunks
 - apply domain and sensitivity filters
 - pass only the selected evidence onward
+
+If multilingual support is added later, retrieval should happen after any helper translation/normalization step so the core pipeline still works on a consistent internal representation.
 
 ## 7. Step 6 - LLM generation
 

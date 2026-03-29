@@ -81,6 +81,8 @@ This classifier should:
 - return structured labels
 - not generate a free-form answer
 
+This classifier can be implemented with the OpenAI API as a constrained helper step, as long as it only returns routing labels from a fixed schema.
+
 ## Recommended Output Schema
 
 ```json
@@ -167,3 +169,13 @@ Classification and response strategy should work together:
 - `policy_first` domains should prefer templates for clarification and deterministic outcomes
 - `refuse` and `redirect` paths should use templates
 - `retrieval_generation` should be used mainly for supported handbook explanation questions
+
+## Related Helper Services
+
+The same helper-service principle can apply to adjacent preprocessing tasks:
+
+- classification fallback
+- translation for multilingual input
+- transcription for future voice input
+
+These are helper steps around the text pipeline, not replacements for policy logic.

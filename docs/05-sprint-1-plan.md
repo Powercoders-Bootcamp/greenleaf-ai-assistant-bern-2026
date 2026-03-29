@@ -37,13 +37,15 @@ Included for the first build:
 
 ## 3.1 MVP Authentication Direction
 
-The recommended MVP authentication setup is:
+The current working assumption for MVP authentication is:
 
 - Google Workspace OIDC
 - allowed domain: `@powercoders.org`
 - simple role model: `Employee` and `Admin`
 
 This should be treated as an internal project-domain access model for the MVP, not as a real GreenLeaf production identity system.
+
+This direction still requires stakeholder clarification before it becomes a committed implementation decision.
 
 ## 4. Recommended Task Breakdown
 

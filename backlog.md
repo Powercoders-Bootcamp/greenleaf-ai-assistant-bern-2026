@@ -41,7 +41,7 @@ The handbook contains the current guest Wi-Fi password. The stakeholder briefing
 
 This can be revisited later with explicit role-based approval.
 
-For MVP authentication, the project will use `Google Workspace OIDC` with approved `@powercoders.org` accounts, rather than a real GreenLeaf production identity setup.
+For MVP authentication, the current working assumption is `Google Workspace OIDC` with approved `@powercoders.org` accounts, rather than a real GreenLeaf production identity setup. This remains subject to stakeholder clarification.
 
 ## Priority Scale
 
@@ -397,6 +397,17 @@ For MVP authentication, the project will use `Google Workspace OIDC` with approv
 - Prompt includes refusal behavior
 - Prompt supports structured outputs
 
+### BB-029A - Constrained AI helper usage
+
+**Priority:** Should Have  
+**Estimate:** S  
+**Story:** As the system, I want tightly scoped AI helper steps so that ambiguous routing or future multilingual/voice support can be added without changing core policy logic.
+
+**Acceptance Criteria**
+- AI helper usage is limited to allowed tasks such as classification fallback, translation, or transcription
+- Helper steps return structured outputs
+- Helper steps do not make final policy decisions
+
 ### BB-030 - LLM integration for response generation
 
 **Priority:** Must Have  
@@ -439,10 +450,10 @@ For MVP authentication, the project will use `Google Workspace OIDC` with approv
 **Story:** As the organization, we want authenticated access so that the assistant is not openly available.
 
 **Acceptance Criteria**
-- Only authenticated users with approved `@powercoders.org` accounts can access the app
+- Only authenticated users with approved accounts can access the app
 - Session handling is implemented at MVP level
 - Unauthorized requests are rejected
-- Google Workspace OIDC is the preferred MVP authentication path
+- Final provider and domain choice are confirmed before implementation
 
 ### BB-034 - Basic role-aware access model
 
@@ -650,6 +661,15 @@ For MVP authentication, the project will use `Google Workspace OIDC` with approv
 - Real-time enterprise system integrations
 - Autonomous workflow execution
 
+## Optional Post-MVP Enhancements
+
+- voice message input with speech-to-text before the existing text pipeline
+- receipt upload with OCR
+- stronger RBAC and admin tooling
+- analytics and reporting
+
+The preferred design for future voice support is a modular `voice input adapter` that feeds the existing text-first pipeline.
+
 ## Suggested MVP Cut Line
 
 The following items form the recommended MVP scope for a 3-week, 5-person team:
@@ -661,6 +681,8 @@ The following items form the recommended MVP scope for a 3-week, 5-person team:
 - BB-040 to BB-043
 - BB-045
 - BB-048
+
+Items such as final authentication choice and logging retention policy require clarification before they should be treated as committed MVP scope.
 
 ## Suggested Delivery Sequence
 

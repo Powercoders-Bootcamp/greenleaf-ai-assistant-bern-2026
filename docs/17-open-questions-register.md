@@ -120,6 +120,24 @@ Which example questions are allowed:
 **Impact if unresolved**  
 The team may implement inconsistent refusal behavior.
 
+### OQ-07A - Should the bot ever disclose sensitive information that exists in a source document?
+
+**Why this matters**  
+The handbook includes some information that may still be considered sensitive in practice, especially the guest Wi-Fi password. This creates a direct conflict between source-backed answering and disclosure control.
+
+**Current safe MVP assumption**  
+Even if a sensitive detail appears in a source document, the bot should still refuse disclosure when the security policy says it should not be shared.
+
+**Decision needed**  
+Should the bot:
+
+- disclose any source-backed information by default
+- block selected sensitive source-backed information
+- use a separate disclosure policy on top of source retrieval
+
+**Impact if unresolved**  
+The team may build a system that is technically source-grounded but still unsafe from a disclosure perspective.
+
 ### OQ-08 - What can Admin do that Employee cannot do?
 
 **Why this matters**  
@@ -139,6 +157,42 @@ Should Admin be able to:
 
 **Impact if unresolved**  
 Role-aware access control may remain vague and difficult to implement.
+
+### OQ-08A - Where should role mapping be stored?
+
+**Why this matters**  
+If authentication comes from an external provider, the project still needs a clear place to resolve or store application roles.
+
+**Current safe MVP assumption**  
+Keep role mapping simple and application-controlled.
+
+**Decision needed**  
+Should roles be determined from:
+
+- an app database table
+- a config or allowlist
+- provider groups or claims
+
+**Impact if unresolved**  
+The team may leave authorization too vague, or choose a role model that is harder to implement and test than necessary.
+
+### OQ-08B - Should app access require a managed or registered device?
+
+**Why this matters**  
+The handbook mentions device registration for internal Wi-Fi access, but the project does not define whether Beat-Bot access should also depend on device state.
+
+**Current safe MVP assumption**  
+Treat app access as identity-based, not device-registration-based.
+
+**Decision needed**  
+Should access to Beat-Bot depend on:
+
+- authenticated user identity only
+- company network access
+- managed or registered devices
+
+**Impact if unresolved**  
+The team may either overcomplicate MVP access control or assume a weaker access model than the stakeholder expects.
 
 ### OQ-09 - How much multi-turn conversation should the MVP support?
 
@@ -253,6 +307,56 @@ What confidence threshold or validation rule should trigger refusal?
 **Impact if unresolved**  
 The assistant may become either too risky or too unhelpful.
 
+### OQ-16 - What logging and retention policy should the MVP use?
+
+**Why this matters**  
+The architecture expects logging and traceability, but the project does not yet define how long records should be kept or how much content should be stored.
+
+**Current safe MVP assumption**  
+Keep persistent logs for debugging and evaluation, but store only the minimum necessary information and avoid unnecessary sensitive content.
+
+**Decision needed**  
+Should the system store:
+
+- full user questions
+- only metadata and routing outcomes
+- retrieved source references
+- refusal reasons
+
+The team also needs a decision on:
+
+- retention period
+- who can access logs
+- whether sensitive content must be masked
+
+**Impact if unresolved**  
+The team may either under-build auditability or over-collect user data without a clear policy.
+
+### OQ-17 - Should the MVP support voice-message input?
+
+**Why this matters**  
+Voice input changes the product from a text-only flow into an audio-processing flow with extra frontend, backend, QA, and privacy work.
+
+**Current safe MVP assumption**  
+Keep the MVP text-first and treat voice as a post-MVP enhancement unless explicitly prioritized.
+
+**Decision needed**  
+If voice is wanted, should it be limited to:
+
+- voice input only
+- speech-to-text followed by the normal text pipeline
+- text output only, not voice output
+
+The team also needs decisions on:
+
+- audio file retention
+- transcript storage
+- supported languages
+- how to handle transcription uncertainty on rule-heavy questions
+
+**Impact if unresolved**  
+The team may underestimate scope, especially around transcription errors, QA, and logging/privacy.
+
 ## Recommended Priority for Decision-Making
 
 The most important open questions to resolve before serious implementation are:
@@ -264,6 +368,8 @@ The most important open questions to resolve before serious implementation are:
 5. OQ-06 per-person expense calculation
 6. OQ-08 Admin vs Employee permissions
 7. OQ-10 citation detail level
+8. OQ-16 logging and retention policy
+9. OQ-17 voice-message input scope
 
 ## Default Rule If a Decision Is Missing
 

@@ -27,6 +27,15 @@ This document defines the functional and non-functional requirements for Beat-Bo
   - whether clarification is likely needed
 - Classification shall route questions into deterministic policy handling, retrieval plus generation, refusal, or redirection
 
+### 2.1.3 AI-Assisted Helper Tasks
+
+- The system may use AI helper tasks for constrained preprocessing or routing support
+- Acceptable helper tasks include:
+  - classification fallback
+  - translation or normalization
+  - speech-to-text transcription
+- AI helper tasks shall not replace deterministic policy decisions in expense, holiday, security, or misconduct-routing cases
+
 ### 2.1.2 Response Strategy by Question Type
 
 - The system shall use template-based clarification messages for rule-heavy domains when required fields are missing

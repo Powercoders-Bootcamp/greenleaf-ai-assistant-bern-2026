@@ -17,7 +17,7 @@ The MVP is optimized for four core capabilities:
 
 The app is intended for internal project users.
 
-### MVP Access Approach
+### Working Assumption for MVP Access
 
 - authentication via `Google Workspace OIDC`
 - allowed domain: `@powercoders.org`
@@ -29,13 +29,15 @@ This is a practical MVP access model for the project.
 
 It is not a real GreenLeaf production identity environment.
 
+This access model is still `clarification required`, not a final stakeholder-approved commitment.
+
 ## 3. Core Tech Stack
 
 - `Frontend`: Next.js + TypeScript
 - `Backend`: FastAPI
 - `Database`: PostgreSQL + pgvector
 - `LLM`: OpenAI API
-- `Auth`: Google Workspace OIDC
+- `Auth`: Google Workspace OIDC as the current working assumption
 - `Architecture style`: RAG + deterministic policy guardrails
 
 ## 4. Main Architectural Principle
@@ -52,7 +54,7 @@ That means:
 
 ## 5. Main System Flow
 
-1. User signs in with `@powercoders.org`
+1. User signs in with the approved MVP domain, currently assumed to be `@powercoders.org`
 2. User submits a question in the web UI
 3. Backend validates the request
 4. Query classification runs
@@ -83,6 +85,8 @@ Deterministic signals:
 If the first pass is unclear:
 
 - a lightweight classifier chooses from fixed labels
+
+This fallback classifier may use the OpenAI API as a constrained helper step.
 
 ### Typical Classification Output
 
@@ -177,6 +181,16 @@ Approved sources:
 - Stakeholder Briefing
 - Holiday CSV
 
+## 9.1 AI-Assisted Helper Use
+
+The OpenAI API may also be used for helper tasks around the core pipeline, such as:
+
+- classification fallback
+- translation or normalization for multilingual input
+- transcription for future voice input
+
+These helper uses support the pipeline, but they do not replace deterministic policy logic.
+
 ## 10. Security Model
 
 The key security rule is:
@@ -201,7 +215,6 @@ Included:
 - expense decisions
 - Basel holiday logic
 - refusal and redirect flows
-- lightweight internal auth
 
 Deferred:
 
@@ -210,6 +223,15 @@ Deferred:
 - Slack/Teams integration
 - OCR-based receipt processing
 - production-grade enterprise identity setup
+
+The architecture should still remain extensible enough to support a future modular voice-input adapter without changing the core text pipeline.
+
+If voice or multilingual support is added later, the preferred pattern is:
+
+- helper service first
+- then normal text pipeline
+
+Authentication provider/domain choice and logging-retention policy are still clarification items and should not be treated as fully locked MVP commitments.
 
 ## 12. What Success Looks Like
 

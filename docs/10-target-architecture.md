@@ -175,6 +175,35 @@ Classification output inside the backend may also include:
 - `needs_clarification`
 - `routing_path`
 
+## 8.1 AI-Assisted Helper Services
+
+The architecture may use the OpenAI API not only for answer generation, but also for tightly scoped helper tasks.
+
+These helper tasks should support the core pipeline without replacing deterministic business logic.
+
+### Appropriate Helper Uses
+
+- lightweight classification fallback when deterministic classification is uncertain
+- translation or normalization for multilingual input
+- speech-to-text transcription for future voice input
+
+### Important Boundary
+
+These helper uses should assist with understanding or transformation, not final policy decisions.
+
+Examples:
+
+- good use: classify an ambiguous user question into a fixed label set
+- good use: translate a French question into the system's working language
+- good use: transcribe a voice message into text
+- bad use: let the model freely decide whether an expense should be reimbursed
+
+### Architectural Rule
+
+Use AI for `understanding and transformation`.
+
+Use rules and policy logic for `business decisions and safety enforcement`.
+
 ## 9. Why This Architecture Fits the Problem
 
 This design matches the problem because the project has:
@@ -185,3 +214,33 @@ This design matches the problem because the project has:
 - strong need for proof of source
 
 RAG alone is not enough. The project needs `RAG + deterministic policy guardrails`.
+
+## 10. Future Extensibility
+
+The MVP should be designed so that future input channels can be added without changing the core decision pipeline.
+
+### Recommended Modularity Rule
+
+Keep the core system `text-first` and `input-channel agnostic`.
+
+That means future channels such as voice should be added as separate input adapters:
+
+- text input adapter
+- voice input adapter
+
+The recommended future voice path is:
+
+`Voice Input -> Speech-to-Text -> Normal Text Query Pipeline`
+
+This allows the same core services to stay unchanged:
+
+- query classification
+- policy engine
+- retrieval
+- rule checks
+- response generation
+- response validation
+
+### Why This Matters
+
+This keeps post-MVP voice support modular, reduces refactoring risk, and prevents the team from coupling audio processing directly into core policy logic.

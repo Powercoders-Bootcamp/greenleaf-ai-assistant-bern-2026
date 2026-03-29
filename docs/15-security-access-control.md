@@ -58,13 +58,15 @@ However, the MVP should not rely on incomplete RBAC to justify disclosure of cre
 
 ## 6.1 MVP Authentication Approach
 
-The recommended MVP authentication approach is:
+The current working assumption for MVP authentication is:
 
 - Google Workspace OIDC
 - approved user domain: `@powercoders.org`
 - lightweight internal access control for project users only
 
 This is a practical project setup for the MVP. It should not be confused with a real GreenLeaf production identity environment.
+
+This remains subject to stakeholder clarification.
 
 ## 7. Security Controls
 
