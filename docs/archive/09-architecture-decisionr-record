@@ -1,0 +1,371 @@
+# Architecture Decision Record (ADR)
+
+## GreenLeaf Logistics – Beat-Bot
+
+---
+
+## 1. Purpose
+
+This document records the key architectural decisions made for the Beat-Bot system, including:
+
+- Context and problem
+- Decision made
+- Alternatives considered
+- Rationale and trade-offs
+
+These decisions ensure alignment between product requirements, technical implementation, and stakeholder expectations.
+
+---
+
+## 2. Decision 1: Use a Retrieval-Augmented Generation (RAG) Architecture
+
+### Context
+
+The system must:
+
+- Answer questions based on internal documents
+- Provide source-backed responses
+- Avoid hallucinations
+- Ensure high accuracy for policy-related queries
+
+### Decision
+
+Use a **Retrieval-Augmented Generation (RAG)** architecture.
+
+### Alternatives Considered
+
+- Fine-tuned LLM
+- Rule-based system only
+- Direct LLM without retrieval
+
+### Rationale
+
+- RAG allows grounding answers in real documents
+- Supports source citation
+- Reduces hallucination risk
+- Enables dynamic updates without retraining
+
+### Trade-offs
+
+- Added system complexity
+- Requires retrieval tuning
+- Dependent on document quality
+
+---
+
+## 3. Decision 2: Use Custom Web UI Instead of Slack-First Interface
+
+### Context
+
+The system requires:
+
+- Controlled UX
+- Source visualization
+- Safe fallback handling
+- Flexible future expansion
+
+### Decision
+
+Use a **custom web interface (Next.js)** as the primary user interface.
+
+### Alternatives Considered
+
+- Slack-only bot
+- Microsoft Teams integration
+- CLI-based interface
+
+### Rationale
+
+- Full control over user experience
+- Better support for source display and refusal handling
+- Easier integration of future features (admin panel, analytics)
+
+### Trade-offs
+
+- Requires frontend development effort
+- No immediate integration into existing communication tools
+
+---
+
+## 4. Decision 3: Use Python + FastAPI for Backend
+
+### Context
+
+The system requires:
+
+- AI integration
+- API-based architecture
+- Rapid development
+
+### Decision
+
+Use **Python with FastAPI**.
+
+### Alternatives Considered
+
+- Node.js (Express/NestJS)
+- Java (Spring Boot)
+- Django
+
+### Rationale
+
+- Strong ecosystem for AI/ML
+- Fast development with minimal boilerplate
+- Built-in API documentation (OpenAPI)
+- Good performance for MVP
+
+### Trade-offs
+
+- Team familiarity may vary
+- Less strict structure compared to some frameworks
+
+---
+
+## 5. Decision 4: Use PostgreSQL + pgvector for Storage
+
+### Context
+
+The system needs:
+
+- Structured data storage
+- Vector similarity search
+- Metadata filtering
+- Auditability
+
+### Decision
+
+Use **PostgreSQL with pgvector extension**.
+
+### Alternatives Considered
+
+- Dedicated vector databases (Pinecone, Weaviate)
+- Elasticsearch
+- In-memory storage
+
+### Rationale
+
+- Combines relational and vector data in one system
+- Simplifies architecture
+- Supports metadata-based filtering
+- Easier to manage for MVP
+
+### Trade-offs
+
+- May not scale as easily as specialized vector DBs
+- Requires tuning for performance
+
+---
+
+## 6. Decision 5: Implement Policy Decision Layer (Rule-Based Guardrails)
+
+### Context
+
+Some business rules are:
+
+- Deterministic
+- Critical (e.g., expense limits)
+- Unsafe to delegate to LLM
+
+### Decision
+
+Introduce a **policy decision layer** separate from LLM.
+
+### Alternatives Considered
+
+- Let LLM handle all logic
+- Prompt-based rule enforcement
+
+### Rationale
+
+- Ensures deterministic behavior
+- Eliminates risk of incorrect rule interpretation
+- Aligns with strict stakeholder requirements
+
+### Trade-offs
+
+- Additional implementation effort
+- Requires maintenance of rule logic
+
+---
+
+## 7. Decision 6: Enforce Source-Backed Responses
+
+### Context
+
+The system must:
+
+- Provide proof of answers
+- Be auditable and trustworthy
+
+### Decision
+
+All responses must include **source references**.
+
+### Alternatives Considered
+
+- Optional citation
+- No citation
+
+### Rationale
+
+- Builds user trust
+- Enables verification
+- Supports debugging and evaluation
+
+### Trade-offs
+
+- Slightly more complex UI
+- Additional backend logic
+
+---
+
+## 8. Decision 7: Implement Refusal Mechanism
+
+### Context
+
+The system must:
+
+- Avoid unsafe or incorrect answers
+- Handle unknown queries safely
+
+### Decision
+
+Implement a **refusal and fallback mechanism**.
+
+### Alternatives Considered
+
+- Always attempt an answer
+- Return partial answers
+
+### Rationale
+
+- Prevents hallucinations
+- Protects system credibility
+- Aligns with “do not guess” principle
+
+### Trade-offs
+
+- May reduce perceived usefulness in some cases
+- Requires careful UX design
+
+---
+
+## 9. Decision 8: Keep Slack as Optional Integration (Not Core)
+
+### Context
+
+Slack could be used for:
+
+- Authentication
+- User interaction
+
+### Decision
+
+Do not use Slack as the primary interface in MVP.
+
+### Alternatives Considered
+
+- Slack-first architecture
+- Slack-only bot
+
+### Rationale
+
+- Keeps system independent
+- Avoids UI limitations
+- Reduces complexity
+
+### Trade-offs
+
+- No immediate Slack integration benefits
+- Requires separate authentication solution
+
+---
+
+## 10. Decision 9: Use Structured Outputs from LLM
+
+### Context
+
+The system needs:
+
+- Predictable responses
+- Easy parsing
+- Reliable UI rendering
+
+### Decision
+
+Use **structured response format**:
+
+- answer
+- sources
+- confidence
+- refusal flag
+
+### Alternatives Considered
+
+- Free-text responses
+- Minimal structure
+
+### Rationale
+
+- Improves reliability
+- Enables validation and filtering
+- Supports better UX
+
+### Trade-offs
+
+- Slightly more complex prompting
+- Requires validation logic
+
+---
+
+## 11. Decision 10: Implement Evaluation Strategy (Golden Questions)
+
+### Context
+
+The system must be validated against real scenarios.
+
+### Decision
+
+Define and use a **set of test questions**.
+
+### Alternatives Considered
+
+- Ad-hoc testing
+- Manual validation only
+
+### Rationale
+
+- Enables consistent evaluation
+- Supports regression testing
+- Measures system quality objectively
+
+### Trade-offs
+
+- Requires maintenance of test set
+- Initial setup effort
+
+---
+
+## 12. Summary of Key Decisions
+
+| Area            | Decision                   |
+| --------------- | -------------------------- |
+| Architecture    | RAG                        |
+| UI              | Custom Web UI              |
+| Backend         | FastAPI (Python)           |
+| Storage         | PostgreSQL + pgvector      |
+| Policy Handling | Rule-based guardrails      |
+| Responses       | Source-backed + structured |
+| Safety          | Refusal mechanism          |
+| Integration     | Slack optional             |
+| Evaluation      | Golden question set        |
+
+---
+
+## 13. Decision Statement
+
+The Beat-Bot architecture is designed to prioritize **accuracy, security, and trust** over flexibility or general-purpose AI behavior.
+
+All architectural decisions support the creation of a **controlled, policy-aware, and verifiable AI assistant**.
+
+---

@@ -1,59 +1,46 @@
-# GreenLeaf AI Assistant
+# GreenLeaf AI Assistant Docs
 
-## Project Goal
+## Recommended Reading Order
 
-Build an internal AI assistant for GreenLeaf Logistics that answers repetitive employee questions based strictly on approved company sources.
+### Core Docs
 
-## Problem
+These are the main documents the team should use day to day:
 
-Employees repeatedly ask HR and Operations the same questions about holidays, expenses, leave, attendance, and company rules. This creates avoidable interruptions and reduces productivity for Beat Muller and the operations team.
+1. `01-project-overview.md`
+2. `08-requirements-specification`
+3. `10-target-architecture.md`
+4. `15-security-access-control.md`
+5. `14-qa-test-strategy.md`
+6. `17-open-questions-register.md`
+7. `22-backend-component-map.md`
+8. `backlog.md` in the repository root
 
-## Approved Sources
+### Working Docs
 
-Current source set for the project:
+Use these during planning and implementation:
 
-- `GreenLeaf Logistics Internal Handbook v2.1`
-- `Stakeholder Briefing: The "Beat-Bot" Project`
-- `2026 Holiday Logic (CSV)`
+- `05-sprint-1-plan.md`
 
-## Proposed Solution
+### Archived / Reference Docs
 
-We are building a reliable internal assistant that:
+Older planning notes, duplicate summaries, and reference material live under `docs/archive/`.
 
-- answers only from approved sources
-- avoids hallucinations
-- shows the source of each answer
-- enforces deterministic rules for expenses and holiday logic
-- redirects misconduct cases to the external ombudsman
-- does not expose sensitive information
+They are kept for traceability, but they are not the primary source of truth anymore.
 
-## Important Security Interpretation
+## Current Documentation Structure
 
-The handbook includes guest Wi-Fi details, but the stakeholder requirement is stricter than raw source visibility. For the MVP:
+- `01-project-overview.md`: product scope and business framing
+- `08-requirements-specification`: functional and non-functional requirements
+- `10-target-architecture.md`: architecture, routing, helper AI, and extensibility
+- `14-qa-test-strategy.md`: QA, evaluation, and release quality checks
+- `15-security-access-control.md`: security boundaries and disclosure policy
+- `17-open-questions-register.md`: open questions, defaults, and stakeholder checklist
+- `22-backend-component-map.md`: backend module map and request flow
+- `05-sprint-1-plan.md`: current sprint guidance
 
-- internal Wi-Fi credentials must never be disclosed
-- MAC address registration details must not be disclosed
-- the guest Wi-Fi password should not be disclosed through the bot
-- users should be redirected to IT or the appropriate human-managed access process
+## Documentation Rule
 
-## Key Requirements
+If two docs appear to overlap:
 
-- Accurate expense validation
-- Basel-Stadt holiday accuracy
-- Security-first behavior
-- Proof of source
-- Clear refusal behavior when confidence is low
-- Clear project scope and team workflow
-
-## Repository Structure
-
-- `docs/` project documentation
-- `data/` source and processed project data
-- `src/` technical structure for future implementation
-
-## MVP Focus
-
-- source-backed policy Q&A
-- deterministic expense decisions
-- deterministic Basel holiday logic
-- security refusal and redirection behavior
+- prefer the document in the `Core Docs` list
+- treat `docs/archive/` as historical context, not the active source of truth

@@ -2,172 +2,81 @@
 
 ## GreenLeaf Logistics - Beat-Bot
 
-## 1. Architectural Goal
+## 1. Architecture Summary
 
-Beat-Bot should behave as a trusted internal policy assistant, not as a general-purpose chatbot.
+Beat-Bot uses a policy-first RAG architecture.
 
-The architecture must optimize for:
+The system is designed as a `modular monolith`, not a microservice system.
 
-- source grounding
-- deterministic policy enforcement
-- security-first behavior
-- refusal safety
-- traceability
+The main idea is simple:
 
-## 2. High-Level Architecture
+- use deterministic policy logic whenever the business rule is explicit
+- use retrieval plus generation only for supported handbook explanations
+- refuse or redirect when the topic is sensitive
 
-- `Frontend`: Next.js + TypeScript web UI
-- `Backend`: FastAPI orchestration layer
-- `Knowledge Base`: PostgreSQL + pgvector
-- `LLM Layer`: OpenAI API
-- `Policy Layer`: deterministic rules and refusal logic
-- `Audit Layer`: logging and traceability
+## 2. Core Stack
 
-## 3. Key Architectural Principle
+- `Frontend`: Next.js + TypeScript
+- `Backend`: FastAPI
+- `Database`: PostgreSQL + pgvector
+- `LLM / helper AI`: OpenAI API
+- `Auth`: clarification required, with Google Workspace OIDC as the current working assumption
 
-Policy comes before generation.
+## 3. Core Architectural Principle
 
-If a question can be answered deterministically or must be refused for security reasons, the system should not defer that decision to the LLM.
+`Policy before generation`
 
-## 4. Main Processing Paths
+This means:
 
-### Deterministic Path
+- expense, holiday, and security-sensitive questions should not be decided by free-form generation
+- the model may help with understanding or transformation tasks
+- business decisions remain inside the policy layer
 
-Used for:
+## 4. Main Runtime Flow
 
-- expense checks
-- holiday checks
-- sensitive-topic refusal
-- misconduct redirection
+1. user authenticates through the chosen internal-access method
+2. user submits a question in the web UI
+3. backend validates the request
+4. input is normalized into the common text-query format
+5. query classification runs
+6. policy router chooses the path
+7. system returns one of:
+   - clarification
+   - deterministic decision
+   - refusal
+   - redirect
+   - retrieval plus generated explanation
+8. response is validated
+9. audit events are recorded
 
-### Retrieval + Generation Path
+## 5. Main Components
 
-Used for:
+- `API layer`: receives requests and returns structured responses
+- `Auth module`: validates identity and resolves role mapping
+- `Input processing`: normalizes text and supports future translation/transcription adapters
+- `Classification`: hybrid routing layer
+- `Policy engine`: deterministic rules and safety decisions
+- `Retrieval`: evidence lookup from approved sources
+- `Answer generation`: evidence-based explanatory answers only
+- `Response templates`: clarification, refusal, redirect, and deterministic responses
+- `Response validator`: schema and safety checks
+- `Audit/logging`: traceability and debugging support
 
-- vacation policy questions
-- handbook explanations
-- office policy questions
-- other supported handbook content with citations
+The developer-facing backend breakdown is documented in `22-backend-component-map.md`.
 
-## 4.2 Response Strategy Design
+## 6. Hybrid Classification
 
-Beat-Bot should also use a hybrid response strategy.
+Beat-Bot should use:
 
-### Template-Based Responses
+### First pass
 
-Templates should be used for:
+- deterministic keywords
+- pattern matching
+- simple routing rules
 
-- clarification requests in rule-heavy domains
-- deterministic rule outcomes
-- refusal messages
-- redirect messages
+### Second pass
 
-Examples:
-
-- expense clarification when amount or person count is missing
-- holiday clarification when date or location is missing
-- refusal for Wi-Fi password requests
-- redirect for harassment-related questions
-
-### Retrieval Plus Generation Responses
-
-Retrieval plus generation should be used for:
-
-- handbook explanations
-- policy summaries
-- source-backed answers where natural-language explanation is useful
-
-### Why This Matters
-
-Using templates for clarification, refusal, redirect, and deterministic rule messages improves:
-
-- consistency
-- safety
-- auditability
-- predictability in MVP behavior
-
-Generation should be reserved mainly for evidence-backed explanation, not for inventing control flow or policy decisions.
-
-## 4.1 Query Classification Design
-
-Beat-Bot should use a hybrid query-classification layer before policy routing.
-
-### First Pass: Deterministic Classification
-
-The first pass should use:
-
-- keyword matching
-- phrase and pattern rules
-- simple heuristics
-
-Examples:
-
-- `expense`, `receipt`, `lunch`, `CHF`, `alcohol` -> likely `expense`
-- `holiday`, `May 1`, `Basel`, `vacation day` -> likely `holiday` or `leave`
-- `Wi-Fi`, `password`, `MAC`, `device registration` -> likely `IT/security`
-- `harassment`, `bullying`, `whistleblowing`, `ombudsman` -> likely `sensitive conduct`
-
-### Second Pass: Lightweight Classifier
-
-If deterministic signals are weak or conflicting, the system may call a lightweight classifier that chooses only from a fixed label set.
-
-The classifier should not generate answers. It should only assign routing labels such as:
-
-- `domain`
-- `question_type`
-- `sensitive`
-- `needs_clarification`
-
-### Why Hybrid Classification
-
-This project should not rely on pure keyword logic for every case, and it should not rely on full LLM judgment for every routing decision either.
-
-Hybrid classification gives:
-
-- speed and determinism on obvious cases
-- flexibility for paraphrased questions
-- lower cost and lower risk than full free-form model routing
-
-## 5. Sensitive IT Handling Design
-
-The architecture must explicitly support a conservative access policy.
-
-For MVP:
-
-- internal Wi-Fi credential requests are refused
-- guest Wi-Fi password requests are refused
-- MAC registration detail requests are refused
-- process guidance such as "contact Sarah Muller in IT" is allowed
-
-This means the policy layer must evaluate topic sensitivity before retrieval and generation.
-
-## 6. Approved Data Sources
-
-- Handbook v2.1
-- Stakeholder briefing
-- Holiday CSV for deterministic logic
-
-## 7. Retrieval Design
-
-The retrieval layer should:
-
-- operate on section-aware chunks
-- preserve metadata for section title and source
-- support domain and sensitivity filtering
-- keep only a small number of relevant chunks
-
-## 8. Structured Output Contract
-
-Trusted answers should return:
-
-- `answer`
-- `citations`
-- `confidence`
-- `refusal_flag`
-- `policy_rule_applied`
-- `redirect_target`
-
-Classification output inside the backend may also include:
+If the first pass is uncertain, the system may use a constrained AI helper step that returns a fixed schema such as:
 
 - `domain`
 - `question_type`
@@ -175,72 +84,118 @@ Classification output inside the backend may also include:
 - `needs_clarification`
 - `routing_path`
 
-## 8.1 AI-Assisted Helper Services
+## 7. Hybrid Response Strategy
 
-The architecture may use the OpenAI API not only for answer generation, but also for tightly scoped helper tasks.
+The app should not use one response method for every case.
 
-These helper tasks should support the core pipeline without replacing deterministic business logic.
+### Template-based responses
 
-### Appropriate Helper Uses
+Use templates for:
 
-- lightweight classification fallback when deterministic classification is uncertain
-- translation or normalization for multilingual input
-- speech-to-text transcription for future voice input
+- clarification requests
+- deterministic rule outcomes
+- refusals
+- redirects
 
-### Important Boundary
+### Retrieval plus generation
 
-These helper uses should assist with understanding or transformation, not final policy decisions.
+Use retrieval plus generation for:
 
-Examples:
+- handbook explanations
+- policy summaries
+- source-backed informational responses
 
-- good use: classify an ambiguous user question into a fixed label set
-- good use: translate a French question into the system's working language
-- good use: transcribe a voice message into text
-- bad use: let the model freely decide whether an expense should be reimbursed
+## 8. AI-Assisted Helper Services
 
-### Architectural Rule
+The OpenAI API may be used for tightly scoped helper tasks:
 
-Use AI for `understanding and transformation`.
+- classification fallback
+- translation or normalization
+- future speech-to-text transcription
 
-Use rules and policy logic for `business decisions and safety enforcement`.
+Important boundary:
 
-## 9. Why This Architecture Fits the Problem
+- AI may help with understanding and transformation
+- AI should not make final policy decisions for expense, holiday, security, or misconduct-routing cases
 
-This design matches the problem because the project has:
+## 9. Policy-First Domains
 
-- a narrow document set
-- clear deterministic rules
-- strict safety expectations
-- strong need for proof of source
+### Expense
 
-RAG alone is not enough. The project needs `RAG + deterministic policy guardrails`.
+Deterministic checks:
 
-## 10. Future Extensibility
+- amount above `35 CHF per person`
+- alcohol included
+- external client present
+- enough decision data available
 
-The MVP should be designed so that future input channels can be added without changing the core decision pipeline.
+### Holidays
 
-### Recommended Modularity Rule
+Deterministic checks:
 
-Keep the core system `text-first` and `input-channel agnostic`.
+- holiday date
+- region
+- Basel-Stadt handling
+- May 1 rule
 
-That means future channels such as voice should be added as separate input adapters:
+### Sensitive IT
 
-- text input adapter
+The app refuses:
+
+- internal Wi-Fi password requests
+- guest Wi-Fi password requests in the MVP
+- MAC registration detail requests
+
+The app may provide safe process guidance such as contacting IT.
+
+### Sensitive Conduct
+
+The app redirects:
+
+- harassment
+- bullying
+- whistleblowing
+
+to the ombudsman process.
+
+## 10. Data and Retrieval
+
+Approved source set:
+
+- Handbook v2.1
+- Stakeholder Briefing
+- 2026 Holiday CSV
+
+Retrieval should:
+
+- use section-aware chunks
+- preserve metadata
+- support citation-ready evidence
+- filter by domain and sensitivity when needed
+
+## 11. Security Boundary
+
+`Source presence does not equal disclosure permission`
+
+Even if a source document contains a sensitive detail, the bot may still need to refuse disclosure.
+
+This is especially important for:
+
+- Wi-Fi credentials
+- technical access information
+- device-registration details
+
+## 12. Future Extensibility
+
+The system should remain:
+
+- `text-first`
+- `input-channel agnostic`
+
+This allows future additions such as:
+
 - voice input adapter
+- translation/normalization helper path
+- OCR or receipt-processing path
 
-The recommended future voice path is:
-
-`Voice Input -> Speech-to-Text -> Normal Text Query Pipeline`
-
-This allows the same core services to stay unchanged:
-
-- query classification
-- policy engine
-- retrieval
-- rule checks
-- response generation
-- response validation
-
-### Why This Matters
-
-This keeps post-MVP voice support modular, reduces refactoring risk, and prevents the team from coupling audio processing directly into core policy logic.
+without rewriting the core policy pipeline.
