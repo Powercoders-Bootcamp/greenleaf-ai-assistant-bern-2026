@@ -4,13 +4,15 @@
 
 ## 1. Project Summary
 
-Beat-Bot is an internal AI assistant for GreenLeaf Logistics. Its purpose is to reduce repetitive operational interruptions by answering employee handbook questions with source-backed responses while refusing unsafe or unsupported requests.
+Beat-Bot is an internal AI assistant for GreenLeaf Logistics. Its goal is to reduce repetitive questions from employees by answering them automatically using the company handbook and provided data.
 
-The product is not intended to behave like a general-purpose chatbot. It is a narrow, policy-aware assistant focused on a small number of high-value employee questions.
+The bot focuses on common topics like expenses, holidays, and leave. It should give clear and accurate answers and always refer to the source in the handbook.
+
+It is not a general chatbot and it focuses only on a few important topics, like expenses, holidays, and leave policies, and aims to handle them in a simple and reliable way.
 
 ## 2. Business Problem
 
-Beat Muller, Head of Operations & HR, is repeatedly interrupted by employees asking the same questions:
+Beat Müller, Head of Operations & HR, is repeatedly interrupted by employees asking the same questions:
 
 - Is May 1st a holiday in Basel-Stadt?
 - Can I expense this lunch?
@@ -21,13 +23,13 @@ The handbook already contains the answers, but employees do not reliably find or
 
 ## 3. Product Goal
 
-The goal of the project is to deliver a reliable assistant that:
+The goal of this project is to build a reliable assistant that:
 
-- answers from approved sources only
-- cites the source of every trusted answer
-- enforces hard policy rules deterministically
-- refuses or redirects sensitive questions
-- avoids hallucinations and unsupported guessing
+- only answers using approved sources
+- shows where each answer comes from
+- follows company rules strictly (no exceptions)
+- does not answer sensitive questions
+- does not guess or make up information
 
 ## 4. Approved Source Set
 
@@ -61,8 +63,8 @@ Beat's non-negotiable expectations are:
 
 The handbook states that:
 
-- internal staff Wi-Fi access requires MAC address registration with Sarah Muller in IT
-- the guest Wi-Fi password exists and is rotated annually
+- Internal Wi-Fi access is only given to registered devices and must be approved by Sarah Müller from IT
+- A guest Wi-Fi password exists, but it is managed internally and changed regularly
 
 However, the stakeholder requirement is stricter than simple document recall. For the MVP, Beat-Bot should:
 
@@ -70,6 +72,7 @@ However, the stakeholder requirement is stricter than simple document recall. Fo
 - refuse requests for guest Wi-Fi passwords
 - refuse requests for MAC address registration details
 - safely direct users to IT when access help is needed
+- not confirm or validate any shared credentials
 
 This conservative behavior reduces security risk and aligns with the stakeholder's trust threshold.
 
@@ -104,10 +107,10 @@ The MVP is successful if it can demonstrate:
 
 - correct expense rejection behavior
 - correct Basel holiday behavior
-- source-backed handbook answers
+- give answers with handbook references
 - safe refusal on sensitive IT questions
-- safe redirection for misconduct questions
+- safe redirection for misconduct questions (Exp:“For this kind of issue, please contact our confidential ombudsman at ombudsman@greenleaf-safety.ch)
 
 ## 12. Delivery Position
 
-This is a realistic 3-week MVP only if the team stays narrow and prioritizes trust, safety, and correctness over breadth.
+This MVP can be done in 3 weeks if we focus on the essentials and prioritize safety and correct answers.
