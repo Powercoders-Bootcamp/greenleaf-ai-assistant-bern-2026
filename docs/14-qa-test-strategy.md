@@ -36,7 +36,7 @@ Use for:
 Use for:
 
 - `/ask` flow
-- routing through classification, policy, retrieval, and generation
+- retrieval, structured draft generation, validation, and fallback behavior
 - refusal and redirect behavior
 
 ### End-to-end checks
@@ -93,6 +93,7 @@ Each important response should be checked for:
 - consistency
 - policy compliance
 - clarity
+- validator outcome correctness
 
 ## 7. Acceptance Rule
 
@@ -104,6 +105,7 @@ A feature is not accepted if it:
 - mishandles expense rules
 - mishandles Basel holiday logic
 - mishandles misconduct redirection
+- bypasses a validator that should have blocked the answer
 
 ## 8. Regression Strategy
 
@@ -111,7 +113,7 @@ Re-run the golden set after changes to:
 
 - prompts
 - retrieval logic
-- policy rules
+- validator rules
 - source data
 - helper-AI preprocessing behavior
 
@@ -122,8 +124,14 @@ Testing should verify that the system produces enough traceability for:
 - debugging
 - QA review
 - failure analysis
+- admin transcript review
+- employee self-history access
 
-The exact retention and access policy still requires clarification.
+Testing should also verify that:
+
+- chat history is persisted
+- `Admin` can access all employee chat histories and related metadata
+- each `Employee` can access only their own history
 
 ## 10. MVP Release Check
 

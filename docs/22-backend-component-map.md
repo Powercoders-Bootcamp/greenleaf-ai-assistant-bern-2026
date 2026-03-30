@@ -7,10 +7,10 @@ A modular backend is recommended inside a single service:
 - `api`
 - `auth`
 - `input_processing`
-- `classification`
-- `policy`
 - `retrieval`
 - `generation`
+- `validation`
+- `fallbacks`
 - `responses`
 - `audit`
 - `shared`
@@ -44,9 +44,9 @@ Authentication and basic role resolution.
 
 Responsibilities:
 
-- validate OIDC token or session
+- validate the chosen login/session mechanism
 - read user email
-- resolve role mapping
+- resolve role mapping from the application database
 - expose `Employee` or `Admin`
 
 ### `input_processing`
@@ -63,43 +63,6 @@ Responsibilities:
 
 This keeps the core pipeline compatible with future input channels such as voice.
 
-### `classification`
-
-Assigns routing labels to the question.
-
-Responsibilities:
-
-- deterministic keyword and pattern pass
-- fallback classifier
-- structured classification output
-
-Typical output:
-
-- `domain`
-- `question_type`
-- `sensitive`
-- `needs_clarification`
-- `routing_path`
-
-### `policy`
-
-The most critical business-decision module.
-
-Responsibilities:
-
-- expense rules
-- holiday rules
-- sensitive IT refusal
-- misconduct redirect
-- clarification requirement detection
-
-Possible submodules:
-
-- `expense_policy`
-- `holiday_policy`
-- `security_policy`
-- `conduct_policy`
-
 ### `retrieval`
 
 Evidence lookup layer.
@@ -114,15 +77,41 @@ Responsibilities:
 
 ### `generation`
 
-Used only when natural-language explanation is needed.
+Primary LLM interaction layer.
 
 Responsibilities:
 
-- grounded answer generation
+- grounded draft generation
 - structured output generation
+- clarification-aware response drafting
 - handbook explanation responses
 
-This module should not make final policy decisions.
+This module drafts the answer, but does not decide whether it is safe to release.
+
+### `validation`
+
+Post-generation guardrail layer.
+
+Responsibilities:
+
+- schema validation
+- citation validation
+- disclosure validation
+- expense and holiday consistency checks
+- response-type checks for refusal and redirect scenarios
+
+Validators should work from structured fields whenever possible, not from brittle raw-string checks alone.
+
+### `fallbacks`
+
+Safe recovery layer.
+
+Responsibilities:
+
+- retry draft generation with stricter instructions
+- return a safe refusal when disclosure validation fails
+- return a safe redirect when misconduct handling is required
+- return a verification failure message when a trustworthy answer cannot be confirmed
 
 ### `responses`
 
@@ -130,13 +119,11 @@ Builds user-facing responses.
 
 Responsibilities:
 
-- clarification template rendering
-- refusal template rendering
-- redirect template rendering
-- deterministic decision formatting
-- generated answer formatting
+- final response formatting
+- citation rendering
+- safe fallback formatting
 
-This module ensures rule-based and safety-critical responses do not depend on free-form generation.
+This module only formats outputs that have already passed validation or been replaced by a safe fallback.
 
 ### `audit`
 
@@ -145,11 +132,12 @@ Traceability and logging layer.
 Responsibilities:
 
 - log request metadata
-- log classification result
-- log applied rules
+- log structured draft metadata
+- log validator outcomes
 - log retrieval trace
 - log response type
-- log refusal or redirect reason
+- log fallback reason when used
+- persist chat history and access-control metadata
 
 ### `shared`
 
@@ -167,21 +155,21 @@ Responsibilities:
 
 Recommended flow:
 
-`api -> auth -> input_processing -> classification -> policy -> retrieval -> generation -> responses -> audit`
+`api -> auth -> input_processing -> retrieval -> generation -> validation -> fallbacks -> responses -> audit`
 
 Not every request uses every module.
 
 ### Example: Expense Question
 
-`api -> auth -> input_processing -> classification -> policy -> responses -> audit`
+`api -> auth -> input_processing -> retrieval -> generation -> validation -> fallbacks -> responses -> audit`
 
 ### Example: Handbook Explanation Question
 
-`api -> auth -> input_processing -> classification -> policy -> retrieval -> generation -> responses -> audit`
+`api -> auth -> input_processing -> retrieval -> generation -> validation -> responses -> audit`
 
 ### Example: Sensitive IT Question
 
-`api -> auth -> input_processing -> classification -> policy -> responses -> audit`
+`api -> auth -> input_processing -> retrieval -> generation -> validation -> fallbacks -> responses -> audit`
 
 ## 4. Example Folder Shape
 
@@ -198,16 +186,6 @@ src/backend/
     language.py
     translation.py
     transcription.py
-  classification/
-    rules.py
-    classifier.py
-    schema.py
-  policy/
-    expense.py
-    holidays.py
-    security.py
-    conduct.py
-    router.py
   retrieval/
     store.py
     search.py
@@ -216,8 +194,16 @@ src/backend/
     prompts.py
     answer_generator.py
     structured_output.py
+  validation/
+    schema.py
+    citations.py
+    disclosure.py
+    consistency.py
+    response_type.py
+  fallbacks/
+    retry.py
+    safe_responses.py
   responses/
-    templates.py
     formatter.py
   audit/
     logger.py
@@ -231,20 +217,20 @@ src/backend/
 
 ## 5. Design Rules
 
-- `classification` routes, but does not make business decisions
-- `policy` makes business decisions
-- `generation` explains, but does not override policy
+- `generation` drafts, but does not release
+- `validation` decides whether a draft is acceptable
+- `fallbacks` recover safely when validation fails
 - `responses` formats user-facing output
 - `audit` records important pipeline events
-- `input_processing` keeps future voice and multilingual support isolated from core policy logic
+- `input_processing` keeps future voice and multilingual support isolated from the core answer pipeline
 
 ## 6. Most Critical Boundaries
 
 The most important architectural boundaries are:
 
-- `policy` and `generation` must not be mixed
+- `generation` and `validation` must not be mixed
 - `auth` and security-disclosure policy must not be confused
-- `input_processing` must stay separate from core policy logic
+- `input_processing` must stay separate from the core answer pipeline
 - `retrieval` finds evidence, but does not decide outcomes
 
 ## 7. MVP-Minimum Version
@@ -253,10 +239,10 @@ If the team wants the smallest practical backend for MVP, the minimum version ca
 
 - `api`
 - `auth`
-- `classification`
-- `policy`
 - `retrieval`
 - `generation`
+- `validation`
+- `fallbacks`
 - `responses`
 - `shared`
 

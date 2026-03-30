@@ -25,7 +25,7 @@ These sources make four capabilities non-negotiable:
 
 - Accuracy over creativity
 - Source-backed answers only
-- Policy-first decision making
+- Validate before release
 - Security by default
 - Refuse when evidence is weak
 - Keep MVP narrow and reliable
@@ -41,7 +41,14 @@ The handbook contains the current guest Wi-Fi password. The stakeholder briefing
 
 This can be revisited later with explicit role-based approval.
 
-For MVP authentication, the current working assumption is `Google Workspace OIDC` with approved `@powercoders.org` accounts, rather than a real GreenLeaf production identity setup. This remains subject to stakeholder clarification.
+For MVP authentication, user login is required. The MVP must support authenticated access with two application roles:
+
+- `Employee`
+- `Admin`
+
+Google Workspace OIDC is not the chosen provider for now. The authentication mechanism still needs implementation design, but authenticated access itself is no longer optional.
+
+The earlier plan to use keyword-based pre-classification and template-first response routing is no longer in scope. The current direction is an `LLM-first` flow with structured post-generation validators and safe fallbacks.
 
 ## Priority Scale
 
@@ -143,7 +150,7 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 
 ### BB-008 - Response formatting for structured outputs
 
-**Priority:** Should Have  
+**Priority:** Must Have  
 **Estimate:** S  
 **Story:** As an employee, I want answers to be clearly formatted so that I can understand them quickly.
 
@@ -180,12 +187,13 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I want one orchestration flow for every request so that policy checks, retrieval, and generation happen consistently.
+**Story:** As the system, I want one orchestration flow for every request so that retrieval, draft generation, validation, and fallback happen consistently.
 
 **Acceptance Criteria**
-- Query classification is invoked before answer generation
-- Policy checks run before retrieval or generation when needed
 - Retrieval and generation steps are centrally coordinated
+- The LLM returns a structured draft response
+- Post-generation validators run before any response is released
+- Retry and safe fallback behavior are centrally coordinated
 - Response validation runs before output is returned
 
 ### BB-012 - Structured response validation
@@ -314,18 +322,18 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 - Retrieval output can be inspected against expected sections
 - Major mismatches are visible to the team
 
-## Epic 6: Policy Decision Layer and Guardrails
+## Epic 6: Guardrails and High-Risk Validation
 
-### BB-023 - Query classification by domain
+### BB-023 - Structured topic and response-type extraction
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I want to classify incoming questions so that they can be routed correctly.
+**Story:** As the system, I want the structured LLM draft to expose topic and response-type signals so that backend validators can enforce safe behavior.
 
 **Acceptance Criteria**
-- Questions can be categorized into domains such as expenses, holidays, leave, office rules, IT/security, and sensitive conduct
-- Unsupported or unclear questions are detectable
-- Classification result is available to downstream services
+- Structured drafts include coarse topics such as expense, holiday, security, misconduct, or handbook-general
+- Structured drafts include a response type such as policy answer, clarification, refusal, redirect, or verification failure
+- Unsupported or unclear questions remain detectable through structured draft fields
 
 ### BB-024 - Expense rule enforcement
 
@@ -338,6 +346,7 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 - Alcohol-related expense requests are rejected
 - Client lunch conditions can be reflected when relevant
 - Response explains the rule clearly
+- Validators use structured facts rather than brittle substring matching alone
 
 ### BB-025 - Holiday rule enforcement
 
@@ -349,6 +358,7 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 - National holidays are answered correctly
 - Basel-Stadt rules for May 1 are answered correctly
 - Holiday logic distinguishes national and cantonal cases
+- Validators can detect contradiction between structured facts and generated holiday answers
 
 ### BB-026 - Sensitive IT refusal and safe redirection
 
@@ -361,6 +371,7 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 - Questions asking for guest Wi-Fi passwords are refused in MVP
 - MAC address registration details are not disclosed
 - Safe guidance can direct the user to Sarah Muller or IT for access help
+- Safe refusal wording is allowed even when restricted terms such as `MAC address` appear in the response
 
 ### BB-027 - Misconduct and whistleblowing redirection
 
@@ -384,6 +395,19 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 - Unsupported answers are replaced by fallback or refusal
 - No fabricated citations are returned
 
+### BB-028A - Post-generation validator pipeline
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Story:** As the system, I want structured validators after draft generation so that unsafe or inconsistent outputs are blocked before release.
+
+**Acceptance Criteria**
+- Schema validation runs on every draft
+- Citation validation runs on trusted answer types
+- Disclosure validation blocks restricted technical disclosure
+- Consistency validation checks high-risk rules such as expense and Basel holiday logic
+- Response-type validation enforces refusal or redirect behavior where required
+
 ## Epic 7: LLM Integration and Answer Generation
 
 ### BB-029 - Prompt design for grounded answers
@@ -401,12 +425,12 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 
 **Priority:** Should Have  
 **Estimate:** S  
-**Story:** As the system, I want tightly scoped AI helper steps so that ambiguous routing or future multilingual/voice support can be added without changing core policy logic.
+**Story:** As the system, I want tightly scoped AI helper steps so that translation, normalization, or future multilingual/voice support can be added without changing core validation logic.
 
 **Acceptance Criteria**
-- AI helper usage is limited to allowed tasks such as classification fallback, translation, or transcription
+- AI helper usage is limited to allowed tasks such as translation, normalization, or transcription
 - Helper steps return structured outputs
-- Helper steps do not make final policy decisions
+- Helper steps do not decide whether a draft is safe to release
 
 ### BB-030 - LLM integration for response generation
 
@@ -417,7 +441,7 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 **Acceptance Criteria**
 - Model can be called from the backend
 - Retrieved context is passed into generation
-- System can return a valid structured answer
+- System can return a valid structured draft answer
 
 ### BB-031 - Citation-aware answer generation
 
@@ -429,6 +453,17 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 - Generated responses include source references
 - Citation identifiers match retrieved chunks
 - Citations can be rendered by the frontend
+
+### BB-031A - Retry and safe fallback handling
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Story:** As the system, I want controlled retry and fallback behavior so that failed drafts do not become unsafe user-visible answers.
+
+**Acceptance Criteria**
+- Recoverable validation failures can trigger one stricter retry
+- Irrecoverable failures return refusal, redirect, or verification-failure responses
+- A failed draft is never released directly to the user
 
 ### BB-032 - Simple follow-up handling
 
@@ -445,7 +480,7 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 
 ### BB-033 - Basic authenticated access
 
-**Priority:** Should Have  
+**Priority:** Must Have  
 **Estimate:** M  
 **Story:** As the organization, we want authenticated access so that the assistant is not openly available.
 
@@ -453,18 +488,20 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 - Only authenticated users with approved accounts can access the app
 - Session handling is implemented at MVP level
 - Unauthorized requests are rejected
-- Final provider and domain choice are confirmed before implementation
+- Login is required for all users
+- Final provider/mechanism is implemented without relying on Google Workspace OIDC
 
 ### BB-034 - Basic role-aware access model
 
-**Priority:** Should Have  
+**Priority:** Must Have  
 **Estimate:** M  
 **Story:** As the system, I want role-aware behavior so that access to features can be controlled.
 
 **Acceptance Criteria**
 - At least Employee and Admin roles are modeled
-- Role information is available in backend processing
-- Restricted features can be protected in later iterations
+- Role information is stored and resolved in the application database
+- Admin can view all employee chat histories
+- Employee can view only their own chat history
 
 ### BB-035 - Secret and configuration management
 
@@ -492,25 +529,27 @@ For MVP authentication, the current working assumption is `Google Workspace OIDC
 
 ### BB-037 - Structured request and response logging
 
-**Priority:** Should Have  
+**Priority:** Must Have  
 **Estimate:** M  
 **Story:** As the team, we want structured logs so that we can debug issues and review behavior.
 
 **Acceptance Criteria**
 - Logs include request metadata
-- Logs include classification and decision outcomes
+- Logs include draft-generation and validator outcomes
 - Logs avoid storing sensitive content unnecessarily
+- Chat history is persisted
 
 ### BB-038 - Audit trail for answer generation
 
-**Priority:** Should Have  
+**Priority:** Must Have  
 **Estimate:** M  
 **Story:** As the team, we want an audit trail so that incorrect answers can be investigated.
 
 **Acceptance Criteria**
 - Retrieved chunk references are traceable
-- Applied rules are recorded
+- Validator outcomes are recorded
 - Refusal reasons can be inspected
+- Admin can review all stored chat transcripts and related metadata
 
 ### BB-039 - Error monitoring basics
 
@@ -676,8 +715,8 @@ The following items form the recommended MVP scope for a 3-week, 5-person team:
 
 - BB-001 to BB-007
 - BB-009 to BB-021
-- BB-023 to BB-031
-- BB-035 to BB-036
+- BB-023 to BB-031A
+- BB-033 to BB-038
 - BB-040 to BB-043
 - BB-045
 - BB-048
@@ -691,14 +730,14 @@ Items such as final authentication choice and logging retention policy require c
 - Foundation, API skeleton, UI shell
 - Handbook parsing and holiday CSV loading
 - Shared contracts
-- Basic retrieval and deterministic expense rules
+- Basic retrieval and structured draft generation
 
 ### Week 2
 
-- LLM integration
+- Validator pipeline and fallback handling
 - Source citation
 - Basel holiday logic
-- Sensitive-topic refusal and fallback logic
+- Sensitive-topic refusal and consistency checks
 - End-to-end integration
 
 ### Week 3

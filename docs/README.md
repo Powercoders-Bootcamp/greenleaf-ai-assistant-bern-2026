@@ -13,7 +13,10 @@ These are the main documents the team should use day to day:
 5. `14-qa-test-strategy.md`
 6. `17-open-questions-register.md`
 7. `22-backend-component-map.md`
-8. `backlog.md` in the repository root
+8. `24-structured-llm-response-schema.md`
+9. `25-backend-implementation-blueprint.md`
+10. `26-ask-flow-sequence.md`
+11. `backlog.md` in the repository root
 
 ### Working Docs
 
@@ -36,6 +39,9 @@ They are kept for traceability, but they are not the primary source of truth any
 - `15-security-access-control.md`: security boundaries and disclosure policy
 - `17-open-questions-register.md`: open questions, defaults, and stakeholder checklist
 - `22-backend-component-map.md`: backend module map and request flow
+- `24-structured-llm-response-schema.md`: structured draft format for the LLM-first architecture
+- `25-backend-implementation-blueprint.md`: backend stack, folders, modules, and build order
+- `26-ask-flow-sequence.md`: end-to-end backend sequence for a single ask request
 - `05-sprint-1-plan.md`: current sprint guidance
 
 ## Documentation Rule

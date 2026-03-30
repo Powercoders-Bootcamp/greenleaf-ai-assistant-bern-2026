@@ -18,6 +18,7 @@ Deliver a functional MVP core that can:
 Included for the first build:
 
 - basic UI input/output
+- login-protected app access
 - `/ask` endpoint
 - handbook parsing
 - holiday CSV loading
@@ -26,6 +27,7 @@ Included for the first build:
 - deterministic Basel holiday checks
 - refusal and redirection behavior
 - source citation rendering
+- conversation history persistence
 
 ## 3. Explicit Non-Goals for Sprint 1
 
@@ -37,15 +39,14 @@ Included for the first build:
 
 ## 3.1 MVP Authentication Direction
 
-The current working assumption for MVP authentication is:
+The product direction for MVP is now:
 
-- Google Workspace OIDC
-- allowed domain: `@powercoders.org`
-- simple role model: `Employee` and `Admin`
+- user login is required
+- the role model is `Employee` and `Admin`
+- app access is identity-based only for now
+- role mapping should live in the app database
 
-This should be treated as an internal project-domain access model for the MVP, not as a real GreenLeaf production identity system.
-
-This direction still requires stakeholder clarification before it becomes a committed implementation decision.
+The remaining open decision is the concrete auth provider or login mechanism.
 
 ## 4. Recommended Task Breakdown
 
@@ -67,8 +68,8 @@ This direction still requires stakeholder clarification before it becomes a comm
 
 - handbook parsing
 - holiday CSV ingestion
-- expense rules
-- sensitive-topic classification
+- expense validation rules
+- draft-validation rules for sensitive topics
 
 ### QA
 

@@ -54,26 +54,30 @@ The project currently distinguishes between:
 - `Employee`
 - `Admin`
 
-However, the MVP should not rely on incomplete RBAC to justify disclosure of credentials. Sensitive access details should remain restricted even if basic roles exist.
+For MVP:
+
+- `Admin` may review all employee chat histories and related metadata
+- `Employee` may view only their own chat history
+
+Sensitive access details remain restricted even if the user is authenticated or has the Admin role.
 
 ## 6.1 MVP Authentication Approach
 
-The current working assumption for MVP authentication is:
+MVP decisions:
 
-- Google Workspace OIDC
-- approved user domain: `@powercoders.org`
-- lightweight internal access control for project users only
-
-This is a practical project setup for the MVP. It should not be confused with a real GreenLeaf production identity environment.
-
-This remains subject to stakeholder clarification.
+- user login is required
+- app access is identity-based for MVP
+- managed or registered device checks are not required for MVP
+- Google Workspace OIDC is not the selected provider for now
+- role mapping should be stored in the app database
 
 ## 7. Security Controls
 
 - authenticated access when available
 - input validation
-- query classification for sensitive topics
-- refusal and redirect logic
+- structured draft generation
+- disclosure and response-type validation
+- safe refusal and redirect fallback logic
 - server-side logging with minimal sensitive content
 - secrets managed outside source code
 
