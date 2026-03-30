@@ -1,10 +1,18 @@
 # Frontend
 
-This folder will contain the user interface for the GreenLeaf assistant.
+React frontend for the GreenLeaf assistant.
 
-Possible scope:
-- simple internal chat interface
-- question input
-- structured answer output
-- visible source reference
-- fallback message when no trusted answer is available
+## Current MVP
+
+- question input field
+- submit button
+- request to backend `/ask`
+- display answer
+- display sources
+- basic loading state
+
+## Run locally
+
+```bash
+npm install
+npm run dev

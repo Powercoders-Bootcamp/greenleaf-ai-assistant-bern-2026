@@ -1,13 +1,20 @@
 # Backend
 
-This folder will contain the assistant logic, including:
-- handbook and holiday data loading
-- retrieval / rule validation
-- response generation
-- source reference handling
+FastAPI backend for the GreenLeaf assistant.
 
-Planned responsibilities:
-- validate expenses
-- validate holiday logic
-- prevent unsafe answers
-- return structured responses with sources
+## Current MVP
+
+- `GET /` health check
+- `POST /ask` endpoint
+- request validation with Pydantic
+- structured mock response with sources
+- safe invalid input handling
+- Swagger docs at `/docs`
+
+## Run locally
+
+```bash
+python -m venv .venv
+.\.venv\Scripts\Activate
+python -m pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
