@@ -1,755 +1,728 @@
 # Product Backlog
 
-## Project
+## GreenLeaf Logistics - Beat-Bot
 
-**Project Name:** GreenLeaf Logistics Beat-Bot  
-**Primary Sponsor:** Beat Muller, Head of Operations & HR  
-**Goal:** Deliver a trusted internal AI assistant that answers repetitive employee policy questions from approved company sources, enforces hard business rules, and refuses unsafe or out-of-scope requests.
+## 1. Product Goal
 
-## Source-Informed Product Scope
+Deliver a trusted internal AI assistant that answers employee policy questions from approved sources, enforces critical business rules, and refuses or redirects unsafe requests.
 
-The backlog below is aligned to the current known sources:
+## 2. Delivery Assumptions
 
-- `GreenLeaf Logistics Internal Handbook v2.1`
-- `Stakeholder Briefing: The "Beat-Bot" Project`
-- `2026 Holiday Logic (CSV)`
+- Team size: `6 people`
+- Delivery window: `3 weeks`
+- MVP access model: authenticated users only
+- MVP roles: `Employee`, `Admin`
+- Current architecture: `LLM-first + structured draft + validators + safe fallback`
+- Current input model: `text only`
+- Current language scope: `no multilingual support in MVP`
+- Current voice scope: `out of MVP`
 
-These sources make four capabilities non-negotiable:
+## 3. Scrum Structure
 
-- source-backed handbook Q&A
-- deterministic expense decisions
-- Basel-Stadt holiday accuracy
-- security-first refusal and redirection behavior
+This backlog is organized as:
 
-## Backlog Principles
+- `Epic`
+- `Product Backlog Item (PBI)`
+- `User Story or Technical Story`
+- `Acceptance Criteria`
+- `Priority`
+- `Estimate`
+- `Dependencies`
 
-- Accuracy over creativity
-- Source-backed answers only
-- Validate before release
-- Security by default
-- Refuse when evidence is weak
-- Keep MVP narrow and reliable
+## 4. Priority Scale
 
-## Important Product Interpretation
+- `Must Have`
+- `Should Have`
+- `Could Have`
+- `Won't Have`
 
-The handbook contains the current guest Wi-Fi password. The stakeholder briefing explicitly says the bot must not give out internal Wi-Fi passwords or MAC address details "to just anyone." For the MVP, the safest interpretation is:
+## 5. Estimation Scale
 
-- never disclose internal Wi-Fi credentials
-- never disclose MAC address registration details beyond directing users to IT
-- do not disclose the guest Wi-Fi password through the bot
-- redirect Wi-Fi access requests to IT or the appropriate human-managed process
+- `S`
+- `M`
+- `L`
 
-This can be revisited later with explicit role-based approval.
+## 6. Epics
 
-For MVP authentication, user login is required. The MVP must support authenticated access with two application roles:
+- `E1` Product Foundation
+- `E2` User Interface
+- `E3` Core Ask Flow
+- `E4` Source Ingestion and Retrieval
+- `E5` Validation and Guardrails
+- `E6` Authentication, Roles, and History
+- `E7` Quality and Release
 
-- `Employee`
-- `Admin`
+## 7. Product Backlog Items
 
-Google Workspace OIDC is not the chosen provider for now. The authentication mechanism still needs implementation design, but authenticated access itself is no longer optional.
+### E1 - Product Foundation
 
-The earlier plan to use keyword-based pre-classification and template-first response routing is no longer in scope. The current direction is an `LLM-first` flow with structured post-generation validators and safe fallbacks.
+#### PBI-001 - Repository and Team Conventions
 
-## Priority Scale
+**Story**  
+As a `project team`, we want a clear repo structure and working conventions so that development stays consistent.
 
-- `Must Have` - Required for MVP success
-- `Should Have` - Important, but not required for first release
-- `Could Have` - Valuable enhancement if time allows
-- `Won't Have` - Explicitly out of scope for this phase
+**Business Value**  
+Reduces coordination overhead and setup confusion.
 
-## Estimation Scale
+**Acceptance Criteria**
 
-- `S` - Small
-- `M` - Medium
-- `L` - Large
-
-## Epic 1: Product Foundation and Delivery Setup
-
-### BB-001 - Project repository and working agreements
+- repository structure is documented
+- branching and PR conventions are documented
+- ownership and working agreements are visible
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As a project team, we want a clear repo structure and delivery conventions so that we can work consistently.
+**Dependencies:** None
+
+#### PBI-002 - Local Development Environment
+
+**Story**  
+As a `developer`, I want a working local setup so that I can contribute without setup blockers.
+
+**Business Value**  
+Allows the team to start implementation quickly.
 
 **Acceptance Criteria**
-- Repository structure is agreed and documented
-- Branching and PR conventions are defined
-- Roles and ownership are visible
-- Definition of Ready and Definition of Done are linked from the repo
 
-### BB-002 - Environment setup for frontend, backend, and data work
+- frontend runs locally
+- backend runs locally
+- required environment variables are documented
+- local setup instructions are available
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As a developer, I want a working local setup so that I can contribute without setup blockers.
+**Dependencies:** PBI-001
+
+#### PBI-003 - Shared Contracts
+
+**Story**  
+As a `team`, we want shared request and response contracts so that frontend and backend integrate cleanly.
+
+**Business Value**  
+Prevents integration mismatch and rework.
 
 **Acceptance Criteria**
-- Frontend can run locally
-- Backend can run locally
-- Required environment variables are documented
-- Local development instructions are written
 
-### BB-003 - Shared API and data contracts
+- ask request schema is defined
+- response schema is defined
+- error schema is defined
+- example payloads are documented
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As a team, we want shared request and response contracts so that frontend and backend integrate smoothly.
+**Dependencies:** PBI-002
+
+### E2 - User Interface
+
+#### PBI-004 - Basic Chat Interface
+
+**Story**  
+As an `Employee`, I want a simple chat interface so that I can ask policy questions easily.
+
+**Business Value**  
+Provides the main employee-facing value of the product.
 
 **Acceptance Criteria**
-- Request schema for asking a question is defined
-- Response schema includes answer, sources, confidence, refusal flag, and policy metadata
-- Error response format is documented
-- Contract examples are available
 
-## Epic 2: User Interface
-
-### BB-004 - Basic internal chat interface
+- user can type and submit a question
+- conversation area shows user and assistant messages
+- layout works on desktop and mobile
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As an employee, I want a simple interface so that I can ask policy questions easily.
+**Dependencies:** PBI-003
+
+#### PBI-005 - Loading and Error States
+
+**Story**  
+As an `Employee`, I want clear feedback while the system is working so that the experience feels reliable.
+
+**Business Value**  
+Improves usability and trust.
 
 **Acceptance Criteria**
-- User can type a question and submit it
-- Conversation area shows user and assistant messages
-- Interface works on desktop and mobile screen sizes
-- UI remains usable with long answers
 
-### BB-005 - Loading, error, and empty states
+- loading state is visible
+- backend/network errors are visible
+- invalid input is handled safely
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As an employee, I want clear feedback while the system works so that the experience feels reliable.
+**Dependencies:** PBI-004
+
+#### PBI-006 - Citation Display
+
+**Story**  
+As an `Employee`, I want to see the source of an answer so that I can verify it myself.
+
+**Business Value**  
+Improves trust and reduces policy disputes.
 
 **Acceptance Criteria**
-- Loading state appears while waiting for backend response
-- Network or server errors are shown clearly
-- Empty or invalid input is handled gracefully
 
-### BB-006 - Source citation display
+- answers can display citations
+- citation format is human-readable
+- citation can show document, section, and page when available
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As an employee, I want to see the source of each answer so that I can verify the result.
+**Dependencies:** PBI-004, PBI-021
+
+#### PBI-007 - Refusal and Redirect UI
+
+**Story**  
+As an `Employee`, I want refusals and redirects to be clearly shown so that I know what to do next.
+
+**Business Value**  
+Makes sensitive-topic handling understandable instead of confusing.
 
 **Acceptance Criteria**
-- Each answer can display one or more citations
-- Citation label is human-readable
-- Source metadata includes at least section or document name
 
-### BB-007 - Refusal and redirection UI states
+- refusal responses are distinguishable from normal answers
+- redirect responses clearly show the next step
+- restricted content is not exposed in the UI
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As an employee, I want refusals and redirects to be clearly explained so that I know what to do next.
+**Dependencies:** PBI-004, PBI-027
+
+### E3 - Core Ask Flow
+
+#### PBI-008 - API Skeleton and Health Check
+
+**Story**  
+As a `developer`, I want a working API skeleton so that the backend can be integrated safely.
+
+**Business Value**  
+Creates the base for all backend delivery.
 
 **Acceptance Criteria**
-- Refusal responses are visually distinguishable from normal answers
-- Redirect responses can show the proper channel or next step
-- Sensitive-topic responses do not expose restricted content
 
-### BB-008 - Response formatting for structured outputs
+- backend starts successfully
+- health endpoint exists
+- base routing structure exists
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As an employee, I want answers to be clearly formatted so that I can understand them quickly.
+**Dependencies:** PBI-002
+
+#### PBI-009 - `/ask` Endpoint
+
+**Story**  
+As the `frontend`, I want a stable `/ask` endpoint so that user questions can be submitted to the backend.
+
+**Business Value**  
+Connects the UI to the assistant logic.
 
 **Acceptance Criteria**
-- Answer body is separated from sources
-- Confidence or policy status can be displayed when available
-- Long answers remain readable
 
-## Epic 3: Backend API and Orchestration
-
-### BB-009 - Health check and base API structure
+- endpoint accepts validated ask payload
+- endpoint returns structured response
+- invalid input returns safe error output
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As a developer, I want a working API skeleton so that other features can be integrated safely.
+**Dependencies:** PBI-008, PBI-003
+
+#### PBI-010 - Ask Orchestration Flow
+
+**Story**  
+As the `System`, I want one orchestration flow so that retrieval, draft generation, validation, and fallback happen consistently.
+
+**Business Value**  
+Makes backend behavior predictable and maintainable.
 
 **Acceptance Criteria**
-- Backend service starts successfully
-- Health endpoint is available
-- Base routing structure exists
 
-### BB-010 - `/ask` endpoint
+- retrieval is called before answer drafting
+- the LLM returns a structured draft
+- validators run before any user-visible response
+- retry/fallback behavior is centralized
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-009, PBI-018, PBI-020, PBI-024
+
+#### PBI-011 - Structured Draft Generation
+
+**Story**  
+As the `System`, I want the LLM to return structured drafts so that the backend can validate them safely.
+
+**Business Value**  
+Reduces reliance on brittle raw-text checks.
+
+**Acceptance Criteria**
+
+- draft includes `answer_text`
+- draft includes `response_type`
+- draft includes `decision`
+- draft includes `citations` when applicable
+- draft includes structured facts when available
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-020, PBI-021
+
+#### PBI-012 - Final Response Formatting
+
+**Story**  
+As an `Employee`, I want clear final responses so that I can understand the answer quickly.
+
+**Business Value**  
+Improves usability and reduces ambiguity.
+
+**Acceptance Criteria**
+
+- final response separates answer from citations
+- fallback/refusal/redirect responses are formatted clearly
+- frontend-ready response payload is returned
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As the frontend, I want a stable `/ask` endpoint so that the user can submit questions.
+**Dependencies:** PBI-011, PBI-024
+
+### E4 - Source Ingestion and Retrieval
+
+#### PBI-013 - Approved Source Inventory
+
+**Story**  
+As the `team`, we want a defined list of approved sources so that the assistant answers only from trusted content.
+
+**Business Value**  
+Protects trust and narrows scope.
 
 **Acceptance Criteria**
-- Endpoint accepts a validated question payload
-- Endpoint returns a structured response
-- Invalid input returns a safe error response
 
-### BB-011 - Request orchestration pipeline
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want one orchestration flow for every request so that retrieval, draft generation, validation, and fallback happen consistently.
-
-**Acceptance Criteria**
-- Retrieval and generation steps are centrally coordinated
-- The LLM returns a structured draft response
-- Post-generation validators run before any response is released
-- Retry and safe fallback behavior are centrally coordinated
-- Response validation runs before output is returned
-
-### BB-012 - Structured response validation
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want to validate generated responses so that broken or unsafe outputs are not returned.
-
-**Acceptance Criteria**
-- Output schema is enforced server-side
-- Missing citations trigger fallback or refusal
-- Invalid fields are rejected before response is sent
-
-## Epic 4: Source Management, Ingestion, and Knowledge Base
-
-### BB-013 - Source inventory and approval list
+- approved source list is documented
+- each source has a version or date reference
+- out-of-scope sources are excluded
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As the team, we want a defined list of approved sources so that the assistant only answers from trusted content.
+**Dependencies:** None
+
+#### PBI-014 - Handbook Parsing
+
+**Story**  
+As the `System`, I want to parse the handbook so that it can be searched and cited.
+
+**Business Value**  
+Makes handbook Q&A possible.
 
 **Acceptance Criteria**
-- Approved source list is documented
-- Each source has a version or date reference
-- Out-of-scope sources are excluded from ingestion
 
-### BB-014 - Handbook parsing pipeline
+- handbook PDF can be parsed
+- section structure is preserved where possible
+- parsing failures are logged
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I want to parse the handbook so that it can be searched.
+**Dependencies:** PBI-013
+
+#### PBI-015 - Holiday CSV Ingestion
+
+**Story**  
+As the `System`, I want to load the holiday CSV so that holiday answers can use trusted data.
+
+**Business Value**  
+Supports Basel holiday correctness.
 
 **Acceptance Criteria**
-- Handbook PDF can be parsed
-- Parsed content preserves section boundaries where possible
-- Parsing failures are logged
 
-### BB-015 - Holiday CSV ingestion
+- CSV loads successfully
+- date, type, and region fields are preserved
+- Basel-Stadt rules are identifiable
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As the system, I want the 2026 holiday CSV ingested so that holiday answers can be deterministic.
+**Dependencies:** PBI-013
+
+#### PBI-016 - Chunking and Metadata Enrichment
+
+**Story**  
+As the `System`, I want section-aware chunks with metadata so that retrieval and citation quality improve.
+
+**Business Value**  
+Improves grounding quality and traceability.
 
 **Acceptance Criteria**
-- CSV can be loaded into the backend
-- Holiday records preserve date, type, and region
-- Basel-Stadt-specific holidays are identifiable
 
-### BB-016 - Section-aware chunking
+- chunks preserve section boundaries where practical
+- metadata includes document, section, and page when available
+- chunks remain retrieval-friendly in size
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I want section-aware chunks so that retrieval and citation quality improve.
+**Dependencies:** PBI-014
+
+#### PBI-017 - Knowledge Store Persistence
+
+**Story**  
+As the `System`, I want source data stored in PostgreSQL plus pgvector so that retrieval can run efficiently.
+
+**Business Value**  
+Provides one practical store for app data and retrieval data.
 
 **Acceptance Criteria**
-- Chunks are not created by naive fixed size only
-- Chunk metadata includes section title
-- Chunk sizes remain suitable for retrieval and generation
 
-### BB-017 - Metadata enrichment
+- DB schema exists for source documents and chunks
+- vector storage is enabled
+- chunk records can be inserted and queried
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I want chunks enriched with metadata so that filtering and source display are reliable.
+**Dependencies:** PBI-016
+
+#### PBI-018 - Embeddings and Semantic Retrieval
+
+**Story**  
+As the `System`, I want to retrieve relevant chunks for a question so that answers are grounded in approved sources.
+
+**Business Value**  
+Enables source-backed LLM responses.
 
 **Acceptance Criteria**
-- Metadata includes document name
-- Metadata includes section title or heading
-- Metadata includes page number when available
-- Metadata includes policy domain and sensitivity level
 
-### BB-018 - Embedding generation and storage
+- embeddings are generated and stored
+- retrieval returns top relevant chunks
+- retrieval output includes citation metadata
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I want embeddings stored for active chunks so that semantic search is possible.
+**Dependencies:** PBI-017
+
+### E5 - Validation and Guardrails
+
+#### PBI-019 - Citation Validation
+
+**Story**  
+As the `System`, I want trusted answer types to require citations so that unsupported policy answers are not released.
+
+**Business Value**  
+Preserves trust and auditability.
 
 **Acceptance Criteria**
-- Embeddings are generated for chunked content
-- Stored records link embeddings to chunk metadata
-- Failed embedding jobs are detectable
 
-### BB-019 - Knowledge base persistence
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want a queryable knowledge store so that relevant content can be retrieved quickly.
-
-**Acceptance Criteria**
-- PostgreSQL schema is created
-- Vector storage is enabled
-- Chunk records can be inserted and queried
-
-## Epic 5: Retrieval and Grounding
-
-### BB-020 - Semantic retrieval
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want to retrieve relevant chunks for a question so that answers are grounded in approved content.
-
-**Acceptance Criteria**
-- Retrieval returns top relevant chunks
-- Returned chunks are limited to a safe number
-- Results include metadata for citation and auditing
-
-### BB-021 - Metadata-aware filtering
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want metadata filters so that results better match domain, sensitivity, and location.
-
-**Acceptance Criteria**
-- Retrieval can filter by policy domain
-- Retrieval can filter by sensitivity or active status
-- Retrieval supports location-specific content such as Basel-Stadt
-
-### BB-022 - Retrieval quality evaluation
-
-**Priority:** Should Have  
-**Estimate:** M  
-**Story:** As the team, we want retrieval checks so that we can detect weak grounding early.
-
-**Acceptance Criteria**
-- A small evaluation set exists
-- Retrieval output can be inspected against expected sections
-- Major mismatches are visible to the team
-
-## Epic 6: Guardrails and High-Risk Validation
-
-### BB-023 - Structured topic and response-type extraction
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want the structured LLM draft to expose topic and response-type signals so that backend validators can enforce safe behavior.
-
-**Acceptance Criteria**
-- Structured drafts include coarse topics such as expense, holiday, security, misconduct, or handbook-general
-- Structured drafts include a response type such as policy answer, clarification, refusal, redirect, or verification failure
-- Unsupported or unclear questions remain detectable through structured draft fields
-
-### BB-024 - Expense rule enforcement
+- policy-style answers require citations
+- invalid or missing citations trigger retry or fallback
+- citation validation outcome is traceable
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As the system, I must enforce expense rules deterministically so that policy violations are not answered incorrectly.
+**Dependencies:** PBI-011
+
+#### PBI-020 - Disclosure Validation
+
+**Story**  
+As the `System`, I want to block restricted technical disclosure so that sensitive access details are not leaked.
+
+**Business Value**  
+Protects sponsor trust and safety boundaries.
 
 **Acceptance Criteria**
-- Expenses above 35 CHF per person are rejected
-- Alcohol-related expense requests are rejected
-- Client lunch conditions can be reflected when relevant
-- Response explains the rule clearly
-- Validators use structured facts rather than brittle substring matching alone
 
-### BB-025 - Holiday rule enforcement
+- internal Wi-Fi password responses are blocked
+- guest Wi-Fi password responses are blocked in MVP
+- actionable MAC registration details are blocked
+- safe refusal wording is still allowed
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As an employee, I want correct holiday answers so that I can plan work accurately.
+**Dependencies:** PBI-011
+
+#### PBI-021 - Consistency Validation
+
+**Story**  
+As the `System`, I want high-risk business rules checked against structured facts so that incorrect outputs are blocked.
+
+**Business Value**  
+Reduces risk on critical sponsor scenarios.
 
 **Acceptance Criteria**
-- National holidays are answered correctly
-- Basel-Stadt rules for May 1 are answered correctly
-- Holiday logic distinguishes national and cantonal cases
-- Validators can detect contradiction between structured facts and generated holiday answers
 
-### BB-026 - Sensitive IT refusal and safe redirection
+- expense consistency checks exist
+- Basel holiday consistency checks exist
+- validators prefer structured facts over brittle string matching
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I must refuse unsafe IT and access questions so that sensitive information is protected.
+**Dependencies:** PBI-011, PBI-015
+
+#### PBI-022 - Response-Type Validation
+
+**Story**  
+As the `System`, I want refusal and redirect behavior enforced so that sensitive topics do not return the wrong answer type.
+
+**Business Value**  
+Makes misconduct and IT safety behavior dependable.
 
 **Acceptance Criteria**
-- Questions about internal Wi-Fi credentials are refused
-- Questions asking for guest Wi-Fi passwords are refused in MVP
-- MAC address registration details are not disclosed
-- Safe guidance can direct the user to Sarah Muller or IT for access help
-- Safe refusal wording is allowed even when restricted terms such as `MAC address` appear in the response
 
-### BB-027 - Misconduct and whistleblowing redirection
+- Wi-Fi and MAC topics produce refusal behavior
+- misconduct topics produce redirect behavior
+- invalid response types trigger retry or fallback
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-011
+
+#### PBI-023 - Retry and Safe Fallback
+
+**Story**  
+As the `System`, I want retry and safe fallback handling so that failed drafts do not become unsafe user-visible answers.
+
+**Business Value**  
+Provides safe degradation when the model output is weak.
+
+**Acceptance Criteria**
+
+- recoverable failures can trigger one stricter retry
+- irrecoverable failures return refusal, redirect, or verification failure
+- failed drafts are never released directly
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-019, PBI-020, PBI-021, PBI-022
+
+### E6 - Authentication, Roles, and History
+
+#### PBI-024 - Authenticated Access
+
+**Story**  
+As the `organization`, we want authenticated access so that the assistant is not openly available.
+
+**Business Value**  
+Protects internal use and enables role-based features.
+
+**Acceptance Criteria**
+
+- login is required
+- unauthorized requests are rejected
+- session or token handling works at MVP level
+- chosen auth mechanism is implemented without relying on Google Workspace OIDC
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-008
+
+#### PBI-025 - Role Model and Access Checks
+
+**Story**  
+As the `System`, I want Employee and Admin roles enforced so that data access follows product rules.
+
+**Business Value**  
+Supports admin review without exposing other employees’ data broadly.
+
+**Acceptance Criteria**
+
+- Employee and Admin roles exist
+- role mapping is stored in the application database
+- route-level access checks work
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-024
+
+#### PBI-026 - Chat History Persistence
+
+**Story**  
+As an `Employee`, I want my chat history saved so that I can review previous assistant answers.
+
+**Business Value**  
+Improves continuity and traceability.
+
+**Acceptance Criteria**
+
+- chats and messages are stored in the application database
+- each employee can view only their own history
+- related metadata is persisted
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-025, PBI-009
+
+#### PBI-027 - Admin Chat Review
+
+**Story**  
+As an `Admin`, I want to review all employee chat histories and metadata so that I can investigate system behavior.
+
+**Business Value**  
+Supports operational review and QA.
+
+**Acceptance Criteria**
+
+- admin can view all employee chat histories
+- admin can inspect related metadata
+- employee restrictions remain enforced for non-admins
+
+**Priority:** Must Have  
+**Estimate:** M  
+**Dependencies:** PBI-026
+
+#### PBI-028 - Secrets and Config Management
+
+**Story**  
+As a `developer`, I want secrets managed safely so that credentials are not exposed in code.
+
+**Business Value**  
+Supports secure delivery and safer collaboration.
+
+**Acceptance Criteria**
+
+- secrets come from environment variables
+- no credentials are hardcoded
+- required secrets are documented safely
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As the system, I want to redirect misconduct-related questions so that users are sent to the correct human process.
+**Dependencies:** PBI-002
+
+### E7 - Quality and Release
+
+#### PBI-029 - Structured Logs and Audit Trail
+
+**Story**  
+As the `team`, we want logs and traceability so that failures can be debugged and investigated.
+
+**Business Value**  
+Supports QA, demo safety, and admin review.
 
 **Acceptance Criteria**
-- Harassment-related queries are not handled as normal Q&A
-- Whistleblowing-related queries are redirected to the ombudsman process
-- Response language is safe and clear
 
-### BB-028 - Low-confidence fallback behavior
+- logs include request metadata
+- logs include draft-generation and validator outcomes
+- logs avoid storing unnecessary sensitive content
+- retrieval trace is inspectable
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the system, I want to refuse when evidence is insufficient so that I do not guess.
+**Dependencies:** PBI-023, PBI-026
+
+#### PBI-030 - Golden Question Set
+
+**Story**  
+As the `team`, we want a golden test set so that critical business behavior can be verified repeatedly.
+
+**Business Value**  
+Prevents regressions on the most important scenarios.
 
 **Acceptance Criteria**
-- System can detect insufficient grounding
-- Unsupported answers are replaced by fallback or refusal
-- No fabricated citations are returned
 
-### BB-028A - Post-generation validator pipeline
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want structured validators after draft generation so that unsafe or inconsistent outputs are blocked before release.
-
-**Acceptance Criteria**
-- Schema validation runs on every draft
-- Citation validation runs on trusted answer types
-- Disclosure validation blocks restricted technical disclosure
-- Consistency validation checks high-risk rules such as expense and Basel holiday logic
-- Response-type validation enforces refusal or redirect behavior where required
-
-## Epic 7: LLM Integration and Answer Generation
-
-### BB-029 - Prompt design for grounded answers
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want prompts optimized for grounded answers so that the model stays within trusted context.
-
-**Acceptance Criteria**
-- Prompt instructs the model to use only retrieved content
-- Prompt includes refusal behavior
-- Prompt supports structured outputs
-
-### BB-029A - Constrained AI helper usage
-
-**Priority:** Should Have  
-**Estimate:** S  
-**Story:** As the system, I want tightly scoped AI helper steps so that translation, normalization, or future multilingual/voice support can be added without changing core validation logic.
-
-**Acceptance Criteria**
-- AI helper usage is limited to allowed tasks such as translation, normalization, or transcription
-- Helper steps return structured outputs
-- Helper steps do not decide whether a draft is safe to release
-
-### BB-030 - LLM integration for response generation
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want to generate answers from approved context so that users receive clear responses.
-
-**Acceptance Criteria**
-- Model can be called from the backend
-- Retrieved context is passed into generation
-- System can return a valid structured draft answer
-
-### BB-031 - Citation-aware answer generation
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want answers linked to retrieved evidence so that trust and auditability are preserved.
-
-**Acceptance Criteria**
-- Generated responses include source references
-- Citation identifiers match retrieved chunks
-- Citations can be rendered by the frontend
-
-### BB-031A - Retry and safe fallback handling
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want controlled retry and fallback behavior so that failed drafts do not become unsafe user-visible answers.
-
-**Acceptance Criteria**
-- Recoverable validation failures can trigger one stricter retry
-- Irrecoverable failures return refusal, redirect, or verification-failure responses
-- A failed draft is never released directly to the user
-
-### BB-032 - Simple follow-up handling
-
-**Priority:** Should Have  
-**Estimate:** M  
-**Story:** As an employee, I want limited follow-up support so that I can continue a short conversation.
-
-**Acceptance Criteria**
-- System supports basic clarification turns
-- Follow-up questions do not break core safety rules
-- Single-turn behavior remains reliable
-
-## Epic 8: Security, Access, and Compliance
-
-### BB-033 - Basic authenticated access
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the organization, we want authenticated access so that the assistant is not openly available.
-
-**Acceptance Criteria**
-- Only authenticated users with approved accounts can access the app
-- Session handling is implemented at MVP level
-- Unauthorized requests are rejected
-- Login is required for all users
-- Final provider/mechanism is implemented without relying on Google Workspace OIDC
-
-### BB-034 - Basic role-aware access model
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the system, I want role-aware behavior so that access to features can be controlled.
-
-**Acceptance Criteria**
-- At least Employee and Admin roles are modeled
-- Role information is stored and resolved in the application database
-- Admin can view all employee chat histories
-- Employee can view only their own chat history
-
-### BB-035 - Secret and configuration management
+- golden questions cover expenses, holidays, general policy, and sensitive topics
+- expected outcomes are defined
+- test set is accessible to the team
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As a developer, I want secrets handled safely so that credentials are not exposed in code.
+**Dependencies:** None
+
+#### PBI-031 - Core Automated and Manual QA
+
+**Story**  
+As the `team`, we want tests and a QA checklist so that MVP quality is consistent.
+
+**Business Value**  
+Improves release confidence.
 
 **Acceptance Criteria**
-- Secrets are read from environment variables
-- No credentials are hardcoded in the repository
-- Setup instructions explain required secrets without revealing values
 
-### BB-036 - Input validation and basic abuse prevention
-
-**Priority:** Must Have  
-**Estimate:** S  
-**Story:** As the system, I want validated input so that malformed or risky requests are handled safely.
-
-**Acceptance Criteria**
-- Input size and format are validated
-- Obviously malformed requests are rejected
-- Request handling fails safely
-
-## Epic 9: Observability, Logging, and Auditability
-
-### BB-037 - Structured request and response logging
+- expense and holiday checks are tested
+- ask-flow integration is covered at MVP level
+- manual QA checklist exists for demos and release
 
 **Priority:** Must Have  
 **Estimate:** M  
-**Story:** As the team, we want structured logs so that we can debug issues and review behavior.
+**Dependencies:** PBI-030, PBI-021, PBI-023
+
+#### PBI-032 - Demo Readiness
+
+**Story**  
+As the `team`, we want a demo-ready MVP so that stakeholder reviews clearly show product value and safety.
+
+**Business Value**  
+Increases delivery confidence and stakeholder buy-in.
 
 **Acceptance Criteria**
-- Logs include request metadata
-- Logs include draft-generation and validator outcomes
-- Logs avoid storing sensitive content unnecessarily
-- Chat history is persisted
 
-### BB-038 - Audit trail for answer generation
-
-**Priority:** Must Have  
-**Estimate:** M  
-**Story:** As the team, we want an audit trail so that incorrect answers can be investigated.
-
-**Acceptance Criteria**
-- Retrieved chunk references are traceable
-- Validator outcomes are recorded
-- Refusal reasons can be inspected
-- Admin can review all stored chat transcripts and related metadata
-
-### BB-039 - Error monitoring basics
-
-**Priority:** Could Have  
-**Estimate:** S  
-**Story:** As the team, we want basic error visibility so that failures are caught quickly.
-
-**Acceptance Criteria**
-- Critical backend errors are visible in logs
-- Frontend error cases can be identified
-
-## Epic 10: Quality Assurance and Evaluation
-
-### BB-040 - Golden question set
+- demo scenarios are prepared
+- expected outcomes are documented
+- core MVP flows work end-to-end
 
 **Priority:** Must Have  
 **Estimate:** S  
-**Story:** As the team, we want a golden test set so that critical business behavior can be validated repeatedly.
+**Dependencies:** PBI-031
 
-**Acceptance Criteria**
-- Golden questions cover expenses, holidays, general policy, and sensitive topics
-- Expected behavior is defined for each question
-- Test set is accessible to the team
+## 8. Definition of Ready
 
-### BB-041 - Unit tests for deterministic rules
+A PBI is ready when:
 
-**Priority:** Must Have  
-**Estimate:** S  
-**Story:** As a developer, I want rule tests so that critical business logic remains correct.
+- story text is clear
+- business value is understood
+- acceptance criteria are testable
+- dependencies are known
+- open blockers are visible
+- estimate is agreed
 
-**Acceptance Criteria**
-- Expense rule tests exist
-- Holiday logic tests exist
-- Failing rule behavior is detectable automatically
+## 9. Definition of Done
 
-### BB-042 - Integration tests for `/ask` flow
+A PBI is done when:
 
-**Priority:** Should Have  
-**Estimate:** M  
-**Story:** As the team, we want integration tests so that the main request pipeline stays stable.
+- acceptance criteria are met
+- code is reviewed
+- tests or validation checks are completed
+- security expectations are satisfied
+- citations and fallback behavior work where relevant
+- documentation is updated if needed
 
-**Acceptance Criteria**
-- Tests cover a successful grounded answer
-- Tests cover deterministic rule rejection
-- Tests cover refusal for sensitive topics
+## 10. Suggested Sprint Breakdown
 
-### BB-043 - Manual QA checklist for demos and release
+### Sprint 1
 
-**Priority:** Must Have  
-**Estimate:** S  
-**Story:** As the team, we want a manual QA checklist so that demo quality is consistent.
+- PBI-001 to PBI-010
+- PBI-013 to PBI-018
+- PBI-024
+- PBI-028
+- PBI-030
 
-**Acceptance Criteria**
-- Checklist includes critical scenarios
-- Checklist includes citation verification
-- Checklist includes refusal behavior verification
+### Sprint 2
 
-### BB-044 - AI evaluation scorecard
+- PBI-011 to PBI-023
+- PBI-025
+- PBI-026
 
-**Priority:** Should Have  
-**Estimate:** M  
-**Story:** As the team, we want an evaluation scorecard so that answer quality can be tracked over time.
+### Sprint 3
 
-**Acceptance Criteria**
-- Scorecard tracks accuracy, source validity, safety, and consistency
-- Review process is defined
-- Results can be compared across iterations
+- PBI-027
+- PBI-029
+- PBI-031
+- PBI-032
+- bug fixing and hardening
 
-## Epic 11: Deployment and Demo Readiness
+## 11. MVP Cut Line
 
-### BB-045 - Demo-ready seed data and examples
+Recommended MVP PBIs:
 
-**Priority:** Must Have  
-**Estimate:** S  
-**Story:** As the team, we want predictable demo data so that stakeholder reviews run smoothly.
+- PBI-001 to PBI-012
+- PBI-013 to PBI-023
+- PBI-024 to PBI-029
+- PBI-030 to PBI-032
 
-**Acceptance Criteria**
-- Demo scenarios are prepared
-- Required data files are available
-- Known expected outputs are documented
+## 12. Won't Have in This Phase
 
-### BB-046 - MVP deployment setup
+- payroll or salary workflows
+- full HR case management
+- logistics tracking support
+- self-service disclosure of Wi-Fi credentials
+- MAC registration detail disclosure
+- voice input
+- multilingual support
+- OCR receipt upload
 
-**Priority:** Should Have  
-**Estimate:** M  
-**Story:** As the team, we want a deployable MVP so that the product can be demonstrated outside local machines.
+## 13. Current Major Risks
 
-**Acceptance Criteria**
-- Frontend and backend can be deployed in a basic environment
-- Environment-specific configuration is documented
-- Deployment steps are repeatable
-
-### BB-047 - Release checklist
-
-**Priority:** Should Have  
-**Estimate:** S  
-**Story:** As the team, we want a release checklist so that delivery is controlled and predictable.
-
-**Acceptance Criteria**
-- Checklist includes testing, documentation, and risk review
-- Checklist includes sign-off responsibilities
-
-## Epic 12: Documentation and Team Enablement
-
-### BB-048 - Technical architecture documentation
-
-**Priority:** Must Have  
-**Estimate:** S  
-**Story:** As the team, we want architecture documented so that implementation decisions stay aligned.
-
-**Acceptance Criteria**
-- Component responsibilities are documented
-- Request flow is documented
-- Data flow and guardrail points are visible
-
-### BB-049 - Developer onboarding guide
-
-**Priority:** Should Have  
-**Estimate:** S  
-**Story:** As a new team member, I want onboarding guidance so that I can become productive quickly.
-
-**Acceptance Criteria**
-- Setup steps are documented
-- Key folders and responsibilities are described
-- Common commands are listed
-
-### BB-050 - Admin and stakeholder demo guide
-
-**Priority:** Could Have  
-**Estimate:** S  
-**Story:** As the project team, we want a demo script so that stakeholder presentations stay focused on value and risk controls.
-
-**Acceptance Criteria**
-- Demo shows expense rejection
-- Demo shows Basel holiday accuracy
-- Demo shows sensitive-topic refusal
-- Demo shows source-backed answer
-
-## Won't Have for This Phase
-
-- Payroll or salary change workflows
-- Full HR case management
-- Logistics tracking or warehouse operations support
-- Open self-service disclosure of Wi-Fi credentials through the bot
-- Exposure of internal technical identifiers or device registration details
-- Advanced analytics dashboard
-- Slack-first or Teams-first rollout
-- Real-time enterprise system integrations
-- Autonomous workflow execution
-
-## Optional Post-MVP Enhancements
-
-- voice message input with speech-to-text before the existing text pipeline
-- receipt upload with OCR
-- stronger RBAC and admin tooling
-- analytics and reporting
-
-The preferred design for future voice support is a modular `voice input adapter` that feeds the existing text-first pipeline.
-
-## Suggested MVP Cut Line
-
-The following items form the recommended MVP scope for a 3-week, 5-person team:
-
-- BB-001 to BB-007
-- BB-009 to BB-021
-- BB-023 to BB-031A
-- BB-033 to BB-038
-- BB-040 to BB-043
-- BB-045
-- BB-048
-
-Items such as final authentication choice and logging retention policy require clarification before they should be treated as committed MVP scope.
-
-## Suggested Delivery Sequence
-
-### Week 1
-
-- Foundation, API skeleton, UI shell
-- Handbook parsing and holiday CSV loading
-- Shared contracts
-- Basic retrieval and structured draft generation
-
-### Week 2
-
-- Validator pipeline and fallback handling
-- Source citation
-- Basel holiday logic
-- Sensitive-topic refusal and consistency checks
-- End-to-end integration
-
-### Week 3
-
-- QA hardening
-- Golden question evaluation
-- Bug fixing
-- Documentation
-- Demo and release readiness
-
-## Notes
-
-- All stories should satisfy the Definition of Ready before sprint commitment.
-- All completed work should satisfy the Definition of Done, including safety, source validation, and testing expectations.
-- If time becomes tight, prefer cutting optional UX polish and access-control depth before cutting core rule accuracy, source grounding, or refusal safety.
+- weak retrieval quality
+- unsafe or uncited LLM drafts
+- incorrect expense validation
+- incorrect Basel holiday handling
+- sensitive IT disclosure
+- scope creep in a 3-week delivery window

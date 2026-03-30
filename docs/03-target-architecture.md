@@ -17,11 +17,11 @@ The main idea is simple:
 
 ## 2. Core Stack
 
-- `Frontend`: Next.js + TypeScript
+- `Frontend`: Next.js + Javascript
 - `Backend`: FastAPI
 - `Database`: PostgreSQL + pgvector
 - `LLM / helper AI`: OpenAI API
-- `Auth`: required for MVP, with final provider/mechanism still to be selected
+- `Auth`: required for MVP
 
 ## 3. Core Architectural Principle
 

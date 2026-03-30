@@ -17,6 +17,5 @@ Planned responsibilities:
 
 Recommended implementation references:
 
-- `docs/22-backend-component-map.md`
-- `docs/24-structured-llm-response-schema.md`
-- `docs/25-backend-implementation-blueprint.md`
+- `docs/07-structured-llm-response-schema.md`
+- `docs/08-backend-implementation-blueprint.md`
