@@ -11,37 +11,46 @@ This document defines the functional and non-functional requirements for Beat-Bo
 ### 2.1 Question Handling
 
 - The system shall accept natural-language questions from users
+- The system shall require authenticated user login before question access is granted
 - The system shall support single-turn interactions and limited clarification turns
 - The system shall validate incoming requests before processing
-- The system shall classify each question before policy, retrieval, or generation steps run
 
-### 2.1.1 Query Classification
+### 2.1.0 Identity and Roles
 
-- The system shall use a hybrid classification approach
-- The first classification pass shall use deterministic rules, keywords, and pattern matching
-- If the first pass is uncertain, the system may use a lightweight classifier step to choose from a fixed label set
-- Classification shall assign at least:
-  - domain
-  - question type
-  - sensitivity flag
-  - whether clarification is likely needed
-- Classification shall route questions into deterministic policy handling, retrieval plus generation, refusal, or redirection
+- The system shall support exactly two MVP roles: `Employee` and `Admin`
+- The system shall store user-role mapping in the application database
+- The system shall allow each `Employee` to view only their own conversation history
+- The system shall allow `Admin` users to view all employee conversation histories and related metadata
+- The system shall use identity-based access for MVP without requiring managed-device checks
 
-### 2.1.3 AI-Assisted Helper Tasks
+### 2.1.1 LLM Draft Generation
 
-- The system may use AI helper tasks for constrained preprocessing or routing support
-- Acceptable helper tasks include:
-  - classification fallback
-  - translation or normalization
-  - speech-to-text transcription
-- AI helper tasks shall not replace deterministic policy decisions in expense, holiday, security, or misconduct-routing cases
+- The system shall use the LLM as the primary interpretation layer for user questions
+- The LLM shall return a structured draft response rather than only free text
+- The structured draft should include fields such as:
+  - `answer_text`
+  - `response_type`
+  - `citations`
+  - `decision`
+  - `needs_clarification`
+  - `sensitive_topic`
 
-### 2.1.2 Response Strategy by Question Type
+### 2.1.2 AI-Assisted Helper Tasks
 
-- The system shall use template-based clarification messages for rule-heavy domains when required fields are missing
-- The system shall use template-based refusal and redirection messages for sensitive or restricted topics
-- The system shall use retrieval plus generation primarily for supported handbook explanation questions
-- The system shall avoid using free-form generation for deterministic decisions when a rule or template can provide the response safely
+- The system may use the same AI layer for translation or normalization
+- The system may use the same AI layer for future speech-to-text transcription
+- Helper AI behavior shall still be subject to backend validation before release
+
+### 2.1.3 Post-Generation Validation
+
+- The system shall validate every structured draft before returning it to the user
+- Validation shall include:
+  - schema validation
+  - citation validation
+  - disclosure validation
+  - consistency validation for high-risk policy areas
+  - response-type validation for redirect/refusal scenarios
+- If validation fails, the system shall retry with a stricter instruction or return a safe fallback
 
 ### 2.2 Source-Limited Answering
 
@@ -52,7 +61,8 @@ This document defines the functional and non-functional requirements for Beat-Bo
 ### 2.3 Source Referencing
 
 - The system shall include source references in trusted responses
-- The system shall identify the section or source used
+- The system shall identify the document and section used
+- The system should include page number when available
 - The system shall validate citations before returning the answer
 
 ### 2.4 Expense Policy Enforcement
@@ -60,6 +70,7 @@ This document defines the functional and non-functional requirements for Beat-Bo
 - The system shall reject expense requests above 35 CHF per person
 - The system shall reject expense requests involving alcohol
 - The system shall explain the relevant policy rule in the response
+- The system shall use structured fact extraction for expense validation instead of relying only on raw string matching
 - The system shall request clarification when expense-critical fields are missing, such as amount, person count, alcohol status, or external client presence
 
 ### 2.5 Holiday Policy Enforcement
@@ -89,7 +100,9 @@ This document defines the functional and non-functional requirements for Beat-Bo
 ### 2.9 Logging and Traceability
 
 - The system shall log query handling steps needed for debugging and evaluation
-- The system shall make applied rules and retrieved sources traceable
+- The system shall make validation outcomes and retrieved sources traceable
+- The system shall persist conversation history and related metadata
+- The system shall enforce role-based access to conversation history
 
 ## 3. Non-Functional Requirements
 
@@ -104,11 +117,15 @@ This document defines the functional and non-functional requirements for Beat-Bo
 - The system must prevent disclosure of restricted technical access information
 - The system must fail safely when policy or evidence is unclear
 - The system must not expose secrets in code or logs
+- The system must not disclose Wi-Fi passwords or MAC registration details even when such topics are mentioned in source content
+- The system must keep identity, role, and authorization logic in the backend rather than delegating those decisions to the LLM
+- The system must not expose full user data or full chat history to the LLM by default
 
 ### 3.3 Reliability
 
 - The system must behave consistently for equivalent inputs
 - The system must handle unsupported requests safely
+- The system must not release a draft that fails a critical validator
 
 ### 3.4 Performance
 
@@ -124,7 +141,8 @@ This document defines the functional and non-functional requirements for Beat-Bo
 
 - Presence of a fact in a source document does not automatically mean the bot may disclose it to every user
 - Stakeholder security expectations override broad source recall for sensitive IT-access topics
-- Query classification should not rely on LLM judgment alone for high-risk routing decisions when deterministic signals are already sufficient
+- Lightweight validators should prefer structured facts over brittle substring blocking when checking policy consistency or disclosure risk
+- The LLM should receive only the minimum necessary request context selected by the backend
 
 ## 5. Acceptance Criteria at Product Level
 

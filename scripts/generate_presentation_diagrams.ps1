@@ -132,7 +132,7 @@ $purple = [System.Drawing.Color]::FromArgb(235, 229, 248)
 $purpleB = [System.Drawing.Color]::FromArgb(118, 94, 176)
 $arrow = [System.Drawing.Color]::FromArgb(67, 78, 92)
 
-$docs = "C:\Users\yusBug\Desktop\Powercoders\greenleaf-ai-assistant-bern-2026\docs"
+$docs = "C:\Users\yusBug\Desktop\Powercoders\greenleaf-ai-assistant-bern-2026\docs\91-diagrams"
 
 # 1. System Context
 $c = New-Canvas 1600 900 "Beat-Bot System Context" "Presentation view of users, core app, external services, and source data"
@@ -186,6 +186,45 @@ Draw-Text $g "Routing labels" 1035 205
 Draw-Text $g "Policy-first branch" 1145 360
 Draw-Text $g "Supported Q&A path" 710 400
 Save-Canvas $c (Join-Path $docs "high-level-architecture-diagram.png")
+
+# 2A. New High-Level System Architecture
+$c = New-Canvas 1800 980 "High-Level System Architecture" "LLM-first architecture with retrieval, validation, and safe fallback"
+$g = $c.Graphics
+Draw-Box $g 80 210 240 120 "Next.js Frontend" "Chat UI, login, source display, and history views." $blue $blueB
+Draw-Box $g 390 210 230 120 "FastAPI API" "Receives /ask, orchestrates backend flow, returns final response." $gray $grayB
+Draw-Box $g 690 110 240 120 "Auth + Role Access" "Login/session handling and DB-backed Employee/Admin authorization." $purple $purpleB
+Draw-Box $g 690 320 240 120 "Retrieval Layer" "Finds relevant approved chunks and citation metadata." $green $greenB
+Draw-Box $g 1000 210 250 120 "OpenAI LLM" "Interprets the question and returns a structured draft response." $purple $purpleB
+Draw-Box $g 1320 110 260 120 "Validator Layer" "Schema, citation, disclosure, consistency, and response-type checks." $amber $amberB
+Draw-Box $g 1320 320 260 120 "Retry / Safe Fallback" "Retries once when useful or returns refusal, redirect, or verification failure." $amber $amberB
+Draw-Box $g 1650 210 110 120 "Audit" "Stores outcomes." $gray $grayB
+Draw-Box $g 690 570 240 130 "PostgreSQL + pgvector" "Users, roles, chats, messages, sources, chunk metadata, embeddings." $green $greenB
+Draw-Box $g 1000 570 250 130 "Approved Sources" "Handbook, stakeholder briefing, holiday CSV." $green $greenB
+
+Draw-Arrow $g 320 270 390 270 $arrow
+Draw-Arrow $g 620 235 690 170 $arrow
+Draw-Arrow $g 620 300 690 380 $arrow
+Draw-Arrow $g 930 270 1000 270 $arrow
+Draw-Arrow $g 1250 240 1320 170 $arrow
+Draw-Arrow $g 1250 300 1320 380 $arrow
+Draw-Arrow $g 1580 270 1650 270 $arrow
+Draw-Arrow $g 810 440 810 570 $arrow
+Draw-Arrow $g 1125 440 1125 570 $arrow
+Draw-Arrow $g 1705 330 1705 570 $arrow
+
+Draw-Text $g "login + ask flow" 330 235
+Draw-Text $g "identity / authorization" 630 120
+Draw-Text $g "grounding context" 730 470
+Draw-Text $g "structured draft" 1065 175
+Draw-Text $g "pass / fail" 1365 245
+Draw-Text $g "validator and chat metadata" 1540 520
+
+Draw-Text $g "Boundary rules:" 80 780 16 $true
+Draw-Text $g "- LLM does not access the database directly" 100 820 13
+Draw-Text $g "- Backend owns auth, role mapping, and release decisions" 100 855 13
+Draw-Text $g "- Only minimum necessary context is sent to the model" 100 890 13
+
+Save-Canvas $c (Join-Path $docs "01-high-level-system-architecture-diagram.png")
 
 # 3. Request Flow
 $c = New-Canvas 1800 980 "Beat-Bot End-to-End Request Flow" "How one user question moves through the system"
@@ -275,5 +314,161 @@ Draw-Text $g "refuse" 640 420
 Draw-Text $g "redirect" 1060 420
 Draw-Text $g "safe fallback" 1380 420
 Save-Canvas $c (Join-Path $docs "security-guardrail-diagram.png")
+
+# 6. Ask Flow Sequence
+$c = New-Canvas 1900 1040 "Ask Flow Sequence" "LLM-first request flow with backend-controlled validation and persistence"
+$g = $c.Graphics
+
+Draw-Box $g 60 150 170 90 "1. User" "Sends a question from the UI." $blue $blueB
+Draw-Box $g 280 150 190 90 "2. Frontend" "Calls POST /ask with session info." $blue $blueB
+Draw-Box $g 520 150 190 90 "3. API" "Validates request and orchestrates the flow." $gray $grayB
+Draw-Box $g 760 70 210 90 "4. Auth Service" "Loads current user and role mapping." $purple $purpleB
+Draw-Box $g 760 230 210 90 "5. Retrieval" "Fetches relevant source chunks and citation metadata." $green $greenB
+Draw-Box $g 1030 150 230 90 "6. OpenAI API" "Returns a structured draft response." $purple $purpleB
+Draw-Box $g 1320 70 220 90 "7. Validators" "Schema, citation, disclosure, consistency, response type." $amber $amberB
+Draw-Box $g 1320 230 220 90 "8. Fallbacks" "Retry once or build a safe fallback." $amber $amberB
+Draw-Box $g 1600 150 210 90 "9. Response Formatter" "Formats the validated draft or fallback." $gray $grayB
+Draw-Box $g 760 420 210 90 "10. PostgreSQL" "Users, roles, chats, messages, sources, embeddings." $green $greenB
+Draw-Box $g 1320 420 220 90 "11. Audit / History" "Persists chat history, validator results, metadata." $gray $grayB
+
+Draw-Arrow $g 230 195 280 195 $arrow
+Draw-Arrow $g 470 195 520 195 $arrow
+Draw-Arrow $g 615 150 820 115 $arrow
+Draw-Arrow $g 615 240 820 275 $arrow
+Draw-Arrow $g 970 195 1030 195 $arrow
+Draw-Arrow $g 1260 175 1320 115 $arrow
+Draw-Arrow $g 1260 215 1320 275 $arrow
+Draw-Arrow $g 1540 195 1600 195 $arrow
+Draw-Arrow $g 1705 240 1430 420 $arrow
+Draw-Arrow $g 860 320 860 420 $arrow
+
+Draw-Text $g "session + request" 350 165
+Draw-Text $g "user + role lookup" 690 60
+Draw-Text $g "grounding context" 705 345
+Draw-Text $g "structured draft" 1085 120
+Draw-Text $g "pass or fail" 1350 175
+Draw-Text $g "retry / safe fallback" 1328 335
+Draw-Text $g "persist history + audit trail" 1445 455
+
+Draw-Text $g "Important boundaries:" 60 620 16 $true
+Draw-Text $g "- LLM has no direct database access" 80 660 13
+Draw-Text $g "- Backend owns identity, role mapping, and authorization" 80 695 13
+Draw-Text $g "- Only minimum necessary context is sent to the LLM" 80 730 13
+Draw-Text $g "- Only validated drafts or safe fallbacks reach the user" 80 765 13
+
+Save-Canvas $c (Join-Path $docs "02-ask-flow-sequence-diagram.png")
+
+# 7. ERD / Data Model
+$c = New-Canvas 1900 1080 "Data Model Overview" "Core backend entities for users, chat history, and retrieval data"
+$g = $c.Graphics
+
+Draw-Box $g 120 120 260 150 "users" "id\nemail\nrole\nis_active\ncreated_at" $blue $blueB
+Draw-Box $g 460 120 260 150 "chats" "id\nuser_id\ntitle\ncreated_at" $gray $grayB
+Draw-Box $g 800 100 300 190 "messages" "id\nchat_id\nsender_type\nmessage_text\nresponse_type\nvalidator_status\ncreated_at" $gray $grayB
+Draw-Box $g 1200 120 260 150 "source_documents" "id\nname\nversion\nsource_type" $green $greenB
+Draw-Box $g 1540 100 280 190 "source_chunks" "id\ndocument_id\nsection\npage\ncontent\nembedding" $green $greenB
+Draw-Box $g 800 390 300 170 "message_sources" "message_id\nsource_chunk_id\ncitation_label\nused_in_answer" $amber $amberB
+Draw-Box $g 460 390 260 170 "audit_events" "id\nmessage_id\nevent_type\nvalidator_name\nstatus\ncreated_at" $amber $amberB
+
+Draw-Arrow $g 380 195 460 195 $arrow
+Draw-Arrow $g 720 195 800 195 $arrow
+Draw-Arrow $g 1460 195 1540 195 $arrow
+Draw-Arrow $g 950 290 950 390 $arrow
+Draw-Arrow $g 720 455 800 455 $arrow
+Draw-Arrow $g 1100 455 1200 455 $arrow
+Draw-Arrow $g 1540 455 1680 290 $arrow
+
+Draw-Text $g "1 user -> many chats" 390 165
+Draw-Text $g "1 chat -> many messages" 730 165
+Draw-Text $g "1 document -> many chunks" 1470 165
+Draw-Text $g "1 message -> many cited chunks" 1110 425
+Draw-Text $g "1 message -> many audit events" 705 425
+
+Draw-Text $g "Notes:" 120 760 16 $true
+Draw-Text $g "- Role mapping lives in users.role" 140 800 13
+Draw-Text $g "- Employee sees only own chats; Admin can review all chats" 140 835 13
+Draw-Text $g "- Retrieval metadata stays linked through source_documents and source_chunks" 140 870 13
+Draw-Text $g "- message_sources keeps answer-to-citation traceability" 140 905 13
+
+Save-Canvas $c (Join-Path $docs "data-model-erd-diagram.png")
+
+# 8. Validator Decision Flow
+$c = New-Canvas 1700 1080 "Validator Decision Flow" "How a structured LLM draft is accepted, retried, or replaced"
+$g = $c.Graphics
+
+Draw-Box $g 620 70 420 90 "Structured LLM Draft" "answer_text, response_type, decision, facts, citations" $purple $purpleB
+Draw-Box $g 620 200 420 90 "Schema Validator" "Is the draft structurally valid?" $amber $amberB
+Draw-Box $g 620 330 420 90 "Citation Validator" "Do trusted answers include valid citations?" $amber $amberB
+Draw-Box $g 620 460 420 90 "Disclosure Validator" "Does the draft expose restricted technical details?" $red $redB
+Draw-Box $g 620 590 420 90 "Consistency Validator" "Do structured facts match high-risk rules?" $red $redB
+Draw-Box $g 620 720 420 90 "Response-Type Validator" "Should this be a refusal or redirect instead?" $amber $amberB
+Draw-Box $g 200 870 320 100 "Safe Fallback" "Refusal, redirect, or verification-failure response." $gray $grayB
+Draw-Box $g 690 870 280 100 "Retry Once" "Ask the model again with stricter instruction." $blue $blueB
+Draw-Box $g 1140 870 320 100 "Release Response" "Validated draft can be shown to the user." $green $greenB
+
+Draw-Arrow $g 830 160 830 200 $arrow
+Draw-Arrow $g 830 290 830 330 $arrow
+Draw-Arrow $g 830 420 830 460 $arrow
+Draw-Arrow $g 830 550 830 590 $arrow
+Draw-Arrow $g 830 680 830 720 $arrow
+Draw-Arrow $g 830 810 830 870 $arrow
+Draw-Arrow $g 620 250 520 250 $arrow
+Draw-Arrow $g 620 380 520 380 $arrow
+Draw-Arrow $g 620 510 520 510 $arrow
+Draw-Arrow $g 620 640 520 640 $arrow
+Draw-Arrow $g 620 770 520 770 $arrow
+Draw-Arrow $g 520 250 520 920 $arrow
+Draw-Arrow $g 1040 250 1140 920 $arrow
+Draw-Arrow $g 970 920 1140 920 $arrow
+
+Draw-Text $g "fail" 545 230 12 $true
+Draw-Text $g "fail" 545 360 12 $true
+Draw-Text $g "critical fail" 530 490 12 $true
+Draw-Text $g "fail" 545 620 12 $true
+Draw-Text $g "fail" 545 750 12 $true
+Draw-Text $g "recoverable" 980 900 12 $true
+Draw-Text $g "pass all checks" 985 230 12 $true
+
+Draw-Text $g "Best-practice rule:" 120 120 16 $true
+Draw-Text $g "- validate structured fields, not raw prose alone" 140 160 13
+Draw-Text $g "- never release a failed draft directly" 140 195 13
+
+Save-Canvas $c (Join-Path $docs "03-validator-decision-flow-diagram.png")
+
+# 9. Authentication and Authorization Flow
+$c = New-Canvas 1800 1040 "Authentication and Authorization Flow" "How login, role lookup, and access checks work in the MVP"
+$g = $c.Graphics
+
+Draw-Box $g 80 180 220 110 "User" "Employee or Admin opens the app." $blue $blueB
+Draw-Box $g 360 180 240 110 "Frontend" "Shows login and protected pages." $blue $blueB
+Draw-Box $g 660 180 240 110 "Auth Endpoint" "Creates or verifies session/token." $purple $purpleB
+Draw-Box $g 960 90 260 110 "Auth Provider / Login Method" "Concrete mechanism still to be selected." $purple $purpleB
+Draw-Box $g 960 300 260 110 "PostgreSQL users" "Loads user record and role mapping." $green $greenB
+Draw-Box $g 1280 180 260 110 "Access Control" "Employee vs Admin route and data checks." $amber $amberB
+Draw-Box $g 1280 420 260 110 "Employee Views" "Own chats, own history, normal ask flow." $gray $grayB
+Draw-Box $g 1280 620 260 110 "Admin Views" "All employee chat histories and metadata." $red $redB
+
+Draw-Arrow $g 300 235 360 235 $arrow
+Draw-Arrow $g 600 235 660 235 $arrow
+Draw-Arrow $g 780 180 1020 145 $arrow
+Draw-Arrow $g 780 290 1020 355 $arrow
+Draw-Arrow $g 1220 235 1280 235 $arrow
+Draw-Arrow $g 1410 290 1410 420 $arrow
+Draw-Arrow $g 1410 290 1410 620 $arrow
+
+Draw-Text $g "login request" 315 205
+Draw-Text $g "session / identity" 615 205
+Draw-Text $g "authenticate" 870 120
+Draw-Text $g "load role" 900 330
+Draw-Text $g "authorize route and data scope" 1280 140
+Draw-Text $g "Employee: own data only" 1560 450
+Draw-Text $g "Admin: review all employee chats" 1560 650
+
+Draw-Text $g "Boundary rules:" 80 820 16 $true
+Draw-Text $g "- Role mapping is stored in the backend database" 100 860 13
+Draw-Text $g "- The LLM does not decide who is Admin or Employee" 100 895 13
+Draw-Text $g "- Authorization happens before chat-history access is granted" 100 930 13
+
+Save-Canvas $c (Join-Path $docs "auth-authorization-flow-diagram.png")
 
 Get-ChildItem $docs -Filter "*diagram*.png" | Select-Object -ExpandProperty FullName
