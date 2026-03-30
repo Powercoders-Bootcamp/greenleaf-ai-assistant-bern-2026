@@ -10,8 +10,6 @@ Beat-Bot is a narrow internal policy assistant. It is not a full HR system, not 
 
 - Ask a question in natural language through a simple UI
 - Return source-backed answers from approved documents
-- Enforce expense rules deterministically
-- Enforce Basel-Stadt holiday logic deterministically
 - Refuse low-confidence or unsupported questions
 - Refuse sensitive IT and credential-related questions
 - Redirect harassment, bullying, and whistleblowing questions to the ombudsman
@@ -19,8 +17,8 @@ Beat-Bot is a narrow internal policy assistant. It is not a full HR system, not 
 
 ## 3. Should Have
 
-- Basic authentication
-- Basic role-aware behavior
+- User authentication
+- Role-aware behavior (User - Admin)
 - Clear refusal and redirection UX
 - Query and response logging
 - Basic evaluation with golden questions
@@ -62,7 +60,6 @@ Beat-Bot is a narrow internal policy assistant. It is not a full HR system, not 
 ## 8. Scope Guardrails
 
 - When in doubt, do not answer
-- If the topic is deterministic, use rules instead of LLM judgment
 - If the topic is sensitive, refuse or redirect
 - If the answer cannot be cited, do not treat it as trusted
 
