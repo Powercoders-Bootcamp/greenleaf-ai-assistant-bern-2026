@@ -9,8 +9,8 @@ An internal AI assistant designed to automate repetitive employee questions for 
 - **Product Owner / Project Manager:** Fateme  
 - **Scrum Master:** Heba  
 - **AI Engineers:** Heba, Fateme  
-- **Frontend Developers:** Maksat Bairamov, Pema Tsering, Yasar  
-- **Backend Developers:** Yurii, Yasar, Fateme, Maksat Bairamov  
+- **Frontend Developers:** Maksat, Pema Tsering, Yasar    
+- **Backend Developers:** Yurii, Yasar, Fateme, Maksat   
 
 ---
 
