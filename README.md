@@ -4,7 +4,7 @@ An internal AI assistant designed to automate repetitive employee questions for 
 
 ---
 
-## 👥 Team: PolicyAI Squad (Bern Group 2026)
+## 👥 Team: Bern Group 2026
 
 - **Product Owner / Project Manager:** Fateme  
 - **Scrum Master:** Heba  
