@@ -1,16 +1,57 @@
-# GreenLeaf AI Assistant ("Beat-Bot") 🚛
+# GreenLeaf AI Assistant ("Beat-Bot")
 
 An internal AI assistant designed to automate repetitive employee questions for **GreenLeaf Logistics**, strictly adhering to company policies without hallucinations or security breaches.
 
 ---
 
-## 👥 Team: PolicyAI Squad (Bern Group 2026)
+## 👥 Team: Bern Group 2026
 
 - **Product Owner / Project Manager:** Fateme  
 - **Scrum Master:** Heba  
 - **AI Engineers:** Heba, Fateme  
-- **Frontend Developers:** Maksat Bairamov, Pema Tsering, Yasar  
-- **Backend Developers:** Yurii, Yasar, Fateme, Maksat Bairamov  
+- **Frontend Developers:** Maksat, Pema Tsering, Yasar    
+- **Backend Developers:** Yurii, Yasar, Fateme, Maksat   
+
+## 🤝 Team Charter
+
+### 🎯 Mission
+Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics that provides accurate, policy-based answers and reduces repetitive employee questions.
+
+---
+
+### 💡 Values
+- **Transparency** – We communicate openly about progress, issues, and blockers  
+- **Ownership** – Everyone takes responsibility for their tasks and outcomes  
+- **Collaboration** – We support each other and share knowledge  
+- **Pragmatism** – We focus on simple, working solutions over perfection  
+
+---
+
+### ⚙️ Ground Rules
+
+**Decision Making**
+- We aim for team consensus  
+- If no agreement is reached, the Product Owner makes the final decision  
+
+**Communication**
+- Main communication via Slack  
+- Important decisions are documented in GitHub  
+
+**Handling Issues / Conflicts**
+- Issues are raised early and discussed openly  
+- We focus on solutions, not blame  
+- If needed, we escalate within the team  
+
+---
+
+### ✅ Definition of Done
+
+A task is considered “done” when:
+- The feature works as expected  
+- Code is pushed to GitHub  
+- No critical errors are present  
+- The functionality is tested manually  
+- The task is clearly understandable for the team  
 
 ---
 
