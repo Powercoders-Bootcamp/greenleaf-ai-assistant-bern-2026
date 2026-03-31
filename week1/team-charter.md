@@ -200,11 +200,19 @@ A user story is considered **Ready** when:
 
 ## 10. Tools & Collaboration Setup
 
-- **Version Control:** GitHub
-- **Project Management:** GitHub Projects (Kanban Board)
-- **Communication:** Slack 
-- **Meetings:** Google Meet / Zoom
-- **Documentation:** GitHub Wiki / Markdown files
+- **Version Control:** GitHub  
+- **Project Management:** GitHub Projects (Kanban Board)  
+
+- **Communication:**  
+  - Slack (primary communication channel)  
+  - Discord (fast discussions and quick problem-solving)  
+
+- **Meetings:** Google Meet / Zoom  
+
+- **Documentation:**  
+  - Markdown files in `/docs` (Team Wiki)  
+  - GitHub as the single source of truth  
+
 
 ---
 

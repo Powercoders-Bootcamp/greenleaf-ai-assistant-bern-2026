@@ -52,3 +52,5 @@ Beat-Bot is a focused internal assistant for company policies. It is not a full 
 - If unsure(not in the resources), do not answer
 - If the topic is sensitive, refuse or redirect
 - If the answer cannot be cited, do not generate answers
+
+See `boundary-definition.md` for detailed out-of-scope and system limitations.
