@@ -15,7 +15,7 @@ An internal AI assistant designed to automate repetitive employee questions for 
 ## 🤝 Team Charter
 
 ### 🎯 Mission
-Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics that provides accurate, policy-based answers and reduces repetitive employee questions.
+Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics that provides accurate, policy-based answers, reduces repetitive employee questions, and ensures compliance with company rules.
 
 ---
 
@@ -36,6 +36,7 @@ Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics
 **Communication**
 - Main communication via Slack  
 - Important decisions are documented in GitHub  
+- Team members respond within a reasonable time (max 24h on working days)
 
 **Handling Issues / Conflicts**
 - Issues are raised early and discussed openly  
@@ -48,10 +49,11 @@ Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics
 
 A task is considered “done” when:
 - The feature works as expected  
-- Code is pushed to GitHub  
+- Code is pushed and integrated into the future branch
 - No critical errors are present  
 - The functionality is tested manually  
-- The task is clearly understandable for the team  
+- The task is clearly understandable for the team
+- No major bugs or blockers remain
 
 ---
 
