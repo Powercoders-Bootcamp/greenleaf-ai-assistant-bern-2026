@@ -4,32 +4,30 @@
 
 ## 1. Scope Position
 
-Beat-Bot is a focused internal assistant for company policies. It is not a full HR system, a help desk replacement, or a general chatbot.
+Beat-Bot is a focused internal assistant for company policies. It is not a full HR system, a help desk replacement, or a general chatbot.(handbook reference)
 
 ## 2. Must Have
 
 - Allow users to ask questions in natural language through a simple interface
-- Provide answers based only on approved documents
+- Provide answers based only on approved documents (handbook, Holiday tables)
 - Refuse to answer when the information is unclear or not supported
 - Do not respond to sensitive IT or credential-related questions
-- Redirect harassment, bullying, and whistleblowing questions to the ombudsman
-- Show clear answers with sources included
-- Handle unknown questions safely with a clear fallback response
+- Show clear answers with sources included (Citation)
+- Handle unknown questions, harassment, bullying, and whistleblowing safely with a clear fallback response
+- Evaluate answers using predefined test questions (Basic evaluation with golden questions)
+- Respond Questions only based on Basel-stadt calendar
+- User authentication
 
 ## 3. Should Have
 
-- User authentication
-- Role-aware behavior (User - Admin)
-- Clear refusal and redirection UX
+- Admin pannel for admin control
+- Short and professional conversational polish
 - Log user questions and system responses (Query and response logging)
-- Evaluate answers using predefined test questions (Basic evaluation with golden questions)
+- Alignment with compnay's color palette
 
 ## 4. Could Have
 
-- Friendly conversational polish
 - Limited multi-turn clarification
-- Admin review visibility
-- Usage analytics
 - Suggested follow-up questions
 
 ## 5. Won't Have
@@ -40,7 +38,6 @@ Beat-Bot is a focused internal assistant for company policies. It is not a full 
 - External system integrations
 - Self-service Wi-Fi password disclosure
 - MAC registration detail disclosure
-- Autonomous workflow execution
 
 ## 6. Included Topic Areas for MVP
 
@@ -50,26 +47,8 @@ Beat-Bot is a focused internal assistant for company policies. It is not a full 
 - Working hours and office rules (e.g., kitchen, fridge, etc.)
 - Security refusal cases
 
-## 7. Excluded or Restricted Topic Areas
-
-- Internal credentials
-- Device-registration details
-- Sensitive misconduct handling
-- Legal judgments outside the handbook
-- Complex case-by-case HR decisions
-
 ## 8. Scope Guardrails
 
-- If unsure, do not answer
+- If unsure(not in the resources), do not answer
 - If the topic is sensitive, refuse or redirect
-- If the answer cannot be cited, do not treat it as trusted
-
-## 9. MVP Cut Line
-
-For the 3-week delivery window, the team should optimize for:
-
-- expense correctness
-- Basel holiday correctness
-- source citation quality
-- refusal safety
-
+- If the answer cannot be cited, do not generate answers
