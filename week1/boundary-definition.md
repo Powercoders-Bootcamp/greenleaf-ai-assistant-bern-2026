@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines what is intentionally excluded from the Beat-Bot system.
+This document defines what is intentionally excluded from the BeatBot system.
 
 The goal is to ensure clarity, reduce scope creep, and maintain system reliability and safety.
 
@@ -25,14 +25,7 @@ Based on the current MoSCoW prioritization, the following areas are explicitly e
 
 - Logistics tracking and delivery status  
 - Operational workflows outside internal policies  
-
----
-
-### Sensitive Information Handling
-
-- Disclosure of Wi-Fi passwords or internal credentials  
-- MAC address registration or device configuration details  
-- Any internal IT secrets or restricted access data  
+ 
 
 ---
 
@@ -50,7 +43,6 @@ The system must:
 
 - Only respond based on approved sources (handbook, policy documents)  
 - Refuse to answer when information is missing or unclear  
-- Redirect sensitive or inappropriate topics to appropriate channels  
 - Avoid generating answers without verifiable sources  
 
 ---
@@ -64,17 +56,3 @@ These boundaries directly support the defined priorities:
 - Maintaining a focused MVP scope  
 
 ---
-
-## Identified Risks
-
-### Technical Risk
-
-There is a risk in ensuring that AI responses remain fully grounded in verified company sources.
-
-Without proper validation, the system may generate incorrect or hallucinated answers.
-
----
-
-### Team Risk
-
-Due to limited time and varying experience levels, there is a risk of uneven workload distribution or delays in delivery.

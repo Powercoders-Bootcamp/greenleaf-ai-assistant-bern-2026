@@ -4,7 +4,7 @@
 
 ## 1. Scope Position
 
-Beat-Bot is a focused internal assistant for company policies. It is not a full HR system, a help desk replacement, or a general chatbot.(handbook reference)
+BeatBot is a focused internal assistant for company policies. It is not a full HR system, a help desk replacement, or a general chatbot.(handbook reference)
 
 ## 2. Must Have
 
@@ -36,8 +36,6 @@ Beat-Bot is a focused internal assistant for company policies. It is not a full 
 - Full HR case management
 - Logistics tracking
 - External system integrations
-- Self-service Wi-Fi password disclosure
-- MAC registration detail disclosure
 
 ## 6. Included Topic Areas for MVP
 

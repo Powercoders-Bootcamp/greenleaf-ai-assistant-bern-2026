@@ -78,7 +78,7 @@ The purpose of this team is to:
 **Responsibilities:**
 
 - Design and implement AI components (retrieval, prompting, response logic)
-- Ensure answers are accurate, grounded, and follow company rules
+- Ensure answers are accurate and follow company rules
 - Prevent hallucinations and handle safe refusals
 - Work closely with developers to integrate AI into the system
 - Improve model performance through testing and iteration
@@ -97,49 +97,81 @@ The purpose of this team is to:
 
 ## 5. Team Values & Principles
 
-The team commits to the following values:
-
-### 1. Accuracy is more valued than speed
-
-We prioritize correct and reliable outputs over fast but incorrect solutions.
-
-### 2. Accountability
-
-Each team member owns their work and contributes to overall team success.
-
-### 3. Transparency
-
-We communicate openly about progress, blockers, and risks.
-
-### 4. Simplicity
-
-We aim for simple, effective solutions, especially in early stages.
-
-### 5. Continuous Improvement
-
-We learn from each sprint and continuously refine our process and product.
-
-### 6. User Trust First
-
-We design every feature to increase trust in the system.
+## User First
+We prioritize delivering value to the end user. Every decision should improve the user experience and solve real problems.
 
 ---
 
-## 6. Working Agreements (Ground Rules)
+## Transparency
+We communicate openly and honestly about progress, challenges, and decisions
 
-### Communication
+---
 
-- Daily standups are mandatory
-- Blockers must be communicated immediately
-- Key decisions are documented
+## Accountability
+We take responsibility for our work, commitments, and outcomes. Each team member is accountable for delivering quality results.
+
+---
+
+## Collaboration
+We work as one team, support each other, and share knowledge.
+
+---
+
+## Simplicity
+We try to build a simple, clear, and maintainable system. We avoid unnecessary complexity.
+
+---
+
+## Quality First
+We prioritize clean and well-tested work. We do not sacrifice quality for speed.
+
+---
+
+## Continuous Improvement
+We regularly reflect, learn, and improve our processes, tools, and teamwork.
+
+---
+
+## Respect
+We respect different perspectives, backgrounds, and ideas. We create a safe environment for open discussion.
+
+---
+
+## Proactive Communication
+We raise risks, blockers, and questions early instead of waiting or assuming.
+
+---
+
+## Focus on Delivery
+We stay focused on priorities and deliver incremental value in each sprint.
+---
+
+## 6. Ground Rules - Working Agreements
+
+## Meetings
+- Keep standups short and to the point  
+- Be present in the meetings 
+- Be on time 
+
+## Team Culture
+- Be respectful  
+- Give honest and helpful feedback  
+- Support each other
+
+### Communication and Raising Issues
+
+- Daily standups for our transparency
+- Blockers must be communicated soon
+- Let's not assume, ask if something is unclear  
 
 ---
 
 ### Decision Making
 
-- Product decisions: Product Owner has final say
-- Technical decisions: Architect leads, team collaborates
-- Disagreements: resolved through discussion, escalated if needed
+- Try to agree as a team  
+- If we can’t decide quickly, the Product Owner (or lead) decides  
+- Focus on what’s best for the user and the project
+- Disagreements: resolved through discussion and open communication
 
 ---
 
@@ -151,20 +183,12 @@ We design every feature to increase trust in the system.
 
 ---
 
-### Availability
-
-- Team members are expected to be available during agreed working hours
-- Absences must be communicated in advance
-
----
-
 ## 7. Issue Escalation Process
 
-1. Identify the issue (technical, product, or team-related)
-2. Raise it in standup or team channel
-3. Attempt team-level resolution
-4. Escalate to Scrum Master or Product Owner if unresolved
-5. Document outcome for future reference
+- Identify the issue (technical, product, or team-related)
+- Raise it in standup or team channel
+- Escalate to Scrum Master or Product Owner if unresolved
+- Document outcome for future reference
 
 ---
 
@@ -180,7 +204,6 @@ A user story is considered **Done** when:
 - Source references are correctly included (if applicable)
 - Security constraints are respected
 - Feature is tested and validated
-- Documentation is updated if needed
 
 ---
 
@@ -194,7 +217,6 @@ A user story is considered **Ready** when:
 - Scope is understood by the team
 - Dependencies are identified
 - Story is estimated
-- No major unknowns remain
 
 ---
 
@@ -204,7 +226,7 @@ A user story is considered **Ready** when:
 - **Project Management:** GitHub Projects (Kanban Board)  
 
 - **Communication:**  
-  - Slack (primary communication channel)  
+  - Slack (communication channel)  
   - Discord (fast discussions and quick problem-solving)  
 
 - **Meetings:** Google Meet / Zoom  
@@ -212,7 +234,6 @@ A user story is considered **Ready** when:
 - **Documentation:**  
   - Markdown files in `/docs` (Team Wiki)  
   - GitHub as the single source of truth  
-
 
 ---
 

@@ -1,40 +1,50 @@
 # GreenLeaf AI Assistant ("Beat-Bot")
 
-An internal AI assistant designed to automate repetitive employee questions for **GreenLeaf Logistics**, strictly adhering to company policies without hallucinations or security breaches.
+An internal AI assistant designed to automate repetitive employee questions for **GreenLeaf Logistics**, strictly focusing on company policies without hallucinations or security breaches.
 
 ---
 
 ## 👥 Team: Releaf
 
-* **Product Owner / Project Manager:** Fateme
 * **Scrum Master:** Heba
+* **Product Owner:** Fateme
 * **AI Engineers:** Heba, Fateme
 * **Frontend Developers:** Maksat, Pema Tsering, Yasar
 * **Backend Developers:** Yurii, Yasar, Fateme, Maksat
+* **Quality Assurance:** Pema
 
 ---
 
 ## 🎯 Mission
 
-Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics that provides accurate, policy-based answers, reduces repetitive employee questions, and ensures compliance with company rules.
+Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics that gives accurate, policy-based answers, helps reduce repetitive questions from employees, and makes sure company rules are followed.
 
 ---
 
 ## 💡 Values
 
+* User first
 * Transparency
-* Ownership
+* Accountability
 * Collaboration
-* Pragmatism
+* Adaptation
+* Simplicity  
+* Deliver high Quality 
+* Continuous improvement   
+* Respect 
 
 ---
 
 ## ⚙️ Ground Rules
 
-* Team consensus for decisions
-* Product Owner decides if needed
-* Communication via Slack
+* Communicate clearly via Slack  
 * Issues are raised early
+* Ask questions instead of assuming  
+* Try to decide as a team  
+* Product Owner decides if needed  
+* Keep meetings short and be on time  
+* Respect each other and give helpful feedback  
+* Code reviews required for major changes  
 
 ---
 
@@ -43,9 +53,10 @@ Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics
 A task is done when:
 
 * Functionality works as expected
+* Acceptance criteria are met  
 * No critical errors
-* Tested manually
-* Clear and understandable for the team
+* Tested and validated  
+* Output is accurate and follows policy  
 
 ---
 
@@ -53,10 +64,10 @@ A task is done when:
 
 This repository contains:
 
-* Team setup and roles
-* Scrum setup and user stories
-* Project scope (MoSCoW)
-* Risk identification
+* Team setup and roles  
+* Scrum setup and user stories  
+* Project scope (MoSCoW)  
+* Risk identification 
 
 ---
 
@@ -66,5 +77,3 @@ This repository contains:
 * Backend: FastAPI
 
 ---
-
-Built during Powercoders Bootcamp (Bern 2026)

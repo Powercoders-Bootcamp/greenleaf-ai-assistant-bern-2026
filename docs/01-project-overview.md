@@ -1,10 +1,10 @@
 # Project Overview
 
-## GreenLeaf Logistics - Beat-Bot
+## GreenLeaf Logistics - BeatBot
 
 ## 1. Project Summary
 
-Beat-Bot is an internal AI assistant for GreenLeaf Logistics. Its goal is to reduce repetitive questions from employees by answering them automatically using the company handbook and provided data.
+BeatBot is an internal AI assistant for GreenLeaf Logistics. Its goal is to reduce repetitive questions from employees by answering them automatically using the company handbook and provided data.
 
 The bot focuses on common topics like expenses, holidays, and leave. It should give clear and accurate answers and always refer to the source in the handbook.
 
@@ -66,42 +66,13 @@ The handbook states that:
 - Internal Wi-Fi access is only given to registered devices and must be approved by Sarah Müller from IT
 - A guest Wi-Fi password exists, but it is managed internally and changed regularly
 
-However, the stakeholder requirement is stricter than simple document recall. For the MVP, Beat-Bot should:
-
-- refuse requests for internal Wi-Fi credentials
-- refuse requests for guest Wi-Fi passwords
-- refuse requests for MAC address registration details
-- safely direct users to IT when access help is needed
-- not confirm or validate any shared credentials
-
-This conservative behavior reduces security risk and aligns with the stakeholder's trust threshold.
 
 ## 8. Sensitive Matter Handling
 
 The handbook explicitly states that harassment, bullying, and whistleblowing should not be handled by the internal bot. These cases must be redirected to the external confidential ombudsman.
 
-## 9. In Scope
 
-- Internal handbook Q&A
-- Source citation
-- Expense rule enforcement
-- Basel-specific holiday logic
-- Vacation and leave guidance
-- Refusal for unsafe or unsupported questions
-- Redirection for misconduct-related topics
-- Basic web UI and backend flow
-
-## 10. Out of Scope
-
-- Payroll and salary changes
-- HR case handling
-- Legal advice
-- Logistics operations and tracking
-- Self-service disclosure of Wi-Fi credentials
-- Technical device-registration details
-- Broad enterprise system integrations
-
-## 11. Success Criteria
+## 9. Success Criteria
 
 The MVP is successful if it can demonstrate:
 
@@ -110,7 +81,3 @@ The MVP is successful if it can demonstrate:
 - give answers with handbook references
 - safe refusal on sensitive IT questions
 - safe redirection for misconduct questions (Exp:“For this kind of issue, please contact our confidential ombudsman at ombudsman@greenleaf-safety.ch)
-
-## 12. Delivery Position
-
-This MVP can be done in 3 weeks if we focus on the essentials and prioritize safety and correct answers.

@@ -7,7 +7,7 @@ We use GitHub Projects to manage tasks and track progress.
 **Board Link:**  
 https://github.com/orgs/Powercoders-Bootcamp/projects/4/views/2
 
-The board is used as the single source of truth for task tracking and sprint progress.
+The board is used as the source of truth for task tracking and sprint progress.
 
 ---
 
@@ -38,16 +38,15 @@ As an employee, I want to check if my lunch expense is reimbursable so that I av
 ### Sprint Structure
 
 - Sprint length: 1 week  
-- Daily standup: 15 minutes  
-- Sprint planning: define tasks and priorities  
-- Sprint review: demo completed work  
-- Retrospective: improve team process  
+- Daily standup: 15 minutes (online & onsite)  
+- Sprint planning: define tasks and priorities - (Monday) 
+- Sprint review: demo completed work - end of each sprint (Thursdays) 
+- Retrospective: improve team process - after each sprint (Thursdays)
 
 ---
 
 ### Task Management Principles
 
-- All work must be tracked as a GitHub issue  
+- All work will be tracked as a GitHub issue  
 - Each task moves through the defined workflow  
 - No task is considered complete without review  
-- Priorities are defined and managed by the Product Owner  

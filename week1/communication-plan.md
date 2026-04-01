@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines how the team communicates, collaborates, and shares information during the project.
+This file shows how the team communicates, collaborates, and shares information during the project.
 
 The goal is to ensure transparency, fast decision-making, and effective teamwork.
 
@@ -22,6 +22,7 @@ The goal is to ensure transparency, fast decision-making, and effective teamwork
 ### Discord (Fast Communication)
 
 - Used for quick discussions and problem-solving
+- Pair-programming
 - Enables faster interaction during development
 - Helps reduce delays in decision-making
 
@@ -30,7 +31,7 @@ The goal is to ensure transparency, fast decision-making, and effective teamwork
 ### GitHub
 
 - Used for task tracking and issue management
-- All work is linked to issues and tracked via the Kanban board
+- All work can be tracked via the Kanban board
 - Pull requests are used for code reviews and collaboration
 
 ---
@@ -63,9 +64,8 @@ The goal is to ensure transparency, fast decision-making, and effective teamwork
 
 ### Retrospective
 
-- Reflect on what went well
-- Identify improvements
-- Adjust team processes
+- Reflect on what went well, what could be better
+- Identify improvements as an action plan
 
 ---
 
@@ -74,26 +74,7 @@ The goal is to ensure transparency, fast decision-making, and effective teamwork
 - All documentation is stored in the repository under `/docs`
 - Key deliverables are maintained as Markdown files
 - Documentation is continuously updated during the project
-- GitHub acts as the single source of truth
 
 This documentation structure serves as the team Wiki.
-
----
-
-## Communication Principles
-
-- Be clear and concise
-- Share blockers early
-- Keep discussions transparent
-- Respect team members' time
-- Focus on solutions, not problems
-
----
-
-## Response Expectations
-
-- Slack messages: within working hours (same day)
-- Critical issues: immediate response
-- GitHub reviews: as soon as possible
 
 ---

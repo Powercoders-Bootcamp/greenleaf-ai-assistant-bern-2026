@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document identifies key risks that may impact the development and delivery of the Beat-Bot system.
+This document identifies key risks that may impact the development and delivery of the BeatBot system.
 
-The goal is to proactively recognize potential issues and define mitigation approaches.
+The goal is to proactively recognize potential issues and define proper approaches.
 
 ---
 
@@ -43,7 +43,7 @@ Delays in development and unstable system behavior.
 ### 3. Input Handling & Validation
 
 **Description:**  
-Unexpected or malformed user input may break the system or produce incorrect responses.
+Unexpected user input may break the system or produce incorrect responses.
 
 **Impact:**  
 Errors, crashes, or unreliable answers.
@@ -66,13 +66,12 @@ Some team members may carry more technical work than others.
 Burnout, delays, or reduced quality.
 
 **Mitigation:**  
-- Clear task assignment in Kanban  
 - Regular standups to track workload  
 - Redistribute tasks if needed  
 
 ---
 
-### 2. Time Constraints
+### 2. Time limitation
 
 **Description:**  
 Limited time to design, implement, and test the system.
@@ -105,5 +104,3 @@ Duplicate work, delays, or confusion.
 ## Summary
 
 The team is aware of both technical and organizational risks and actively monitors them throughout the sprint.
-
-Risk management is integrated into daily communication and sprint planning.
