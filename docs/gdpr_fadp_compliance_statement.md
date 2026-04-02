@@ -126,7 +126,7 @@ BeatBot processes only what is necessary to provide internal policy support.
 If enabled:
 
 - minimal data only  
-- the application is not designed to use tracking identifiers for profiling or cross-session user tracking. 
+- no tracking identifiers used for profiling or cross-session tracking  
 - retention: **7–30 days max**  
 - automatic deletion recommended  
 
@@ -143,10 +143,10 @@ BeatBot does **not share data externally**.
 The system differentiates between:
 
 - **Allowed information**  
-  certain operational information may be shareable where explicitly approved by company policy, while internal Wi-Fi credentials, MAC registration details, and security-sensitive procedures must be restricted.
+  Certain operational information may be shared where explicitly approved by company policy.
 
 - **Restricted information**  
-  (e.g. internal MAC registration, security processes)
+  Internal Wi-Fi credentials, MAC registration details, and security-sensitive procedures must not be disclosed automatically.
 
 ### Controls
 
@@ -267,6 +267,5 @@ The system is **designed to align with GDPR and FADP principles**, including:
 - storage limitation  
 - privacy by design/default  
 
-Final compliance depends on production setup (hosting, logging, access control).
-
+Final compliance depends on production setup (hosting, logging, access control) and should be validated before deployment.
 ---
