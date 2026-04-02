@@ -126,7 +126,7 @@ BeatBot processes only what is necessary to provide internal policy support.
 If enabled:
 
 - minimal data only  
-- no identifiers  
+- the application is not designed to use tracking identifiers for profiling or cross-session user tracking. 
 - retention: **7–30 days max**  
 - automatic deletion recommended  
 
@@ -143,7 +143,7 @@ BeatBot does **not share data externally**.
 The system differentiates between:
 
 - **Allowed information**  
-  (e.g. guest Wi-Fi access instructions)
+  certain operational information may be shareable where explicitly approved by company policy, while internal Wi-Fi credentials, MAC registration details, and security-sensitive procedures must be restricted.
 
 - **Restricted information**  
   (e.g. internal MAC registration, security processes)
@@ -185,8 +185,7 @@ Purpose:
 - enforce **data minimisation**
 
 Note:  
-Masking improves privacy but does not guarantee full compliance.  
-Final compliance depends on deployment and governance.
+A PII masking layer has been prototyped and is planned for integration before or during downstream processing. In the current MVP backend, this layer is not yet fully integrated into the /ask request flow.
 
 ---
 
