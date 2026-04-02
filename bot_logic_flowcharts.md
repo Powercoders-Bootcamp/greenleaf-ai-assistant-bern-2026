@@ -205,22 +205,3 @@ This improves:
 ## One-line takeaway
 
 The bot should answer confidently only when it is grounded in approved evidence; otherwise it must clarify, provide a partial grounded response, or escalate — **never hallucinate**.
-
-```mermaid
-flowchart TD
-A[User Question] --> B[Validate Input]
-B -->|Invalid| X[Return Error]
-B -->|Valid| C[Classify Question]
-C --> D[Extract Structured Data]
-D -->|Fail| D2[LLM Extraction Fallback]
-D --> E[Retrieve Evidence]
-D2 --> E
-E -->|No Results| O[Ombudsman Path]
-E --> F[Apply Policy Rules]
-F --> G[Generate Explanation (LLM)]
-G --> H[Validate Output]
-H -->|Fail| O
-H --> I[Apply Guardrails]
-I --> J[Format Response]
-J --> K[Return Answer]
-```
