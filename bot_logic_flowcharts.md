@@ -206,6 +206,7 @@ This improves:
 
 The bot should answer confidently only when it is grounded in approved evidence; otherwise it must clarify, provide a partial grounded response, or escalate — **never hallucinate**.
 
+```mermaid
 flowchart TD
 A[User Question] --> B[Validate Input]
 B -->|Invalid| X[Return Error]
@@ -222,3 +223,4 @@ H -->|Fail| O
 H --> I[Apply Guardrails]
 I --> J[Format Response]
 J --> K[Return Answer]
+```
