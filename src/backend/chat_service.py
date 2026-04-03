@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from openai import OpenAI
 
@@ -18,13 +20,21 @@ PROMPTS_DIR = REPO_ROOT / "prompts"
 TOOLS_DIR = PROMPTS_DIR / "tools_definitions"
 SYSTEM_PROMPT_PATH = PROMPTS_DIR / "system_prompt.txt"
 HANDBOOK_PATH = REPO_ROOT / "data" / "processed" / "handbook-key-rules.md"
+SESSION_TIMEZONE = ZoneInfo("Europe/Zurich")
 
 DEFAULT_MODEL = "gpt-4o"
 MAX_TOOL_ROUNDS = 6
 
 
 def load_system_prompt() -> str:
-    return SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
+    text = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8").rstrip()
+    now = datetime.now(SESSION_TIMEZONE)
+    today_suffix = (
+        "\n\n---\n"
+        "Today's date (for this request, Europe/Zurich): "
+        f"{now.strftime('%A')}, {now:%Y-%m-%d}.\n"
+    )
+    return text + today_suffix
 
 
 def load_tool_definitions() -> list[dict[str, Any]]:
