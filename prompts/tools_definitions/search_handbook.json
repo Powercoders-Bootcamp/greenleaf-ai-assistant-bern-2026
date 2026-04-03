@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "search_handbook",
+    "description": "Answer questions from company handbook using keyword search",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of keywords to search in the handbook"
+        }
+      },
+      "required": ["keywords"]
+    }
+  }
+}

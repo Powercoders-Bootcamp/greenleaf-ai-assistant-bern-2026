@@ -1,0 +1,14 @@
+{
+    "type": "function",
+    "function": {
+        "name": "check_holiday",
+        "description": "Check if a date is a public holiday in Basel",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "date": {"type": "string"}
+            },
+            "required": ["date"]
+        }
+    }
+}
