@@ -69,7 +69,7 @@ def fetch_holidays_ch(year: int) -> list[dict[str, Any]]:
         "validTo": f"{year}-12-31",
     }
 
-    max_retries =MAX_RETRIES
+    max_retries = MAX_RETRIES
 
     for attempt in range(max_retries):
         try:
