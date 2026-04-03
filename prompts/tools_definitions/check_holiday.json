@@ -2,11 +2,14 @@
     "type": "function",
     "function": {
         "name": "check_holiday",
-        "description": "Check if a date is a public holiday in Basel",
+        "description": "Check if a calendar date is a non-working day in Basel-Stadt (public holiday or weekend). Always use Basel-Stadt rules only.",
         "parameters": {
             "type": "object",
             "properties": {
-                "date": {"type": "string"}
+                "date": {
+                    "type": "string",
+                    "description": "Calendar date in ISO format YYYY-MM-DD."
+                }
             },
             "required": ["date"]
         }

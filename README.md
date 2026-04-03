@@ -61,6 +61,8 @@ A task is considered “done” when:
 
 ### Backend (FastAPI)
 
+Full setup (venv, dependencies, `.env`, API key, smoke tests, troubleshooting): **[src/backend/README.md](src/backend/README.md)**.
+
 cd src/backend  
 .\.venv\Scripts\Activate  
 uvicorn main:app --reload --port 8000  
