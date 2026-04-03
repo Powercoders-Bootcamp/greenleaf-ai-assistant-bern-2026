@@ -1,24 +1,32 @@
 """
-Basel public holidays from OpenHolidays API.
+Basel holiday service using OpenHolidays API.
 
-What this script does:
-1. Downloads Swiss public holidays for a given year
-2. Keeps only non-working holidays for Basel (CH-BS)
-3. Includes nationwide holidays
-4. Excludes weekends
-5. Returns clean, sorted results
+Provides two main functions:
 
-Install dependency first:
+1. get_basel_holidays(year) -> list[Holiday]
+   Returns all Basel non-weekend public holidays for the given year.
+   Output: list of Holiday objects with fields (name, date, scope).
+
+2. is_day_a_holiday(day) -> dict
+   Checks if a given date is a holiday.
+
+   Logic:
+   - First checks if the date is a weekend
+   - If weekend → treated as holiday
+   - Otherwise checks Basel public holidays (cached per year)
+
+   Output format (single line JSON):
+   {"holiday": bool, "name": str | null, "date": "YYYY-MM-DD", "scope": "National" | "Basel" | null}
+
+Dependencies:
     pip install requests
-
-Run:
-    python openholidays_basel.py
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, date
+from datetime import date, datetime
+from functools import lru_cache
 from typing import Any
 
 import requests
@@ -30,7 +38,7 @@ BASEL_CODE = "CH-BS"
 @dataclass(frozen=True)
 class Holiday:
     name: str
-    date: str
+    date: date
     scope: str  # "National" or "Basel"
 
 
@@ -54,7 +62,7 @@ def fetch_holidays_ch(year: int) -> list[dict[str, Any]]:
 
 def parse_iso_date(date_str: str | None) -> date | None:
     """
-    Safely parse YYYY-MM-DD into date object.
+    Safely parse YYYY-MM-DD into a date object.
     """
     if not date_str or not isinstance(date_str, str):
         return None
@@ -135,9 +143,13 @@ def to_holiday(item: dict[str, Any]) -> Holiday:
     """
     Convert raw API record to Holiday dataclass.
     """
+    holiday_date = parse_iso_date(item.get("startDate"))
+    if holiday_date is None:
+        raise ValueError("Invalid holiday date")
+
     return Holiday(
         name=extract_english_name(item.get("name")),
-        date=item.get("startDate", ""),
+        date=holiday_date,
         scope="National" if item.get("nationwide") else "Basel",
     )
 
@@ -160,33 +172,94 @@ def is_basel_non_working_holiday(item: dict[str, Any]) -> bool:
     )
 
 
+@lru_cache(maxsize=10)
 def get_basel_holidays(year: int) -> list[Holiday]:
     """
     Fetch, validate, filter, deduplicate, and sort Basel holidays.
+    Results are cached by year.
     """
     raw_holidays = fetch_holidays_ch(year)
 
     result: list[Holiday] = []
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[date, str]] = set()
 
     for item in raw_holidays:
         if not is_basel_non_working_holiday(item):
             continue
 
-        holiday = to_holiday(item)
-        unique_key = (holiday.date, holiday.name)
+        found_holiday = to_holiday(item)
+        unique_key = (found_holiday.date, found_holiday.name)
 
         if unique_key in seen:
             continue
 
         seen.add(unique_key)
-        result.append(holiday)
+        result.append(found_holiday)
 
-    return sorted(result, key=lambda holiday: holiday.date)
+    return sorted(result, key=lambda hol: hol.date)
+
+
+def is_it_weekend(day: date) -> bool:
+    """
+    Check whether a given date is a weekend.
+    Saturday = 5, Sunday = 6.
+    """
+    return day.weekday() >= 5
+
+
+def is_it_holiday_in_basel(day: date) -> Holiday | None:
+    """
+    Return Basel holiday object for a given date if found.
+    """
+    year_holidays = get_basel_holidays(day.year)
+
+    for hol in year_holidays:
+        if hol.date == day:
+            return hol
+    return None
+
+
+def is_day_a_holiday(day: date) -> dict[str, Any]:
+    """
+    Main holiday check pipeline:
+    1. Check weekend first
+    2. Check Basel holiday second
+    3. Return JSON-like dict
+    """
+    if is_it_weekend(day):
+        return {
+            "holiday": True,
+            "name": "Weekend",
+            "date": day.isoformat(),
+            "scope": "National",
+        }
+
+    hol = is_it_holiday_in_basel(day)
+
+    if hol is not None:
+        return {
+            "holiday": True,
+            "name": hol.name,
+            "date": hol.date.isoformat(),
+            "scope": hol.scope,
+        }
+
+    return {
+        "holiday": False,
+        "name": None,
+        "date": day.isoformat(),
+        "scope": None,
+    }
 
 
 if __name__ == "__main__":
     holidays = get_basel_holidays(2026)
 
+    print("=== BASEL HOLIDAYS ===")
     for holiday in holidays:
         print(asdict(holiday))
+
+    print("\n=== DAY CHECK ===")
+    print(is_day_a_holiday(date(2026, 1, 1)))
+    print(is_day_a_holiday(date(2026, 1, 3)))
+    print(is_day_a_holiday(date(2026, 1, 7)))
