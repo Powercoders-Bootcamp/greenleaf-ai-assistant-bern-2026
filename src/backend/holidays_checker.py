@@ -69,7 +69,7 @@ def fetch_holidays_ch(year: int) -> list[dict[str, Any]]:
         "validTo": f"{year}-12-31",
     }
 
-    max_retries =MAX_RETRIES
+    max_retries = MAX_RETRIES
 
     for attempt in range(max_retries):
         try:
@@ -209,7 +209,7 @@ def is_basel_non_working_holiday(item: dict[str, Any]) -> bool:
     )
 
 
-#@lru_cache(maxsize=2)
+@lru_cache(maxsize=2)
 def get_basel_holidays(year: int) -> list[Holiday]:
     """
     Fetch, validate, filter, deduplicate, and sort Basel holidays.
