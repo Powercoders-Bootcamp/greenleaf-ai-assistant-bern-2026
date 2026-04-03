@@ -55,8 +55,10 @@ REGEX_PATTERNS: dict[str, str] = {
     """,
     "URL": r"\bhttps?://[^\s]+|\bwww\.[^\s]+\b",
     "IP": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
+    "MAC": r"\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b",
     "CREDIT_CARD": r"\b(?:\d[ -]*?){13,19}\b",
     "ID": r"\b(?:ID[:\s-]*)?[A-Z0-9]{6,20}\b",
+    "SSN": r"\b\d{3}[- ]?\d{2}[- ]?\d{4}\b",
 }
 
 NER_LABEL_MAP: dict[str, str] = {
