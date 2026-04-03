@@ -15,11 +15,15 @@ Provides two main functions:
    - If weekend → treated as holiday
    - Otherwise checks Basel public holidays (cached per year)
 
-   Output format (single line JSON):
+   Output format (dict):
    {"holiday": bool, "name": str | null, "date": "YYYY-MM-DD", "scope": "National" | "Basel" | null}
 
 Dependencies:
     pip install requests
+
+Errors:
+- HolidayAPIError: raised if the OpenHolidays API is unavailable
+  or returns invalid data after retries
 """
 
 from __future__ import annotations
@@ -28,11 +32,22 @@ from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from functools import lru_cache
 from typing import Any
+import time
 
 import requests
 
 BASE_URL = "https://openholidaysapi.org/PublicHolidays"
 BASEL_CODE = "CH-BS"
+
+MAX_RETRIES = 3
+BACKOFF_SECONDS = 2
+
+
+class HolidayAPIError(Exception):
+    """
+    Raised when OpenHolidays API cannot be reached
+    or returns invalid data after retries.
+    """
 
 
 @dataclass(frozen=True)
@@ -45,6 +60,7 @@ class Holiday:
 def fetch_holidays_ch(year: int) -> list[dict[str, Any]]:
     """
     Fetch all holiday records for Switzerland (CH) for a given year.
+    Retries on temporary API/network errors with simple backoff.
     """
     params = {
         "countryIsoCode": "CH",
@@ -53,11 +69,34 @@ def fetch_holidays_ch(year: int) -> list[dict[str, Any]]:
         "validTo": f"{year}-12-31",
     }
 
-    response = requests.get(BASE_URL, params=params, timeout=10)
-    response.raise_for_status()
+    max_retries =MAX_RETRIES
 
-    data = response.json()
-    return data if isinstance(data, list) else []
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(BASE_URL, params=params, timeout=10)
+            response.raise_for_status()
+
+            data = response.json()
+            if not isinstance(data, list):
+                raise HolidayAPIError(
+                    f"OpenHolidays API returned unexpected response format for year {year}"
+                )
+
+            return data
+
+        except requests.exceptions.RequestException as exc:
+            if attempt == max_retries - 1:
+                raise HolidayAPIError(
+                    f"Failed to fetch holidays from OpenHolidays API for year {year}"
+                ) from exc
+            time.sleep(BACKOFF_SECONDS * (attempt + 1))
+
+        except ValueError as exc:
+            raise HolidayAPIError(
+                f"OpenHolidays API returned invalid JSON for year {year}"
+            ) from exc
+
+    raise HolidayAPIError(f"Unexpected error while fetching holidays for year {year}")
 
 
 def parse_iso_date(date_str: str | None) -> date | None:
@@ -144,8 +183,6 @@ def to_holiday(item: dict[str, Any]) -> Holiday:
     Convert raw API record to Holiday dataclass.
     """
     holiday_date = parse_iso_date(item.get("startDate"))
-    if holiday_date is None:
-        raise ValueError("Invalid holiday date")
 
     return Holiday(
         name=extract_english_name(item.get("name")),
@@ -172,7 +209,7 @@ def is_basel_non_working_holiday(item: dict[str, Any]) -> bool:
     )
 
 
-@lru_cache(maxsize=10)
+#@lru_cache(maxsize=2)
 def get_basel_holidays(year: int) -> list[Holiday]:
     """
     Fetch, validate, filter, deduplicate, and sort Basel holidays.
