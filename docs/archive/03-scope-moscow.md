@@ -14,7 +14,6 @@ Beat-Bot is a focused internal assistant for company policies. It is not a full 
 - Do not respond to sensitive IT or credential-related questions
 - Show clear answers with sources included (Citation)
 - Handle unknown questions, harassment, bullying, and whistleblowing safely with a clear fallback response
-- Evaluate answers using predefined test questions (Basic evaluation with golden questions)
 - Respond Questions only based on Basel-stadt calendar
 - User authentication
 
