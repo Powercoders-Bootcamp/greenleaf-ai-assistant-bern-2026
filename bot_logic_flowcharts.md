@@ -2,8 +2,8 @@
 
 This page documents the two decision paths for the bot:
 
-1. **Happy Path** — the standard grounded-answer flow.
-2. **Ombudsman Path** — the safety path for unknown, ambiguous, or unsupported cases.
+1. **Happy Path** — the standard tool-assisted response flow.  
+2. **Ombudsman Path** — the fallback path for unsupported or ambiguous cases.
 
 ---
 
@@ -11,61 +11,54 @@ This page documents the two decision paths for the bot:
 
 ### Purpose
 
-Show how the bot handles a query when it can validate the input, retrieve approved evidence, and return a grounded answer.
+Shows how the bot handles a query when it can use available tools and return a meaningful response.
 
-### Flow summary
+### Flow Summary
 
-- Validate the request.
-- Classify the question type.
-- Extract structured facts.
-- Retrieve evidence from approved sources.
-- Apply policy rules.
-- Generate an explanation using only grounded evidence.
-- Validate the answer.
-- Apply business guardrails.
-- Return the final response.
+- Send the initial system prompt and user message.  
+- Call the model with the available tool definitions.  
+- If the model requests a tool:  
+  - Extract the tool name and arguments.  
+  - Execute the tool.  
+  - Append the tool result to the message history.  
+  - Call the model again with the updated messages.  
+- Repeat until no tool call is needed or the maximum loop rounds are reached.  
+- If the model returns a valid response, return it to the user.  
+- If the model returns an empty response, return a fallback message.
 
-### Mermaid diagram
+---
+
+### Flowchart
 
 ```mermaid
 flowchart TD
-    A[User query] --> B[1. Validate input
-Tool]
-    B --> C{Valid?}
-    C -- No --> D[Return error / clarification request]
-    C -- Yes --> E[2. Classify question
-Tool]
-    E --> F[3. Extract structured data
-Tool]
-    F --> G{Extraction succeeds?}
-    G -- No --> H[LLM fallback extraction
-constrained]
-    G -- Yes --> I[4. Retrieve evidence
-approved sources only]
-    H --> I
-    I --> J{Grounded evidence found?}
-    J -- No --> K[Go to Ombudsman path]
-    J -- Yes --> L[5. Apply policy rules
-Tool]
-    L --> M[6. Generate explanation
-LLM using evidence only]
-    M --> N[7. Validate output
-schema citations evidence-match]
-    N --> O{Output valid and grounded?}
-    O -- No --> K
-    O -- Yes --> P[8. Apply business guardrails
-final authority]
-    P --> Q[9. Format final response]
-    Q --> R[Return answer
-approve reject or conditional]
-```
 
-### Notes
+A[User Input] --> B[Send initial messages (system prompt + user message)]
+B --> C[Call OpenAI with messages and tool definitions]
 
-- The **LLM does not make the final decision**.
-- The **guardrail engine is the final authority**.
-- If evidence is missing or output is not grounded, the flow immediately diverts to the **Ombudsman Path**.
+C --> D{Tool call?}
 
+%% No tool call path
+D -- No --> E{Response has content?}
+E -- Yes --> F[Return reply to user]
+E -- No --> G[Return fallback message]
+
+%% Tool call path
+D -- Yes --> H[Extract tool name and arguments]
+H --> I{Which tool?}
+
+I -- check_holiday --> J[Run check_holiday]
+I -- search_handbook --> K[Run search_handbook]
+
+J --> L[Append tool result to messages]
+K --> L
+
+L --> M[Call OpenAI again with updated messages]
+M --> C
+
+%% Loop control
+C --> N{Max tool rounds reached?}
+N -- Yes --> O[Return loop limit message]
 ---
 
 ## 2) Ombudsman Path
