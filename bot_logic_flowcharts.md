@@ -33,19 +33,17 @@ Shows how the bot handles a query when it can use available tools and return a m
 ```mermaid
 flowchart TD
 
-A[User Input] --> B[Send initial messages (system prompt + user message)]
-B --> C[Call OpenAI with messages and tool definitions]
+A[User Input] --> B["Send initial messages<br>(system prompt + user message)"]
+B --> C["Call OpenAI with messages and tool definitions"]
 
-C --> D{Tool call?}
+C --> D{"Tool call?"}
 
-%% No tool call path
-D -- No --> E{Response has content?}
+D -- No --> E{"Response has content?"}
 E -- Yes --> F[Return reply to user]
 E -- No --> G[Return fallback message]
 
-%% Tool call path
 D -- Yes --> H[Extract tool name and arguments]
-H --> I{Which tool?}
+H --> I{"Which tool?"}
 
 I -- check_holiday --> J[Run check_holiday]
 I -- search_handbook --> K[Run search_handbook]
@@ -53,13 +51,12 @@ I -- search_handbook --> K[Run search_handbook]
 J --> L[Append tool result to messages]
 K --> L
 
-L --> M[Call OpenAI again with updated messages]
+L --> M["Call OpenAI again with updated messages"]
 M --> C
 
-%% Loop control
-C --> N{Max tool rounds reached?}
+C --> N{"Max tool rounds reached?"}
 N -- Yes --> O[Return loop limit message]
----
+```
 
 ## 2) Ombudsman Path
 
