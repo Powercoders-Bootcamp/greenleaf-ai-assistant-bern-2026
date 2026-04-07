@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from config import DEFAULT_COLLECTION_NAME, DEFAULT_PERSIST_DIR
-from embeddings import OpenAIEmbeddingService
+from config import DEFAULT_COLLECTION_NAME, DEFAULT_PERSIST_DIR, OPENAI_API_KEY, OPENAI_BASE_URL
 from query_builder import build_keywords
 from vector_store import ChromaVectorStore
 
@@ -20,7 +19,8 @@ class HandbookRetrievalService:
         self.embedder = create_embedding_service(
             provider=embedding_provider,
             model_name=embedding_model,
-            api_key=openai_api_key,
+            api_key=openai_api_key or OPENAI_API_KEY,
+            base_url=OPENAI_BASE_URL,
         )
         self.vector_store = ChromaVectorStore(persist_directory, collection_name)
 

@@ -3,12 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 
 from chunker import HandbookChunker, SectionParser
-from config import DEFAULT_COLLECTION_NAME, DEFAULT_PERSIST_DIR
+from config import (
+    DEFAULT_COLLECTION_NAME,
+    DEFAULT_PERSIST_DIR,
+    OPENAI_API_KEY,
+    OPENAI_BASE_URL,
+)
 from embedding_factory import create_embedding_service
 from loaders import PDFHandbookLoader
 from schemas import ChunkingConfig, IngestionResult
 from vector_store import ChromaVectorStore
-from pdf_exporter import export_chunks_to_pdf
 
 
 class HandbookIngestionService:
@@ -20,6 +24,7 @@ class HandbookIngestionService:
         collection_name: str = DEFAULT_COLLECTION_NAME,
         chunking_config: ChunkingConfig | None = None,
         openai_api_key: str | None = None,
+        openai_base_url: str | None = None,
     ) -> None:
         self.embedding_provider = embedding_provider
         self.embedding_model = embedding_model
@@ -30,27 +35,20 @@ class HandbookIngestionService:
         self.embedder = create_embedding_service(
             provider=embedding_provider,
             model_name=embedding_model,
-            api_key=openai_api_key,
+            api_key=openai_api_key or OPENAI_API_KEY,
+            base_url=openai_base_url or OPENAI_BASE_URL,
         )
         self.vector_store = ChromaVectorStore(persist_directory, collection_name)
         self.chunker = HandbookChunker(self.chunking_config, embedding_model)
 
-    def ingest_pdf(
-        self,
-        pdf_path: str | Path,
-        reset_collection: bool = False,
-    ) -> IngestionResult:
+    def ingest_pdf(self, pdf_path: str | Path, reset_collection: bool = False) -> IngestionResult:
         if reset_collection:
             self.vector_store.reset_collection()
 
         pages = self.loader.load_pdf(pdf_path)
         source_name = Path(pdf_path).name
-
         sections = self.parser.parse(pages, source=source_name)
         chunks = self.chunker.chunk_sections(sections)
-
-        export_chunks_to_pdf(chunks, output_path="handbook_chunks.pdf")
-
         embeddings = self.embedder.embed_texts([chunk.text for chunk in chunks])
         self.vector_store.upsert_chunks(chunks, embeddings)
 

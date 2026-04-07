@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from sentence_transformers import SentenceTransformer
 from openai import OpenAI
+from sentence_transformers import SentenceTransformer
 
-from config import SUPPORTED_OPENAI_EMBEDDING_MODELS
+from config import SUPPORTED_EMBEDDING_MODELS
 
 
 class LocalEmbeddingService:
@@ -18,32 +18,38 @@ class LocalEmbeddingService:
 
 
 class OpenAIEmbeddingService:
-    def __init__(self, model: str, api_key: str | None = None) -> None:
-        if model not in SUPPORTED_OPENAI_EMBEDDING_MODELS:
+    def __init__(
+        self,
+        model: str,
+        api_key: str | None = None,
+        base_url: str | None = None,
+    ) -> None:
+        if model not in SUPPORTED_EMBEDDING_MODELS:
             raise ValueError(
                 f"Unsupported embedding model: {model}. "
-                f"Choose one of: {sorted(SUPPORTED_OPENAI_EMBEDDING_MODELS)}"
+                f"Choose one of: {sorted(SUPPORTED_EMBEDDING_MODELS)}"
             )
+
+        if not api_key:
+            raise ValueError(
+                "Missing API key. Set OPENAI_API_KEY in your environment or .env file."
+            )
+
         self.model = model
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url=base_url,
+        )
 
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        response = self.client.embeddings.create(model=self.model, input=texts)
+
+        response = self.client.embeddings.create(
+            model=self.model,
+            input=texts,
+        )
         return [item.embedding for item in response.data]
 
     def embed_query(self, query: str) -> list[float]:
         return self.embed_texts([query])[0]
-
-
-def create_embedding_service(
-    provider: str,
-    model_name: str,
-    api_key: str | None = None,
-):
-    if provider == "local":
-        return LocalEmbeddingService(model_name=model_name)
-    if provider == "openai":
-        return OpenAIEmbeddingService(model=model_name, api_key=api_key)
-    raise ValueError(f"Unsupported embedding provider: {provider}")

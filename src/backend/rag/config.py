@@ -5,16 +5,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+SUPPORTED_EMBEDDING_MODELS = {
+    "text-embedding-3-small",
+    "text-embedding-3-large",
+    "text-embedding-ada-002",
+}
+
 SUPPORTED_OPENAI_EMBEDDING_MODELS = {
     "text-embedding-3-small",
     "text-embedding-3-large",
     "text-embedding-ada-002",
 }
 
+
 EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "local")
 LOCAL_EMBEDDING_MODEL = os.getenv("LOCAL_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 
 DEFAULT_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "greenleaf_handbook")
 DEFAULT_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
