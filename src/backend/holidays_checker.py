@@ -8,15 +8,22 @@ Provides two main functions:
    Output: list of Holiday objects with fields (name, date, scope).
 
 2. is_day_a_holiday(day) -> dict
-   Checks if a given date is a holiday.
+   Checks if a given date is an official holiday and/or a non-working day.
 
    Logic:
    - First checks if the date is a weekend
-   - If weekend → treated as holiday
+   - Weekend → non-working day, but not an official holiday
    - Otherwise checks Basel public holidays (cached per year)
 
    Output format (dict):
-   {"holiday": bool, "name": str | null, "date": "YYYY-MM-DD", "scope": "National" | "Basel" | null}
+   {
+       "holiday": bool,
+       "non_working_day": bool,
+       "name": str | null,
+       "date": "YYYY-MM-DD",
+       "scope": "National" | "Basel" | null,
+       "day_type": "national_holiday" | "regional_holiday" | "weekend" | "working_day"
+   }
 
 Dependencies:
     pip install requests
@@ -265,10 +272,12 @@ def is_day_a_holiday(day: date) -> dict[str, Any]:
     """
     if is_it_weekend(day):
         return {
-            "holiday": True,
-            "name": "Weekend",
+            "holiday": False,
+            "non_working_day": True,
+            "name": None,
             "date": day.isoformat(),
-            "scope": "National",
+            "scope": None,
+            "day_type": "weekend",
         }
 
     hol = is_it_holiday_in_basel(day)
@@ -276,16 +285,20 @@ def is_day_a_holiday(day: date) -> dict[str, Any]:
     if hol is not None:
         return {
             "holiday": True,
+            "non_working_day": True,
             "name": hol.name,
             "date": hol.date.isoformat(),
             "scope": hol.scope,
+            "day_type": "national_holiday" if hol.scope == "National" else "regional_holiday",
         }
 
     return {
         "holiday": False,
+        "non_working_day": False,
         "name": None,
         "date": day.isoformat(),
         "scope": None,
+        "day_type": "working_day",
     }
 
 
