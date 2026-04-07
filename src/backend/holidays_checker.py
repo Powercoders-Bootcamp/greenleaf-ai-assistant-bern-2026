@@ -8,21 +8,23 @@ Provides two main functions:
    Output: list of Holiday objects with fields (name, date, scope).
 
 2. is_day_a_holiday(day) -> dict
-   Checks if a given date is an official holiday and/or a non-working day.
+   Checks if a given date is an official holiday, a weekend,
+   and/or a non-working day.
 
    Logic:
-   - First checks if the date is a weekend
-   - Weekend → non-working day, but not an official holiday
-   - Otherwise checks Basel public holidays (cached per year)
+   - Checks official holiday status using Basel public holidays
+   - Checks whether the date falls on a weekend
+   - Combines both into non-working day status
 
    Output format (dict):
    {
        "holiday": bool,
+       "weekend": bool,
        "non_working_day": bool,
        "name": str | null,
        "date": "YYYY-MM-DD",
        "scope": "National" | "Basel" | null,
-       "day_type": "national_holiday" | "regional_holiday" | "weekend" | "working_day"
+       "day_type": "official_holiday" | "weekend" | "official_holiday_and_weekend" | "working_day"
    }
 
 Dependencies:
@@ -148,11 +150,6 @@ def is_full_day_holiday(item: dict[str, Any]) -> bool:
     return item.get("temporalScope") == "FullDay"
 
 
-def is_weekday_holiday(item: dict[str, Any]) -> bool:
-    holiday_date = parse_iso_date(item.get("startDate"))
-    return holiday_date is not None and holiday_date.weekday() < 5
-
-
 def applies_to_basel(item: dict[str, Any]) -> bool:
     """
     Holiday applies to Basel if it is nationwide
@@ -204,14 +201,12 @@ def is_basel_non_working_holiday(item: dict[str, Any]) -> bool:
     - valid record
     - public holiday
     - full day only
-    - weekday only
     - applies to Basel
     """
     return (
         is_valid_holiday_record(item)
         and is_public_holiday(item)
         and is_full_day_holiday(item)
-        and is_weekday_holiday(item)
         and applies_to_basel(item)
     )
 
@@ -266,39 +261,32 @@ def is_it_holiday_in_basel(day: date) -> Holiday | None:
 def is_day_a_holiday(day: date) -> dict[str, Any]:
     """
     Main holiday check pipeline:
-    1. Check weekend first
-    2. Check Basel holiday second
-    3. Return JSON-like dict
+    1. Check Basel holiday status
+    2. Check weekend status
+    3. Return JSON-like dict without conflating the two
     """
-    if is_it_weekend(day):
-        return {
-            "holiday": False,
-            "non_working_day": True,
-            "name": None,
-            "date": day.isoformat(),
-            "scope": None,
-            "day_type": "weekend",
-        }
-
     hol = is_it_holiday_in_basel(day)
+    is_weekend = is_it_weekend(day)
 
     if hol is not None:
         return {
             "holiday": True,
+            "weekend": is_weekend,
             "non_working_day": True,
             "name": hol.name,
             "date": hol.date.isoformat(),
             "scope": hol.scope,
-            "day_type": "national_holiday" if hol.scope == "National" else "regional_holiday",
+            "day_type": "official_holiday_and_weekend" if is_weekend else "official_holiday",
         }
 
     return {
         "holiday": False,
-        "non_working_day": False,
+        "weekend": is_weekend,
+        "non_working_day": is_weekend,
         "name": None,
         "date": day.isoformat(),
         "scope": None,
-        "day_type": "working_day",
+        "day_type": "weekend" if is_weekend else "working_day",
     }
 
 
