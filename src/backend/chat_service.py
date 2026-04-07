@@ -116,7 +116,7 @@ def run_chat(user_message: str) -> str:
         raise RuntimeError("OPENAI_API_KEY is not set")
 
     model = os.getenv("OPENAI_MODEL", DEFAULT_MODEL)
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
     tools = load_tool_definitions()
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": load_system_prompt()},
@@ -126,6 +126,7 @@ def run_chat(user_message: str) -> str:
     for _ in range(MAX_TOOL_ROUNDS):
         response = client.chat.completions.create(
             model=model,
+            max_tokens=1000,
             messages=messages,
             tools=tools,
             tool_choice="auto",
