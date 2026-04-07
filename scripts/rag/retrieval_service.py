@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from config import DEFAULT_COLLECTION_NAME, DEFAULT_PERSIST_DIR
-from embedding_factory import create_embedding_service
+from embeddings import OpenAIEmbeddingService
+from query_builder import build_keywords
 from vector_store import ChromaVectorStore
 
 
@@ -14,8 +15,7 @@ class HandbookRetrievalService:
         collection_name: str = DEFAULT_COLLECTION_NAME,
         openai_api_key: str | None = None,
     ) -> None:
-        self.embedding_provider = embedding_provider
-        self.embedding_model = embedding_model
+        from embedding_factory import create_embedding_service
 
         self.embedder = create_embedding_service(
             provider=embedding_provider,
@@ -27,3 +27,40 @@ class HandbookRetrievalService:
     def query(self, query_text: str, top_k: int = 5) -> dict:
         query_embedding = self.embedder.embed_query(query_text)
         return self.vector_store.query(query_embedding, top_k=top_k)
+
+    def search_handbook(
+        self,
+        message: str,
+        classification: str,
+        top_k: int = 5,
+    ) -> dict:
+        keywords = build_keywords(message, classification)
+        expanded_query = " ".join(keywords)
+
+        raw_result = self.query(expanded_query, top_k=top_k)
+
+        matches = []
+        ids = raw_result.get("ids", [[]])[0]
+        documents = raw_result.get("documents", [[]])[0]
+        metadatas = raw_result.get("metadatas", [[]])[0]
+        distances = raw_result.get("distances", [[]])[0] if "distances" in raw_result else []
+
+        for index, chunk_id in enumerate(ids):
+            metadata = metadatas[index] if index < len(metadatas) else {}
+            if metadata.get("document_type") != "handbook":
+                continue
+
+            matches.append(
+                {
+                    "chunk_id": chunk_id,
+                    "text": documents[index] if index < len(documents) else "",
+                    "metadata": metadata,
+                    "distance": distances[index] if index < len(distances) else None,
+                }
+            )
+
+        return {
+            "classification": classification,
+            "keywords": keywords,
+            "matches": matches,
+        }
