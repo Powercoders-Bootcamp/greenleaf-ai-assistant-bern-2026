@@ -1,6 +1,6 @@
-import { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
 import { Environment, Float } from '@react-three/drei'
+import { Canvas } from '@react-three/fiber'
+import { Suspense } from 'react'
 import LeafModel from './LeafModel'
 
 type Props = {
@@ -13,20 +13,25 @@ export default function LeafScene({ loading = false }: Props) {
       <Canvas
         dpr={[1, 2]}
         gl={{ alpha: true, antialias: true }}
-        camera={{ position: [0, 0.15, 3.2], fov: 32 }}
+        camera={{ position: [0, 0, 3], fov: 30 }}
       >
-        <ambientLight intensity={1.9} />
-        <hemisphereLight intensity={0.9} groundColor="#d9e7dc" />
-        <directionalLight position={[2.5, 2.5, 3]} intensity={1.8} />
-        <directionalLight position={[-2, -1.5, 2]} intensity={0.7} />
+        <ambientLight intensity={1.55} />
+        <hemisphereLight intensity={0.95} groundColor="#d9e7dc" />
+        <directionalLight position={[2.4, 2.8, 3]} intensity={1.7} />
+        <directionalLight position={[-1.8, -1.1, 2]} intensity={0.55} />
+        <pointLight
+          position={[0, 0.4, 1.8]}
+          intensity={loading ? 0.85 : 0.45}
+          distance={5}
+        />
 
         <Suspense fallback={null}>
           <Float
-            speed={loading ? 2.2 : 1.3}
-            rotationIntensity={loading ? 0.35 : 0.18}
-            floatIntensity={loading ? 0.5 : 0.28}
+            speed={loading ? 1.55 : 0.95}
+            rotationIntensity={loading ? 0.14 : 0.08}
+            floatIntensity={loading ? 0.14 : 0.08}
           >
-            <LeafModel />
+            <LeafModel loading={loading} />
           </Float>
 
           <Environment preset="studio" />

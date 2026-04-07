@@ -26,7 +26,10 @@ export default function MessageBubble({ message, isLatest = false }: Props) {
     }
   }
 
-  const lines = message.content.split('\n').filter(Boolean)
+  const paragraphs = message.content
+    .split('\n\n')
+    .map((block) => block.trim())
+    .filter(Boolean)
 
   return (
     <div className={`message-row ${isUser ? 'message-row--user' : 'message-row--assistant'}`}>
@@ -57,10 +60,10 @@ export default function MessageBubble({ message, isLatest = false }: Props) {
       </div>
 
       <div className={`message-bubble ${isUser ? 'message-bubble--user' : 'message-bubble--assistant'}`}>
-        {lines.length > 0 ? (
-          lines.map((line, index) => (
+        {paragraphs.length > 0 ? (
+          paragraphs.map((block, index) => (
             <p key={`${message.id}-${index}`} className="message-line">
-              {line}
+              {block}
             </p>
           ))
         ) : (

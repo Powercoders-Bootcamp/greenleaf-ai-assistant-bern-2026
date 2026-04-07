@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import './App.css'
 import ChatInput from './components/ChatInput'
 import ChatWindow from './components/ChatWindow'
 import LeafScene from './components/LeafScene'
 import type { Message } from './types/chat'
-import './App.css'
 
 const API_URL = 'http://127.0.0.1:8000/chat'
 
@@ -39,8 +39,10 @@ export default function App() {
   const endRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, loading])
+
+  const currentTime = useMemo(() => formatTime(), [])
 
   const statusText = useMemo(() => {
     if (loading) return 'Checking policy context'
@@ -154,33 +156,27 @@ export default function App() {
       <div className="ambient ambient-2" />
 
       <section className="chat-page">
-        <header className="chat-header">
-  <div className="context-bar">
-    <span>Zurich • 16:32</span>
-    <span>Internal assistant ready</span>
+        <header className="top-bar">
+  <div className="top-bar__left">
+    <div className="brand-mark">
+      <LeafScene loading={loading} />
+    </div>
+
+    <div className="top-bar__title">
+      <span className="top-bar__name">Beat-Bot</span>
+      <span className="top-bar__meta">Internal AI Assistant</span>
+    </div>
   </div>
 
-  <div className="brand-mark" aria-hidden="true">
-    <LeafScene loading={loading} />
-  </div>
+  <div className="top-bar__right">
+    <div className="context-bar">
+      <span>Basel • {currentTime}</span>
+    </div>
 
-  <div>
-    <p className="eyebrow">Internal AI Assistant</p>
-    <h1>GreenLeaf Assistant</h1>
-    <p className="subtext">
-      Fast answers for internal policies, holidays, handbook questions,
-      and common internal rules.
-    </p>
-  </div>
-
-  <div
-    className={`status-badge ${loading ? 'is-loading' : ''} ${
-      error ? 'is-error' : ''
-    }`}
-    aria-live="polite"
-  >
-    <span className="status-dot" />
-    {statusText}
+    <div className={`status-badge ${loading ? 'is-loading' : ''} ${error ? 'is-error' : ''}`}>
+      <span className="status-dot" />
+      {statusText}
+    </div>
   </div>
 </header>
 
@@ -218,8 +214,8 @@ export default function App() {
               loading={loading}
               error={error}
               onSendPreset={handlePreset}
+              bottomRef={endRef}
             />
-            <div ref={endRef} />
           </div>
 
           <div className="chat-card__footer">

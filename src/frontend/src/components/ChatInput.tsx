@@ -17,11 +17,15 @@ export default function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
+  textareaRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
     const el = textareaRef.current
     if (!el) return
 
     el.style.height = '0px'
-    const nextHeight = Math.min(el.scrollHeight, 160)
+    const nextHeight = Math.min(el.scrollHeight, 144)
     el.style.height = `${nextHeight}px`
   }, [input])
 
