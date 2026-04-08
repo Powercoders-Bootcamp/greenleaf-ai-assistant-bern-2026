@@ -24,12 +24,11 @@ export default function ChatWindow({
   onSendPreset,
   bottomRef,
 }: Props) {
-  const hasOnlyGreeting =
-    messages.length === 1 && messages[0]?.role === 'assistant'
+  const hasStartedConversation = messages.length > 0
 
   return (
     <div className="chat-window">
-      {hasOnlyGreeting && !loading && !error && (
+      {!hasStartedConversation && !loading && !error && (
         <div className="chat-empty-state">
           <div className="chat-empty-state__icon">✦</div>
 
@@ -51,6 +50,7 @@ export default function ChatWindow({
         </div>
       )}
 
+      {hasStartedConversation && (
       <div className="chat-thread">
         {messages.map((message, index) => {
           const isLastAssistant =
@@ -66,6 +66,7 @@ export default function ChatWindow({
           )
         })}
       </div>
+    )}
 
       {loading && (
         <div className="chat-thinking">
