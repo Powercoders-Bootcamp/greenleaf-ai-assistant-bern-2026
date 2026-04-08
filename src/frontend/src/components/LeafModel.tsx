@@ -5,9 +5,13 @@ import { Box3, Group, Mesh, MeshStandardMaterial, Vector3 } from 'three'
 
 type Props = {
   loading?: boolean
+  variant?: 'default' | 'auth'
 }
 
-export default function LeafModel({ loading = false }: Props) {
+export default function LeafModel({
+  loading = false,
+  variant = 'default',
+}: Props) {
   const gltf = useGLTF('/models/super_leaf_super_mario_bros.glb')
   const rootRef = useRef<Group>(null)
 
@@ -38,7 +42,7 @@ export default function LeafModel({ loading = false }: Props) {
 
     cloned.position.sub(center)
 
-    const targetSize = 1.55
+    const targetSize = variant === 'auth' ? 1.42 : 1.55
     const scale = targetSize / maxAxis
     cloned.scale.setScalar(scale)
 
@@ -46,16 +50,26 @@ export default function LeafModel({ loading = false }: Props) {
     const scaledCenter = scaledBox.getCenter(new Vector3())
     cloned.position.sub(scaledCenter)
 
-    cloned.position.y += 0.02
+    cloned.position.y += variant === 'auth' ? 0.01 : 0.02
 
     return cloned
-  }, [gltf.scene])
+  }, [gltf.scene, variant])
 
   useFrame((state) => {
     const group = rootRef.current
     if (!group) return
 
     const t = state.clock.getElapsedTime()
+
+    if (variant === 'auth') {
+      group.rotation.z = Math.sin(t * 0.9) * 0.025
+      group.rotation.y = Math.sin(t * 0.65) * 0.07
+      group.rotation.x = Math.cos(t * 0.8) * 0.015
+      group.position.y = Math.sin(t * 1.1) * 0.012
+      group.position.x = Math.cos(t * 0.6) * 0.008
+      group.scale.setScalar(1)
+      return
+    }
 
     const motion = loading ? 1 : 0.55
 

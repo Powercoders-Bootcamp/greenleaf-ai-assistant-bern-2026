@@ -3,6 +3,14 @@ import './App.css'
 import ChatInput from './components/ChatInput'
 import ChatWindow from './components/ChatWindow'
 import LeafScene from './components/LeafScene'
+import AuthShell from './components/auth/AuthShell'
+import {
+  clearAuthSession,
+  getStoredToken,
+  getStoredUser,
+  persistAuthSession,
+} from './lib/auth'
+import type { AuthMode, AuthResponse, AuthUser } from './types/auth'
 import type { Message } from './types/chat'
 
 const API_URL = 'http://127.0.0.1:8000/chat'
@@ -23,20 +31,50 @@ function createMessage(role: Message['role'], content: string): Message {
   }
 }
 
+function createMockAuthResponse(email: string): AuthResponse {
+  const isAdmin = email.toLowerCase().includes('admin')
+
+  const user: AuthUser = {
+    id: crypto.randomUUID(),
+    email,
+    role: isAdmin ? 'admin' : 'user',
+    name: email.split('@')[0],
+  }
+
+  return {
+    token: `mock-token-${crypto.randomUUID()}`,
+    user,
+  }
+}
+
 export default function App() {
-  const [messages, setMessages] = useState<Message[]>([
-    createMessage(
-      'assistant',
-      'Hello! Ask me something about GreenLeaf policies, holidays, internal rules, or handbook-related questions.'
-    ),
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastSubmittedQuestion, setLastSubmittedQuestion] = useState<string | null>(null)
 
+  const [authMode, setAuthMode] = useState<AuthMode>('login')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authConfirmPassword, setAuthConfirmPassword] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null)
+
   const endRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const storedToken = getStoredToken()
+    const storedUser = getStoredUser()
+
+    if (storedToken && storedUser) {
+      setToken(storedToken)
+      setAuthUser(storedUser)
+    }
+  }, [])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -44,17 +82,75 @@ export default function App() {
 
   const currentTime = useMemo(() => formatTime(), [])
 
+  const isAuthenticated = Boolean(token && authUser)
+
   const statusText = useMemo(() => {
     if (loading) return 'Checking policy context'
     if (error) return 'Connection issue'
     return 'Connected to internal knowledge'
   }, [loading, error])
 
+  const handleAuthSubmit = useCallback(async () => {
+    setAuthError(null)
+
+    const email = authEmail.trim()
+    const password = authPassword.trim()
+    const confirmPassword = authConfirmPassword.trim()
+
+    if (!email) {
+      setAuthError('Please enter your email.')
+      return
+    }
+
+    if (authMode !== 'forgot-password' && !password) {
+      setAuthError('Please enter your password.')
+      return
+    }
+
+    if (authMode === 'register' && password !== confirmPassword) {
+      setAuthError('Passwords do not match.')
+      return
+    }
+
+    setAuthLoading(true)
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 700))
+
+      if (authMode === 'forgot-password') {
+        setAuthError('Password reset flow is not connected to backend yet.')
+        return
+      }
+
+      const payload = createMockAuthResponse(email)
+
+      persistAuthSession(payload)
+      setToken(payload.token)
+      setAuthUser(payload.user)
+
+      setAuthPassword('')
+      setAuthConfirmPassword('')
+      setAuthMode('login')
+    } finally {
+      setAuthLoading(false)
+    }
+  }, [authMode, authEmail, authPassword, authConfirmPassword])
+
+  const handleLogout = useCallback(() => {
+    clearAuthSession()
+    setToken(null)
+    setAuthUser(null)
+    setAuthEmail('')
+    setAuthPassword('')
+    setAuthConfirmPassword('')
+    setAuthMode('login')
+  }, [])
+
   const sendMessage = useCallback(
     async (rawText?: string) => {
       const textToSend = (rawText ?? input).trim()
 
-      if (!textToSend || loading) return
+      if (!textToSend || loading || !token) return
 
       const userMessage = createMessage('user', textToSend)
 
@@ -69,6 +165,7 @@ export default function App() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ message: textToSend }),
         })
@@ -85,6 +182,13 @@ export default function App() {
           typeof data === 'object' && data !== null
             ? (data as { reply?: string; detail?: string })
             : {}
+
+        if (response.status === 401) {
+          clearAuthSession()
+          setToken(null)
+          setAuthUser(null)
+          throw new Error('Your session expired. Please sign in again.')
+        }
 
         if (!response.ok) {
           throw new Error(
@@ -116,7 +220,7 @@ export default function App() {
         setLoading(false)
       }
     },
-    [input, loading]
+    [input, loading, token]
   )
 
   const handleSend = useCallback(() => {
@@ -150,35 +254,71 @@ export default function App() {
     }
   }, [messages])
 
+  if (!isAuthenticated) {
+    return (
+      <main className="app-shell">
+        <div className="ambient ambient-1" />
+        <div className="ambient ambient-2" />
+
+        <AuthShell
+          mode={authMode}
+          email={authEmail}
+          password={authPassword}
+          confirmPassword={authConfirmPassword}
+          loading={authLoading}
+          error={authError}
+          success={authMode === 'forgot-password' ? null : null}
+          onModeChange={setAuthMode}
+          onEmailChange={setAuthEmail}
+          onPasswordChange={setAuthPassword}
+          onConfirmPasswordChange={setAuthConfirmPassword}
+          onSubmit={handleAuthSubmit}
+        />
+      </main>
+    )
+  }
+
   return (
     <main className="app-shell">
       <div className="ambient ambient-1" />
       <div className="ambient ambient-2" />
 
       <section className="chat-page">
-        <header className="top-bar">
-  <div className="top-bar__left">
-    <div className="brand-mark">
-      <LeafScene loading={loading} />
-    </div>
+        <header className="chat-header">
+          <div className="context-bar">
+            <span>Basel • {currentTime}</span>
+            <span>{authUser?.role === 'admin' ? 'Admin access' : 'User access'}</span>
+          </div>
 
-    <div className="top-bar__title">
-      <span className="top-bar__name">Beat-Bot</span>
-      <span className="top-bar__meta">Internal AI Assistant</span>
-    </div>
-  </div>
+          <div className="brand-mark" aria-hidden="true">
+            <LeafScene loading={loading} />
+          </div>
 
-  <div className="top-bar__right">
-    <div className="context-bar">
-      <span>Basel • {currentTime}</span>
-    </div>
+          <div className="chat-header__copy">
+            <p className="eyebrow">Internal AI Assistant</p>
+            <h1>Beat-Bot</h1>
+            <p className="subtext">
+              Fast answers for internal policies, holidays, handbook questions,
+              and common internal rules.
+            </p>
+          </div>
 
-    <div className={`status-badge ${loading ? 'is-loading' : ''} ${error ? 'is-error' : ''}`}>
-      <span className="status-dot" />
-      {statusText}
-    </div>
-  </div>
-</header>
+          <div className="chat-header__actions">
+            <div
+              className={`status-badge ${loading ? 'is-loading' : ''} ${
+                error ? 'is-error' : ''
+              }`}
+              aria-live="polite"
+            >
+              <span className="status-dot" />
+              {statusText}
+            </div>
+
+            <button type="button" className="logout-button" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        </header>
 
         <section className="chat-card">
           <div className="chat-card__top">
@@ -201,7 +341,7 @@ export default function App() {
                 type="button"
                 className="chat-card__action-button"
                 onClick={handleCopyLastAnswer}
-                disabled={messages.length <= 1}
+                disabled={!messages.some((message) => message.role === 'assistant')}
               >
                 Copy answer
               </button>
