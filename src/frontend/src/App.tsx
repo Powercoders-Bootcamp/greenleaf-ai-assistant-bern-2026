@@ -5,7 +5,7 @@ import ChatWindow from './components/ChatWindow'
 import LeafScene from './components/LeafScene'
 import type { Message } from './types/chat'
 
-const API_URL = 'http://127.0.0.1:8000/chat'
+const API_URL = 'http://localhost:8000/chat'
 
 function formatTime(date = new Date()) {
   return date.toLocaleTimeString([], {
