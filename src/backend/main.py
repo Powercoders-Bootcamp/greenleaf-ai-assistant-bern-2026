@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from openai import OpenAIError
 from starlette.responses import RedirectResponse
 
-from chat_service import run_chat
+from backend.services.chat_service import run_chat
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
