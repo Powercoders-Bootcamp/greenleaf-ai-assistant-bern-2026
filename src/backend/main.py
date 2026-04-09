@@ -16,11 +16,13 @@ from openai import OpenAIError
 from starlette.responses import RedirectResponse
 
 from backend.services.chat_service import run_chat
-from backend.api.routes import auth, users
+from backend.api.routes import auth, history, users
 from backend.core.config import DATABASE_URL
 from backend.db.base import Base
 from backend.db.session import SessionLocal, engine
 from backend.models.user import User
+from backend.models.chat import Chat
+from backend.models.message import Message
 from backend.services.user_service import ensure_superadmin
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -53,6 +55,7 @@ app = FastAPI(
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(history.router, prefix="/history", tags=["history"])
 
 app.add_middleware(
     CORSMiddleware,

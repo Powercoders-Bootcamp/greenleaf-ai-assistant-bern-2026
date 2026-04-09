@@ -21,13 +21,16 @@ for candidate in (SRC_DIR, BACKEND_DIR):
 from backend.db.base import Base
 from backend.db.session import get_db
 from backend.api.routes import auth, users
+from backend.api.routes import history
 from backend.models.user import User
+from backend.models.chat import Chat
 from backend.core.security import hash_password
 
 
 app = FastAPI()
 app.include_router(auth.router, prefix="/auth")
 app.include_router(users.router, prefix="/users")
+app.include_router(history.router, prefix="/history")
 
 
 class UserAuthSmokeTests(unittest.TestCase):
@@ -314,6 +317,105 @@ class UserAuthSmokeTests(unittest.TestCase):
             headers=auth_headers,
         )
         self.assertEqual(delete_response.status_code, 400)
+
+    def test_history_uses_anonymous_owner_key_without_user_id(self) -> None:
+        self.create_test_user(
+            email="history.user@greenleaf.ch",
+            password="historysecret",
+            display_name="History User",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "history.user@greenleaf.ch",
+                "password": "historysecret",
+            },
+        )
+        self.assertEqual(login_response.status_code, 200)
+        token = login_response.json()["access_token"]
+        auth_headers = {"Authorization": f"Bearer {token}"}
+
+        create_chat_response = self.client.post(
+            "/history",
+            headers=auth_headers,
+            json={"title": "Vacation question"},
+        )
+        self.assertEqual(create_chat_response.status_code, 201)
+        chat_payload = create_chat_response.json()
+        self.assertNotIn("anonymous_user_key", chat_payload)
+        chat_id = chat_payload["id"]
+
+        create_message_response = self.client.post(
+            f"/history/{chat_id}/messages",
+            headers=auth_headers,
+            json={
+                "sender_type": "user",
+                "content_masked": "Can I take vacation next week?",
+            },
+        )
+        self.assertEqual(create_message_response.status_code, 201)
+
+        history_response = self.client.get("/history", headers=auth_headers)
+        self.assertEqual(history_response.status_code, 200)
+        self.assertEqual(len(history_response.json()), 1)
+        self.assertNotIn("anonymous_user_key", history_response.json()[0])
+
+        detail_response = self.client.get(f"/history/{chat_id}", headers=auth_headers)
+        self.assertEqual(detail_response.status_code, 200)
+        detail_payload = detail_response.json()
+        self.assertEqual(detail_payload["messages"][0]["content_masked"], "Can I take vacation next week?")
+
+        db = self.TestingSessionLocal()
+        try:
+            chat = db.query(Chat).filter(Chat.id == chat_id).one()
+            self.assertTrue(chat.anonymous_user_key)
+            self.assertFalse(hasattr(chat, "user_id"))
+        finally:
+            db.close()
+
+    def test_history_is_isolated_by_anonymous_owner_key(self) -> None:
+        self.create_test_user("owner.one@greenleaf.ch", "ownersecret")
+        self.create_test_user("owner.two@greenleaf.ch", "ownersecret")
+
+        owner_one_login = self.client.post(
+            "/auth/login",
+            json={"email": "owner.one@greenleaf.ch", "password": "ownersecret"},
+        )
+        owner_two_login = self.client.post(
+            "/auth/login",
+            json={"email": "owner.two@greenleaf.ch", "password": "ownersecret"},
+        )
+        self.assertEqual(owner_one_login.status_code, 200)
+        self.assertEqual(owner_two_login.status_code, 200)
+
+        owner_one_headers = {
+            "Authorization": f"Bearer {owner_one_login.json()['access_token']}"
+        }
+        owner_two_headers = {
+            "Authorization": f"Bearer {owner_two_login.json()['access_token']}"
+        }
+
+        create_chat_response = self.client.post(
+            "/history",
+            headers=owner_one_headers,
+            json={"title": "Private chat"},
+        )
+        self.assertEqual(create_chat_response.status_code, 201)
+        owner_one_chat_id = create_chat_response.json()["id"]
+
+        owner_two_list_response = self.client.get(
+            "/history",
+            headers=owner_two_headers,
+        )
+        self.assertEqual(owner_two_list_response.status_code, 200)
+        self.assertEqual(owner_two_list_response.json(), [])
+
+        owner_two_detail_response = self.client.get(
+            f"/history/{owner_one_chat_id}",
+            headers=owner_two_headers,
+        )
+        self.assertEqual(owner_two_detail_response.status_code, 404)
 
 
 if __name__ == "__main__":
