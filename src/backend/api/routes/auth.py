@@ -1,3 +1,9 @@
+"""Authentication and self-service account routes.
+
+Registration is intentionally admin-gated in this project. Regular users can
+log in, inspect their auth context/profile, and update only their own password.
+"""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Response, status

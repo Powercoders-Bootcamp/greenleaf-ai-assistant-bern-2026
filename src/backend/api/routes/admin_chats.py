@@ -1,3 +1,10 @@
+"""Admin-only anonymous chat management endpoints.
+
+Admins can inspect retention metadata and delete anonymous chats, but this route
+never exposes `anonymous_user_key` or direct user identifiers. Employee-owned
+history remains anonymous at the API boundary.
+"""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -45,6 +52,7 @@ def get_admin_chats(
     _: AuthContext = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> AdminChatPage:
+    """Return a Spring Page-like result for anonymous chats."""
     chats, total_items, total_pages = paginate_all_chats_for_admin(
         db,
         page=page,
@@ -89,6 +97,7 @@ def remove_expired_admin_chats(
     _: AuthContext = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> ChatRetentionCleanupResponse:
+    """Delete chats older than the requested retention window."""
     deleted_count = delete_expired_chats(db, older_than_days=older_than_days)
     return ChatRetentionCleanupResponse(deleted_count=deleted_count)
 
@@ -110,5 +119,6 @@ def remove_admin_chat(
     _: AuthContext = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> Response:
+    """Delete one anonymous chat by id; messages are removed by cascade."""
     delete_chat_by_id(db, chat_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

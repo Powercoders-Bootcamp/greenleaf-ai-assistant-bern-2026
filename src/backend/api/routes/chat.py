@@ -1,3 +1,12 @@
+"""Authenticated LLM chat endpoint.
+
+This route is the main frontend chat entry point. It deliberately keeps only a
+short-lived multi-turn context: the frontend sends the in-memory `chat_id` while
+the page is open, and the backend rejects expired sessions. Messages are stored
+through the anonymous history service, which masks PII before persistence and
+before the text is sent to the LLM.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -23,6 +32,7 @@ router = APIRouter()
 
 
 def _chat_title(message: str) -> str:
+    """Create a compact title from the first user turn for admin/history lists."""
     compact = " ".join(message.split())
     return compact[:80] if compact else "New chat"
 
@@ -62,6 +72,7 @@ def chat(
     auth_context: AuthContext = Depends(get_current_auth_context),
     db: Session = Depends(get_db),
 ) -> ChatTurnResponse:
+    """Run one chat turn and persist the masked user/assistant messages."""
     if not os.getenv("OPENAI_API_KEY"):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -74,6 +85,8 @@ def chat(
         chat_id=body.chat_id,
         title=_chat_title(body.message),
     )
+    # Load context before writing the new turn so the LLM sees prior messages
+    # plus the current user message exactly once.
     prior_messages = list_recent_messages_for_llm(chat_record)
 
     user_message = append_message(

@@ -1,3 +1,10 @@
+"""Admin-only user management routes.
+
+Employees can only change their own password through `/auth/password`; all user
+creation, role changes, activation changes, and deletion live behind these
+admin-only routes.
+"""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Response, status

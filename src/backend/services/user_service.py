@@ -1,3 +1,10 @@
+"""User lookup, provisioning, and authorization helpers.
+
+This service owns the security rules around managed users: admins can manage
+accounts, employees cannot access admin CRUD routes, and the seeded superadmin
+cannot be deleted, deactivated, or demoted.
+"""
+
 from __future__ import annotations
 
 from fastapi import Depends, HTTPException, status
@@ -44,6 +51,7 @@ def create_user_with_role(
     role: str,
     is_active: bool = True,
 ) -> User:
+    """Create a local password user while enforcing unique email addresses."""
     existing_user = get_user_by_email(db, payload.email)
     if existing_user is not None:
         raise HTTPException(
@@ -67,6 +75,7 @@ def create_user_with_role(
 
 
 def ensure_superadmin(db: Session) -> User | None:
+    """Create or repair the configured superadmin account at application startup."""
     if not SUPERADMIN_EMAIL:
         return None
 
@@ -97,6 +106,7 @@ def ensure_superadmin(db: Session) -> User | None:
 
 
 def create_admin_managed_user(db: Session, payload: UserAdminCreate) -> User:
+    """Create a user through the admin-only management flow."""
     return create_user_with_role(
         db=db,
         payload=payload,
@@ -107,6 +117,7 @@ def create_admin_managed_user(db: Session, payload: UserAdminCreate) -> User:
 
 
 def build_auth_context(user: User, token_subject: str) -> AuthContext:
+    """Normalize a database user into the token-derived request auth context."""
     return AuthContext(
         user_id=user.id,
         email=user.email,
@@ -129,6 +140,7 @@ def get_user_or_404(db: Session, user_id: int) -> User:
 
 
 def is_superadmin(user: User) -> bool:
+    """Return whether the user matches the configured protected superadmin email."""
     return bool(SUPERADMIN_EMAIL) and user.email == SUPERADMIN_EMAIL
 
 
@@ -138,6 +150,7 @@ def update_user(
     payload: UserUpdate,
     acting_user: AuthContext,
 ) -> User:
+    """Apply admin-managed updates while enforcing self/superadmin protections."""
     if payload.email is not None and payload.email != target_user.email:
         existing = get_user_by_email(db, payload.email)
         if existing is not None and existing.id != target_user.id:
@@ -185,6 +198,7 @@ def update_user(
 
 
 def delete_user(db: Session, target_user: User, acting_user: AuthContext) -> None:
+    """Delete a managed user unless the target is protected or the acting user."""
     if is_superadmin(target_user):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -205,6 +219,7 @@ def get_current_auth_context(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> AuthContext:
+    """Resolve the bearer token to an active persisted user."""
     payload = decode_token(token)
     subject = str(payload["sub"])
 
@@ -235,6 +250,7 @@ def get_current_auth_context(
 def require_admin(
     auth_context: AuthContext = Depends(get_current_auth_context),
 ) -> AuthContext:
+    """FastAPI dependency that allows only active users with the Admin role."""
     if auth_context.role != "Admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

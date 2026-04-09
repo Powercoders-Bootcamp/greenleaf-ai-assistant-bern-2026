@@ -1,3 +1,10 @@
+"""Current user's anonymous chat history endpoints.
+
+These endpoints are scoped to the authenticated user's HMAC-derived anonymous
+owner key. They do not expose user ids, emails, or the anonymous key itself.
+Admin-wide history management lives under `/admin/chats`.
+"""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -41,6 +48,7 @@ def create_history_chat(
     auth_context: AuthContext = Depends(get_current_auth_context),
     db: Session = Depends(get_db),
 ) -> ChatRead:
+    """Create a chat record for the current anonymous owner key."""
     chat = create_chat(db, auth_context, body)
     return ChatRead.model_validate(chat)
 
@@ -63,6 +71,7 @@ def get_history(
     auth_context: AuthContext = Depends(get_current_auth_context),
     db: Session = Depends(get_db),
 ) -> ChatPage:
+    """Return current user's chats as a page with optional updated_at filters."""
     chats, total_items, total_pages = paginate_own_chats(
         db,
         auth_context,
@@ -91,6 +100,7 @@ def get_history_chat(
     auth_context: AuthContext = Depends(get_current_auth_context),
     db: Session = Depends(get_db),
 ) -> ChatDetail:
+    """Return a single chat only if it belongs to the current anonymous owner."""
     chat = get_own_chat_or_404(db, auth_context, chat_id)
     return ChatDetail.model_validate(chat)
 
@@ -111,5 +121,6 @@ def create_history_message(
     auth_context: AuthContext = Depends(get_current_auth_context),
     db: Session = Depends(get_db),
 ) -> MessageRead:
+    """Append a masked message to the current user's anonymous chat."""
     message = append_message(db, auth_context, chat_id, body)
     return MessageRead.model_validate(message)

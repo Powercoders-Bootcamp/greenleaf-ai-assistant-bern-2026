@@ -1,3 +1,5 @@
+"""Pydantic schemas for anonymous chat, history, and chat API responses."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -10,6 +12,8 @@ SenderType = Literal["user", "assistant", "system"]
 
 
 class MessageCreate(BaseModel):
+    """Inbound message payload; content is expected to be masked before storage."""
+
     sender_type: SenderType
     content_masked: str = Field(min_length=1)
 
@@ -50,6 +54,8 @@ class AdminChatRead(ChatRead):
 
 
 class ChatPage(BaseModel):
+    """Spring Page-like response for the current user's chat history."""
+
     items: list[ChatRead]
     page: int
     page_size: int
@@ -58,6 +64,8 @@ class ChatPage(BaseModel):
 
 
 class AdminChatPage(BaseModel):
+    """Spring Page-like response for admin chat management."""
+
     items: list[AdminChatRead]
     page: int
     page_size: int
@@ -74,6 +82,8 @@ class ChatDetail(ChatRead):
 
 
 class ChatTurnRequest(BaseModel):
+    """One frontend chat turn; `chat_id` is ephemeral browser state."""
+
     message: str = Field(
         ...,
         min_length=1,
@@ -98,6 +108,8 @@ class ChatTurnRequest(BaseModel):
 
 
 class ChatTurnResponse(BaseModel):
+    """LLM answer plus the chat id to reuse while the page remains open."""
+
     chat_id: int = Field(
         ...,
         description="Anonymous chat id to reuse only while the current frontend chat UI stays open.",
