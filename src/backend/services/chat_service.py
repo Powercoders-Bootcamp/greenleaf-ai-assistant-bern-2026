@@ -15,7 +15,7 @@ from openai import OpenAI
 
 from backend.holidays_checker import HolidayAPIError, is_day_a_holiday, parse_iso_date
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[3]
 PROMPTS_DIR = REPO_ROOT / "prompts"
 TOOLS_DIR = PROMPTS_DIR / "tools_definitions"
 SYSTEM_PROMPT_PATH = PROMPTS_DIR / "system_prompt.txt"
