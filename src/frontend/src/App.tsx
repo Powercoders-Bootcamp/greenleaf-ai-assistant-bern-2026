@@ -80,7 +80,15 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, loading])
 
-  const currentTime = useMemo(() => formatTime(), [])
+  const [currentTime, setCurrentTime] = useState(() => formatTime())
+
+    useEffect(() => {
+      const interval = window.setInterval(() => {
+        setCurrentTime(formatTime())
+      }, 1000 * 30)
+
+      return () => window.clearInterval(interval)
+    }, [])
 
   const isAuthenticated = Boolean(token && authUser)
 
@@ -124,7 +132,7 @@ export default function App() {
 
       const payload = createMockAuthResponse(email)
 
-      persistAuthSession(payload)
+      persistAuthSession(payload.token, payload.user)
       setToken(payload.token)
       setAuthUser(payload.user)
 
@@ -267,7 +275,7 @@ export default function App() {
           confirmPassword={authConfirmPassword}
           loading={authLoading}
           error={authError}
-          success={authMode === 'forgot-password' ? null : null}
+          success={null}
           onModeChange={setAuthMode}
           onEmailChange={setAuthEmail}
           onPasswordChange={setAuthPassword}
@@ -285,11 +293,6 @@ export default function App() {
 
       <section className="chat-page">
         <header className="chat-header">
-          <div className="context-bar">
-            <span>Basel • {currentTime}</span>
-            <span>{authUser?.role === 'admin' ? 'Admin access' : 'User access'}</span>
-          </div>
-
           <div className="brand-mark" aria-hidden="true">
             <LeafScene loading={loading} />
           </div>
@@ -304,19 +307,26 @@ export default function App() {
           </div>
 
           <div className="chat-header__actions">
-            <div
-              className={`status-badge ${loading ? 'is-loading' : ''} ${
-                error ? 'is-error' : ''
-              }`}
-              aria-live="polite"
-            >
-              <span className="status-dot" />
-              {statusText}
+            <div className="context-bar context-bar--right">
+              <span>Basel • {currentTime}</span>
+              <span>{authUser?.role === 'admin' ? 'Admin access' : 'User access'}</span>
             </div>
 
-            <button type="button" className="logout-button" onClick={handleLogout}>
-              Logout
-            </button>
+            <div className="chat-header__actions-row">
+              <div
+                className={`status-badge ${loading ? 'is-loading' : ''} ${
+                  error ? 'is-error' : ''
+                }`}
+                aria-live="polite"
+              >
+                <span className="status-dot" />
+                {statusText}
+              </div>
+
+              <button type="button" className="logout-button" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
           </div>
         </header>
 
