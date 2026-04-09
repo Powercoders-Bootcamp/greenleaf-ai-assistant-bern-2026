@@ -7,3 +7,4 @@ python-dotenv>=1.0.0
 passlib[bcrypt]
 PyJWT
 sqlalchemy
+email-validator
