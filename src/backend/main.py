@@ -19,8 +19,9 @@ from backend.services.chat_service import run_chat
 from backend.api.routes import auth
 from backend.core.config import DATABASE_URL
 from backend.db.base import Base
-from backend.db.session import engine
+from backend.db.session import SessionLocal, engine
 from backend.models.user import User
+from backend.services.user_service import ensure_superadmin
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -34,6 +35,11 @@ def _safe_database_target(database_url: str) -> str:
 
 Base.metadata.create_all(bind=engine)
 logger.info("Database configured for %s", _safe_database_target(DATABASE_URL))
+
+with SessionLocal() as db:
+    seeded_superadmin = ensure_superadmin(db)
+    if seeded_superadmin is not None:
+        logger.info("Superadmin ready for %s", seeded_superadmin.email)
 
 app = FastAPI(
     title="GreenLeaf Beat-Bot API",
