@@ -16,10 +16,16 @@ from openai import OpenAIError
 from starlette.responses import RedirectResponse
 
 from backend.services.chat_service import run_chat
+from backend.api.routes import auth
+from backend.db.base import Base
+from backend.db.session import engine
+from backend.models.user import User
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 logger = logging.getLogger(__name__)
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="GreenLeaf Beat-Bot API",
@@ -31,6 +37,7 @@ app = FastAPI(
     ),
 )
 
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,96 +1,60 @@
-# app/core/security.py
+from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 import jwt
+from fastapi import HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
-import os
+
+from backend.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM, SECRET_KEY
 
 
-# ======================
-# PASSWORD HASHING
-# ======================
-
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def verify_password(password: str, hashed_password: str) -> bool:
+def verify_password(password: str, hashed_password: str | None) -> bool:
+    if not hashed_password:
+        return False
     return pwd_context.verify(password, hashed_password)
 
 
-# ======================
-# JWT CONFIG
-# ======================
-
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")  # dev fallback
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-
-# ======================
-# JWT CREATE
-# ======================
-
 def create_access_token(
-    data: dict,
-    expires_delta: Optional[timedelta] = None
+    data: dict[str, str],
+    expires_delta: timedelta | None = None,
 ) -> str:
     to_encode = data.copy()
-
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-
     to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=JWT_ALGORITHM)
 
-    encoded_jwt = jwt.encode(
-        to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM
-    )
-
-    return encoded_jwt
-
-
-# ======================
-# JWT DECODE / VALIDATE
-# ======================
 
 def decode_token(token: str) -> dict:
     try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
-
-        # 🔥 CRITICAL: sub check
-        if "sub" not in payload:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token missing subject"
-            )
-
-        return payload
-
-    except jwt.ExpiredSignatureError:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token expired"
-        )
-
-    except PyJWTError:
+            detail="Token expired",
+        ) from exc
+    except PyJWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
+            detail="Invalid token",
+        ) from exc
+
+    if "sub" not in payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token missing subject",
         )
+
+    return payload
