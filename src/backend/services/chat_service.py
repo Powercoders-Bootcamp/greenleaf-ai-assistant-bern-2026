@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo
 
 from openai import OpenAI
 
-from holidays_checker import HolidayAPIError, is_day_a_holiday, parse_iso_date
+from backend.holidays_checker import HolidayAPIError, is_day_a_holiday, parse_iso_date
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 PROMPTS_DIR = REPO_ROOT / "prompts"
