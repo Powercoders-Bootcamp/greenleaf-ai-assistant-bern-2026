@@ -20,6 +20,8 @@ for candidate in (SRC_DIR, BACKEND_DIR):
 from backend.db.base import Base
 from backend.db.session import get_db
 from backend.main import app
+from backend.models.user import User
+from backend.core.security import hash_password
 
 
 class UserAuthSmokeTests(unittest.TestCase):
@@ -91,6 +93,109 @@ class UserAuthSmokeTests(unittest.TestCase):
         self.assertEqual(auth_context["email"], "employee@greenleaf.ch")
         self.assertEqual(auth_context["role"], "Employee")
         self.assertEqual(auth_context["auth_method"], "jwt")
+
+    def test_admin_can_run_user_crud_flow(self) -> None:
+        db = self.TestingSessionLocal()
+        try:
+            admin = User(
+                email="admin@greenleaf.ch",
+                display_name="Admin User",
+                password_hash=hash_password("adminsecret"),
+                role="Admin",
+                issuer="test-suite",
+                oidc_subject=None,
+                is_active=True,
+            )
+            db.add(admin)
+            db.commit()
+        finally:
+            db.close()
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "admin@greenleaf.ch",
+                "password": "adminsecret",
+            },
+        )
+        self.assertEqual(login_response.status_code, 200)
+        admin_token = login_response.json()["access_token"]
+        auth_headers = {"Authorization": f"Bearer {admin_token}"}
+
+        create_response = self.client.post(
+            "/users",
+            headers=auth_headers,
+            json={
+                "email": "managed.user@greenleaf.ch",
+                "display_name": "Managed User",
+                "password": "managedsecret",
+                "role": "Employee",
+                "is_active": True,
+            },
+        )
+        self.assertEqual(create_response.status_code, 201)
+        created_user = create_response.json()
+        managed_user_id = created_user["id"]
+        self.assertEqual(created_user["email"], "managed.user@greenleaf.ch")
+
+        list_response = self.client.get("/users", headers=auth_headers)
+        self.assertEqual(list_response.status_code, 200)
+        users_payload = list_response.json()
+        self.assertTrue(any(user["id"] == managed_user_id for user in users_payload))
+
+        detail_response = self.client.get(f"/users/{managed_user_id}", headers=auth_headers)
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertEqual(detail_response.json()["display_name"], "Managed User")
+
+        update_response = self.client.put(
+            f"/users/{managed_user_id}",
+            headers=auth_headers,
+            json={
+                "display_name": "Updated Managed User",
+                "role": "Admin",
+                "is_active": True,
+            },
+        )
+        self.assertEqual(update_response.status_code, 200)
+        updated_user = update_response.json()
+        self.assertEqual(updated_user["display_name"], "Updated Managed User")
+        self.assertEqual(updated_user["role"], "Admin")
+
+        delete_response = self.client.delete(
+            f"/users/{managed_user_id}",
+            headers=auth_headers,
+        )
+        self.assertEqual(delete_response.status_code, 204)
+
+        missing_response = self.client.get(f"/users/{managed_user_id}", headers=auth_headers)
+        self.assertEqual(missing_response.status_code, 404)
+
+    def test_employee_cannot_access_admin_user_routes(self) -> None:
+        register_response = self.client.post(
+            "/auth/register",
+            json={
+                "email": "employee2@greenleaf.ch",
+                "password": "supersecret",
+                "display_name": "Another Employee",
+            },
+        )
+        self.assertEqual(register_response.status_code, 201)
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "employee2@greenleaf.ch",
+                "password": "supersecret",
+            },
+        )
+        self.assertEqual(login_response.status_code, 200)
+        employee_token = login_response.json()["access_token"]
+
+        forbidden_response = self.client.get(
+            "/users",
+            headers={"Authorization": f"Bearer {employee_token}"},
+        )
+        self.assertEqual(forbidden_response.status_code, 403)
 
 
 if __name__ == "__main__":
