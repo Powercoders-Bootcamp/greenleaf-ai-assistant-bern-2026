@@ -4,6 +4,7 @@ import sys
 import unittest
 from pathlib import Path
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -19,9 +20,14 @@ for candidate in (SRC_DIR, BACKEND_DIR):
 
 from backend.db.base import Base
 from backend.db.session import get_db
-from backend.main import app
+from backend.api.routes import auth, users
 from backend.models.user import User
 from backend.core.security import hash_password
+
+
+app = FastAPI()
+app.include_router(auth.router, prefix="/auth")
+app.include_router(users.router, prefix="/users")
 
 
 class UserAuthSmokeTests(unittest.TestCase):
@@ -56,20 +62,35 @@ class UserAuthSmokeTests(unittest.TestCase):
         Base.metadata.drop_all(bind=cls.engine)
         cls.engine.dispose()
 
+    def create_test_user(
+        self,
+        email: str,
+        password: str,
+        role: str = "Employee",
+        display_name: str = "Test User",
+    ) -> None:
+        db = self.TestingSessionLocal()
+        try:
+            user = User(
+                email=email,
+                display_name=display_name,
+                password_hash=hash_password(password),
+                role=role,
+                issuer="test-suite",
+                oidc_subject=None,
+                is_active=True,
+            )
+            db.add(user)
+            db.commit()
+        finally:
+            db.close()
+
     def test_register_login_and_me_flow(self) -> None:
-        register_response = self.client.post(
-            "/auth/register",
-            json={
-                "email": "employee@greenleaf.ch",
-                "password": "supersecret",
-                "display_name": "Green Leaf",
-            },
+        self.create_test_user(
+            email="employee@greenleaf.ch",
+            password="supersecret",
+            display_name="Green Leaf",
         )
-        self.assertEqual(register_response.status_code, 201)
-        registered_user = register_response.json()
-        self.assertEqual(registered_user["email"], "employee@greenleaf.ch")
-        self.assertEqual(registered_user["role"], "Employee")
-        self.assertTrue(registered_user["is_active"])
 
         login_response = self.client.post(
             "/auth/login",
@@ -95,21 +116,12 @@ class UserAuthSmokeTests(unittest.TestCase):
         self.assertEqual(auth_context["auth_method"], "jwt")
 
     def test_admin_can_run_user_crud_flow(self) -> None:
-        db = self.TestingSessionLocal()
-        try:
-            admin = User(
-                email="admin@greenleaf.ch",
-                display_name="Admin User",
-                password_hash=hash_password("adminsecret"),
-                role="Admin",
-                issuer="test-suite",
-                oidc_subject=None,
-                is_active=True,
-            )
-            db.add(admin)
-            db.commit()
-        finally:
-            db.close()
+        self.create_test_user(
+            email="admin@greenleaf.ch",
+            password="adminsecret",
+            role="Admin",
+            display_name="Admin User",
+        )
 
         login_response = self.client.post(
             "/auth/login",
@@ -171,15 +183,11 @@ class UserAuthSmokeTests(unittest.TestCase):
         self.assertEqual(missing_response.status_code, 404)
 
     def test_employee_cannot_access_admin_user_routes(self) -> None:
-        register_response = self.client.post(
-            "/auth/register",
-            json={
-                "email": "employee2@greenleaf.ch",
-                "password": "supersecret",
-                "display_name": "Another Employee",
-            },
+        self.create_test_user(
+            email="employee2@greenleaf.ch",
+            password="supersecret",
+            display_name="Another Employee",
         )
-        self.assertEqual(register_response.status_code, 201)
 
         login_response = self.client.post(
             "/auth/login",
@@ -196,6 +204,62 @@ class UserAuthSmokeTests(unittest.TestCase):
             headers={"Authorization": f"Bearer {employee_token}"},
         )
         self.assertEqual(forbidden_response.status_code, 403)
+
+        register_response = self.client.post(
+            "/auth/register",
+            headers={"Authorization": f"Bearer {employee_token}"},
+            json={
+                "email": "not.allowed@greenleaf.ch",
+                "password": "supersecret",
+                "display_name": "Not Allowed",
+            },
+        )
+        self.assertEqual(register_response.status_code, 403)
+
+    def test_user_can_only_update_own_password(self) -> None:
+        self.create_test_user(
+            email="password.user@greenleaf.ch",
+            password="oldsecret",
+            display_name="Password User",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "password.user@greenleaf.ch",
+                "password": "oldsecret",
+            },
+        )
+        self.assertEqual(login_response.status_code, 200)
+        token = login_response.json()["access_token"]
+
+        password_response = self.client.put(
+            "/auth/password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": "oldsecret",
+                "new_password": "newsecret",
+            },
+        )
+        self.assertEqual(password_response.status_code, 204)
+
+        old_login_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "password.user@greenleaf.ch",
+                "password": "oldsecret",
+            },
+        )
+        self.assertEqual(old_login_response.status_code, 401)
+
+        new_login_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "password.user@greenleaf.ch",
+                "password": "newsecret",
+            },
+        )
+        self.assertEqual(new_login_response.status_code, 200)
 
 
 if __name__ == "__main__":

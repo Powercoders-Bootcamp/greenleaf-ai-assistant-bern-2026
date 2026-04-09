@@ -1,13 +1,22 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
-from backend.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
+from backend.schemas.auth import (
+    LoginRequest,
+    PasswordChangeRequest,
+    RegisterRequest,
+    TokenResponse,
+)
 from backend.schemas.user import AuthContext, UserRead
-from backend.services.auth_service import login_user, register_user
-from backend.services.user_service import get_current_auth_context, get_user_by_id
+from backend.services.auth_service import change_user_password, login_user, register_user
+from backend.services.user_service import (
+    get_current_auth_context,
+    get_user_by_id,
+    require_admin,
+)
 
 router = APIRouter()
 
@@ -17,10 +26,16 @@ router = APIRouter()
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
     summary="Register a new employee account",
-    description="Creates a new user account with the default `Employee` role.",
+    description="Admin-only endpoint that creates a new user account with the default `Employee` role.",
     responses={
         201: {
             "description": "User account created successfully.",
+        },
+        401: {
+            "description": "Token is missing, invalid, or expired.",
+        },
+        403: {
+            "description": "Admin access is required.",
         },
         409: {
             "description": "A user with the same email already exists.",
@@ -29,6 +44,7 @@ router = APIRouter()
 )
 def register(
     body: RegisterRequest,
+    _: AuthContext = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> UserRead:
     user = register_user(db, body)
@@ -88,3 +104,24 @@ def profile(
 ) -> UserRead:
     user = get_user_by_id(db, auth_context.user_id)
     return UserRead.model_validate(user)
+
+
+@router.put(
+    "/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Change current user password",
+    description="Allows any authenticated active user to update only their own password.",
+    responses={
+        204: {"description": "Password updated successfully."},
+        401: {"description": "Token is invalid or current password is wrong."},
+        403: {"description": "Authenticated user is inactive."},
+    },
+)
+def change_password(
+    body: PasswordChangeRequest,
+    auth_context: AuthContext = Depends(get_current_auth_context),
+    db: Session = Depends(get_db),
+) -> Response:
+    user = get_user_by_id(db, auth_context.user_id)
+    change_user_password(db, user, body)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

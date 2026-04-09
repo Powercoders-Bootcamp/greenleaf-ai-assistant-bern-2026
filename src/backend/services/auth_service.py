@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from backend.core.security import create_access_token, hash_password, verify_password
 from backend.models.user import User
-from backend.schemas.auth import RegisterRequest
+from backend.schemas.auth import PasswordChangeRequest, RegisterRequest
 from backend.schemas.user import UserCreate
 from backend.services.user_service import create_user, get_user_by_email
 
@@ -46,3 +46,18 @@ def login_user(db: Session, email: str, password: str) -> tuple[User, str]:
         }
     )
     return user, token
+
+
+def change_user_password(
+    db: Session,
+    user: User,
+    body: PasswordChangeRequest,
+) -> None:
+    if not verify_password(body.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is invalid",
+        )
+
+    user.password_hash = hash_password(body.new_password)
+    db.commit()
