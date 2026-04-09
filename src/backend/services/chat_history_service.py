@@ -3,8 +3,10 @@ from __future__ import annotations
 import hashlib
 import hmac
 from datetime import datetime, timedelta, timezone
+from math import ceil
 
 from fastapi import HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.core.config import (
@@ -88,6 +90,93 @@ def list_own_chats(db: Session, auth_context: AuthContext) -> list[Chat]:
         .order_by(Chat.updated_at.desc(), Chat.id.desc())
         .all()
     )
+
+
+def _apply_chat_date_filters(
+    query,
+    date_from: datetime | None,
+    date_to: datetime | None,
+):
+    if date_from is not None:
+        query = query.filter(Chat.updated_at >= date_from)
+    if date_to is not None:
+        query = query.filter(Chat.updated_at <= date_to)
+    return query
+
+
+def _total_pages(total_items: int, page_size: int) -> int:
+    if total_items == 0:
+        return 0
+    return ceil(total_items / page_size)
+
+
+def paginate_own_chats(
+    db: Session,
+    auth_context: AuthContext,
+    page: int,
+    page_size: int,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+) -> tuple[list[Chat], int, int]:
+    query = db.query(Chat).filter(
+        Chat.anonymous_user_key == anonymous_user_key(auth_context)
+    )
+    query = _apply_chat_date_filters(query, date_from, date_to)
+    total_items = query.count()
+    chats = (
+        query.order_by(Chat.updated_at.desc(), Chat.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return chats, total_items, _total_pages(total_items, page_size)
+
+
+def paginate_all_chats_for_admin(
+    db: Session,
+    page: int,
+    page_size: int,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+) -> tuple[list[tuple[Chat, int]], int, int]:
+    filtered_chats = _apply_chat_date_filters(db.query(Chat), date_from, date_to)
+    total_items = filtered_chats.count()
+    chats_with_counts = (
+        filtered_chats.outerjoin(Message, Message.chat_id == Chat.id)
+        .group_by(Chat.id)
+        .order_by(Chat.updated_at.desc(), Chat.id.desc())
+        .with_entities(Chat, func.count(Message.id).label("message_count"))
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return chats_with_counts, total_items, _total_pages(total_items, page_size)
+
+
+def get_chat_or_404(db: Session, chat_id: int) -> Chat:
+    chat = db.query(Chat).filter(Chat.id == chat_id).first()
+    if chat is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found.",
+        )
+    return chat
+
+
+def delete_chat_by_id(db: Session, chat_id: int) -> None:
+    chat = get_chat_or_404(db, chat_id)
+    db.delete(chat)
+    db.commit()
+
+
+def delete_expired_chats(db: Session, older_than_days: int) -> int:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+    expired_chats = db.query(Chat).filter(Chat.updated_at < cutoff).all()
+    deleted_count = len(expired_chats)
+    for chat in expired_chats:
+        db.delete(chat)
+    db.commit()
+    return deleted_count
 
 
 def get_own_chat_or_404(

@@ -23,7 +23,7 @@ for candidate in (SRC_DIR, BACKEND_DIR):
 
 from backend.db.base import Base
 from backend.db.session import get_db
-from backend.api.routes import auth, chat, users
+from backend.api.routes import admin_chats, auth, chat, users
 from backend.api.routes import history
 from backend.models.message import Message
 from backend.models.user import User
@@ -34,6 +34,7 @@ from backend.core.security import hash_password
 app = FastAPI()
 app.include_router(auth.router, prefix="/auth")
 app.include_router(users.router, prefix="/users")
+app.include_router(admin_chats.router, prefix="/admin")
 app.include_router(history.router, prefix="/history")
 app.include_router(chat.router, prefix="/chat")
 
@@ -363,8 +364,11 @@ class UserAuthSmokeTests(unittest.TestCase):
 
         history_response = self.client.get("/history", headers=auth_headers)
         self.assertEqual(history_response.status_code, 200)
-        self.assertEqual(len(history_response.json()), 1)
-        self.assertNotIn("anonymous_user_key", history_response.json()[0])
+        history_payload = history_response.json()
+        self.assertEqual(len(history_payload["items"]), 1)
+        self.assertEqual(history_payload["total_items"], 1)
+        self.assertEqual(history_payload["page"], 1)
+        self.assertNotIn("anonymous_user_key", history_payload["items"][0])
 
         detail_response = self.client.get(f"/history/{chat_id}", headers=auth_headers)
         self.assertEqual(detail_response.status_code, 200)
@@ -414,7 +418,7 @@ class UserAuthSmokeTests(unittest.TestCase):
             headers=owner_two_headers,
         )
         self.assertEqual(owner_two_list_response.status_code, 200)
-        self.assertEqual(owner_two_list_response.json(), [])
+        self.assertEqual(owner_two_list_response.json()["items"], [])
 
         owner_two_detail_response = self.client.get(
             f"/history/{owner_one_chat_id}",
@@ -567,6 +571,288 @@ class UserAuthSmokeTests(unittest.TestCase):
             )
 
         self.assertEqual(expired_response.status_code, 409)
+
+    def test_history_supports_pagination_and_updated_at_filters(self) -> None:
+        self.create_test_user(
+            email="history.page@greenleaf.ch",
+            password="historysecret",
+            display_name="History Page User",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={"email": "history.page@greenleaf.ch", "password": "historysecret"},
+        )
+        self.assertEqual(login_response.status_code, 200)
+        auth_headers = {
+            "Authorization": f"Bearer {login_response.json()['access_token']}"
+        }
+
+        chat_ids: list[int] = []
+        for title in ("Old page chat", "Middle page chat", "New page chat"):
+            response = self.client.post(
+                "/history",
+                headers=auth_headers,
+                json={"title": title},
+            )
+            self.assertEqual(response.status_code, 201)
+            chat_ids.append(response.json()["id"])
+
+        db = self.TestingSessionLocal()
+        try:
+            updated_values = [
+                datetime(2030, 1, 1, 9, 0, 0),
+                datetime(2030, 1, 2, 9, 0, 0),
+                datetime(2030, 1, 3, 9, 0, 0),
+            ]
+            for chat_id, updated_at in zip(chat_ids, updated_values):
+                chat_record = db.query(Chat).filter(Chat.id == chat_id).one()
+                chat_record.updated_at = updated_at
+            db.commit()
+        finally:
+            db.close()
+
+        page_response = self.client.get(
+            (
+                "/history?page=1&page_size=2"
+                "&date_from=2030-01-02T00:00:00"
+                "&date_to=2030-01-03T23:59:59"
+            ),
+            headers=auth_headers,
+        )
+        self.assertEqual(page_response.status_code, 200)
+        payload = page_response.json()
+        self.assertEqual(payload["page"], 1)
+        self.assertEqual(payload["page_size"], 2)
+        self.assertEqual(payload["total_items"], 2)
+        self.assertEqual(payload["total_pages"], 1)
+        self.assertEqual([item["title"] for item in payload["items"]], [
+            "New page chat",
+            "Middle page chat",
+        ])
+
+    def test_admin_chats_support_pagination_and_updated_at_filters(self) -> None:
+        self.create_test_user(
+            email="admin.page@greenleaf.ch",
+            password="adminsecret",
+            role="Admin",
+            display_name="Admin Page User",
+        )
+        self.create_test_user(
+            email="owner.page@greenleaf.ch",
+            password="ownersecret",
+            display_name="Owner Page User",
+        )
+
+        admin_login = self.client.post(
+            "/auth/login",
+            json={"email": "admin.page@greenleaf.ch", "password": "adminsecret"},
+        )
+        owner_login = self.client.post(
+            "/auth/login",
+            json={"email": "owner.page@greenleaf.ch", "password": "ownersecret"},
+        )
+        self.assertEqual(admin_login.status_code, 200)
+        self.assertEqual(owner_login.status_code, 200)
+
+        admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+        owner_headers = {"Authorization": f"Bearer {owner_login.json()['access_token']}"}
+
+        chat_ids: list[int] = []
+        for title in ("Admin old page chat", "Admin middle page chat", "Admin new page chat"):
+            response = self.client.post(
+                "/history",
+                headers=owner_headers,
+                json={"title": title},
+            )
+            self.assertEqual(response.status_code, 201)
+            chat_ids.append(response.json()["id"])
+
+        db = self.TestingSessionLocal()
+        try:
+            updated_values = [
+                datetime(2031, 1, 1, 9, 0, 0),
+                datetime(2031, 1, 2, 9, 0, 0),
+                datetime(2031, 1, 3, 9, 0, 0),
+            ]
+            for chat_id, updated_at in zip(chat_ids, updated_values):
+                chat_record = db.query(Chat).filter(Chat.id == chat_id).one()
+                chat_record.updated_at = updated_at
+            db.commit()
+        finally:
+            db.close()
+
+        page_response = self.client.get(
+            (
+                "/admin/chats?page=2&page_size=1"
+                "&date_from=2031-01-01T00:00:00"
+                "&date_to=2031-01-03T23:59:59"
+            ),
+            headers=admin_headers,
+        )
+        self.assertEqual(page_response.status_code, 200)
+        payload = page_response.json()
+        self.assertEqual(payload["page"], 2)
+        self.assertEqual(payload["page_size"], 1)
+        self.assertEqual(payload["total_items"], 3)
+        self.assertEqual(payload["total_pages"], 3)
+        self.assertEqual(payload["items"][0]["title"], "Admin middle page chat")
+        self.assertNotIn("anonymous_user_key", payload["items"][0])
+
+    def test_admin_can_list_and_delete_anonymous_chats(self) -> None:
+        self.create_test_user(
+            email="chat.admin@greenleaf.ch",
+            password="adminsecret",
+            role="Admin",
+            display_name="Chat Admin",
+        )
+        self.create_test_user(
+            email="chat.owner@greenleaf.ch",
+            password="ownersecret",
+            display_name="Chat Owner",
+        )
+
+        admin_login = self.client.post(
+            "/auth/login",
+            json={"email": "chat.admin@greenleaf.ch", "password": "adminsecret"},
+        )
+        owner_login = self.client.post(
+            "/auth/login",
+            json={"email": "chat.owner@greenleaf.ch", "password": "ownersecret"},
+        )
+        self.assertEqual(admin_login.status_code, 200)
+        self.assertEqual(owner_login.status_code, 200)
+
+        admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+        owner_headers = {"Authorization": f"Bearer {owner_login.json()['access_token']}"}
+
+        create_chat_response = self.client.post(
+            "/history",
+            headers=owner_headers,
+            json={"title": "Admin visible anonymous chat"},
+        )
+        self.assertEqual(create_chat_response.status_code, 201)
+        chat_id = create_chat_response.json()["id"]
+
+        create_message_response = self.client.post(
+            f"/history/{chat_id}/messages",
+            headers=owner_headers,
+            json={"sender_type": "user", "content_masked": "Hello admin list"},
+        )
+        self.assertEqual(create_message_response.status_code, 201)
+
+        list_response = self.client.get("/admin/chats", headers=admin_headers)
+        self.assertEqual(list_response.status_code, 200)
+        admin_chats_payload = list_response.json()["items"]
+        listed_chat = next(chat for chat in admin_chats_payload if chat["id"] == chat_id)
+        self.assertEqual(listed_chat["message_count"], 1)
+        self.assertNotIn("anonymous_user_key", listed_chat)
+
+        delete_response = self.client.delete(
+            f"/admin/chats/{chat_id}",
+            headers=admin_headers,
+        )
+        self.assertEqual(delete_response.status_code, 204)
+
+        owner_detail_response = self.client.get(
+            f"/history/{chat_id}",
+            headers=owner_headers,
+        )
+        self.assertEqual(owner_detail_response.status_code, 404)
+
+    def test_employee_cannot_access_admin_chat_retention_routes(self) -> None:
+        self.create_test_user(
+            email="chat.employee@greenleaf.ch",
+            password="employeesecret",
+            display_name="Chat Employee",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={"email": "chat.employee@greenleaf.ch", "password": "employeesecret"},
+        )
+        self.assertEqual(login_response.status_code, 200)
+        employee_headers = {
+            "Authorization": f"Bearer {login_response.json()['access_token']}"
+        }
+
+        list_response = self.client.get("/admin/chats", headers=employee_headers)
+        self.assertEqual(list_response.status_code, 403)
+
+        cleanup_response = self.client.delete(
+            "/admin/chats/expired",
+            headers=employee_headers,
+        )
+        self.assertEqual(cleanup_response.status_code, 403)
+
+    def test_admin_can_delete_expired_anonymous_chats(self) -> None:
+        self.create_test_user(
+            email="retention.admin@greenleaf.ch",
+            password="adminsecret",
+            role="Admin",
+            display_name="Retention Admin",
+        )
+        self.create_test_user(
+            email="retention.owner@greenleaf.ch",
+            password="ownersecret",
+            display_name="Retention Owner",
+        )
+
+        admin_login = self.client.post(
+            "/auth/login",
+            json={"email": "retention.admin@greenleaf.ch", "password": "adminsecret"},
+        )
+        owner_login = self.client.post(
+            "/auth/login",
+            json={"email": "retention.owner@greenleaf.ch", "password": "ownersecret"},
+        )
+        self.assertEqual(admin_login.status_code, 200)
+        self.assertEqual(owner_login.status_code, 200)
+
+        admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+        owner_headers = {"Authorization": f"Bearer {owner_login.json()['access_token']}"}
+
+        old_chat_response = self.client.post(
+            "/history",
+            headers=owner_headers,
+            json={"title": "Old retention chat"},
+        )
+        new_chat_response = self.client.post(
+            "/history",
+            headers=owner_headers,
+            json={"title": "Fresh retention chat"},
+        )
+        self.assertEqual(old_chat_response.status_code, 201)
+        self.assertEqual(new_chat_response.status_code, 201)
+        old_chat_id = old_chat_response.json()["id"]
+        new_chat_id = new_chat_response.json()["id"]
+
+        db = self.TestingSessionLocal()
+        try:
+            old_chat = db.query(Chat).filter(Chat.id == old_chat_id).one()
+            old_chat.updated_at = datetime.now(timezone.utc) - timedelta(days=45)
+            db.commit()
+        finally:
+            db.close()
+
+        cleanup_response = self.client.delete(
+            "/admin/chats/expired?older_than_days=30",
+            headers=admin_headers,
+        )
+        self.assertEqual(cleanup_response.status_code, 200)
+        self.assertEqual(cleanup_response.json()["deleted_count"], 1)
+
+        old_detail_response = self.client.get(
+            f"/history/{old_chat_id}",
+            headers=owner_headers,
+        )
+        self.assertEqual(old_detail_response.status_code, 404)
+
+        fresh_detail_response = self.client.get(
+            f"/history/{new_chat_id}",
+            headers=owner_headers,
+        )
+        self.assertEqual(fresh_detail_response.status_code, 200)
 
 
 if __name__ == "__main__":

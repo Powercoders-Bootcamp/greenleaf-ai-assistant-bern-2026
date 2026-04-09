@@ -1,16 +1,25 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, status
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
-from backend.schemas.chat import ChatCreate, ChatDetail, ChatRead, MessageCreate, MessageRead
+from backend.schemas.chat import (
+    ChatCreate,
+    ChatDetail,
+    ChatPage,
+    ChatRead,
+    MessageCreate,
+    MessageRead,
+)
 from backend.schemas.user import AuthContext
 from backend.services.chat_history_service import (
     append_message,
     create_chat,
     get_own_chat_or_404,
-    list_own_chats,
+    paginate_own_chats,
 )
 from backend.services.user_service import get_current_auth_context
 
@@ -38,18 +47,37 @@ def create_history_chat(
 
 @router.get(
     "",
-    response_model=list[ChatRead],
+    response_model=ChatPage,
     summary="List own anonymous chat history",
     description=(
         "Returns chats matching the current user's anonymous HMAC key. "
-        "The key is never returned in the API response."
+        "The key is never returned in the API response. Supports page-based "
+        "pagination and optional updated_at date range filters."
     ),
 )
 def get_history(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
     auth_context: AuthContext = Depends(get_current_auth_context),
     db: Session = Depends(get_db),
-) -> list[ChatRead]:
-    return [ChatRead.model_validate(chat) for chat in list_own_chats(db, auth_context)]
+) -> ChatPage:
+    chats, total_items, total_pages = paginate_own_chats(
+        db,
+        auth_context,
+        page=page,
+        page_size=page_size,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    return ChatPage(
+        items=[ChatRead.model_validate(chat) for chat in chats],
+        page=page,
+        page_size=page_size,
+        total_items=total_items,
+        total_pages=total_pages,
+    )
 
 
 @router.get(

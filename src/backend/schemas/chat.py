@@ -45,6 +45,30 @@ class ChatRead(BaseModel):
     updated_at: datetime
 
 
+class AdminChatRead(ChatRead):
+    message_count: int = 0
+
+
+class ChatPage(BaseModel):
+    items: list[ChatRead]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
+class AdminChatPage(BaseModel):
+    items: list[AdminChatRead]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
+class ChatRetentionCleanupResponse(BaseModel):
+    deleted_count: int
+
+
 class ChatDetail(ChatRead):
     messages: list[MessageRead] = []
 

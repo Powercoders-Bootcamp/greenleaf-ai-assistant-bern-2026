@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
-from backend.api.routes import auth, chat, history, users
+from backend.api.routes import admin_chats, auth, chat, history, users
 from backend.core.config import AUTO_CREATE_DB_TABLES, DATABASE_URL
 from backend.db.base import Base
 from backend.db.session import SessionLocal, engine
@@ -57,6 +57,7 @@ app = FastAPI(
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(admin_chats.router, prefix="/admin", tags=["admin"])
 app.include_router(history.router, prefix="/history", tags=["history"])
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 
