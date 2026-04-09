@@ -1,9 +1,22 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required.")
+
+if not DATABASE_URL.startswith("postgresql+psycopg://"):
+    raise RuntimeError(
+        "Only PostgreSQL connections using the psycopg driver are supported."
+    )
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me-32chars")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")

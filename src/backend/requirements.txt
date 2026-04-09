@@ -8,3 +8,4 @@ passlib[bcrypt]
 PyJWT
 sqlalchemy
 email-validator
+psycopg[binary]

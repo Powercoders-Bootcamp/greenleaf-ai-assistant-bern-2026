@@ -17,6 +17,7 @@ from starlette.responses import RedirectResponse
 
 from backend.services.chat_service import run_chat
 from backend.api.routes import auth
+from backend.core.config import DATABASE_URL
 from backend.db.base import Base
 from backend.db.session import engine
 from backend.models.user import User
@@ -25,7 +26,14 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 
 logger = logging.getLogger(__name__)
 
+
+def _safe_database_target(database_url: str) -> str:
+    if "@" in database_url:
+        return database_url.split("@", 1)[1]
+    return database_url
+
 Base.metadata.create_all(bind=engine)
+logger.info("Database configured for %s", _safe_database_target(DATABASE_URL))
 
 app = FastAPI(
     title="GreenLeaf Beat-Bot API",
