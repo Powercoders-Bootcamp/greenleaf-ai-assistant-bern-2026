@@ -21,6 +21,7 @@ class Chat(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
+        index=True,
         nullable=False,
     )
 

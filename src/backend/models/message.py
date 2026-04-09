@@ -18,7 +18,7 @@ class Message(Base):
     sender_type: Mapped[str] = mapped_column(String(32), nullable=False)
     content_masked: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[object] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
+        DateTime(timezone=True), server_default=func.now(), index=True, nullable=False
     )
 
     chat: Mapped["Chat"] = relationship("Chat", back_populates="messages")

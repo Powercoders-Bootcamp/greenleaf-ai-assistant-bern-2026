@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
 from backend.api.routes import auth, chat, history, users
-from backend.core.config import DATABASE_URL
+from backend.core.config import AUTO_CREATE_DB_TABLES, DATABASE_URL
 from backend.db.base import Base
 from backend.db.session import SessionLocal, engine
 from backend.models.chat import Chat
@@ -33,7 +33,11 @@ def _safe_database_target(database_url: str) -> str:
     return database_url
 
 
-Base.metadata.create_all(bind=engine)
+if AUTO_CREATE_DB_TABLES:
+    Base.metadata.create_all(bind=engine)
+else:
+    logger.info("Database table creation is managed by Alembic migrations.")
+
 logger.info("Database configured for %s", _safe_database_target(DATABASE_URL))
 
 with SessionLocal() as db:
