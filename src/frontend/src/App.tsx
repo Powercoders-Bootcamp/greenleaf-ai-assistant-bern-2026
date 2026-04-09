@@ -10,10 +10,12 @@ import {
   getStoredUser,
   persistAuthSession,
 } from './lib/auth'
-import type { AuthMode, AuthResponse, AuthUser } from './types/auth'
+import type { AuthMode, AuthUser } from './types/auth'
 import type { Message } from './types/chat'
 
-const API_URL = 'http://127.0.0.1:8000/chat'
+const API_BASE_URL = 'http://127.0.0.1:8000'
+const CHAT_API_URL = `${API_BASE_URL}/chat`
+const LOGIN_API_URL = `${API_BASE_URL}/auth/login`
 
 function formatTime(date = new Date()) {
   return date.toLocaleTimeString([], {
@@ -31,24 +33,9 @@ function createMessage(role: Message['role'], content: string): Message {
   }
 }
 
-function createMockAuthResponse(email: string): AuthResponse {
-  const isAdmin = email.toLowerCase().includes('admin')
-
-  const user: AuthUser = {
-    id: crypto.randomUUID(),
-    email,
-    role: isAdmin ? 'admin' : 'user',
-    name: email.split('@')[0],
-  }
-
-  return {
-    token: `mock-token-${crypto.randomUUID()}`,
-    user,
-  }
-}
-
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([])
+  const [chatId, setChatId] = useState<number | null>(null)
 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -68,7 +55,7 @@ export default function App() {
 
   useEffect(() => {
     const storedToken = getStoredToken()
-    const storedUser = getStoredUser()
+    const storedUser = getStoredUser<AuthUser>()
 
     if (storedToken && storedUser) {
       setToken(storedToken)
@@ -122,15 +109,49 @@ export default function App() {
         return
       }
 
-      const payload = createMockAuthResponse(email)
+      if (authMode === 'register') {
+        setAuthError('Registration is admin-managed. Please ask an admin to create your account.')
+        return
+      }
 
-      persistAuthSession(payload)
-      setToken(payload.token)
-      setAuthUser(payload.user)
+      const response = await fetch(LOGIN_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      let data: unknown = null
+
+      try {
+        data = await response.json()
+      } catch {
+        data = null
+      }
+
+      const safeData =
+        typeof data === 'object' && data !== null
+          ? (data as { access_token?: string; user?: AuthUser; detail?: string })
+          : {}
+
+      if (!response.ok || !safeData.access_token || !safeData.user) {
+        throw new Error(
+          safeData.detail || `Authentication failed with status ${response.status}`
+        )
+      }
+
+      persistAuthSession(safeData.access_token, safeData.user)
+      setToken(safeData.access_token)
+      setAuthUser(safeData.user)
 
       setAuthPassword('')
       setAuthConfirmPassword('')
       setAuthMode('login')
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Could not sign in right now.'
+      setAuthError(message)
     } finally {
       setAuthLoading(false)
     }
@@ -144,6 +165,8 @@ export default function App() {
     setAuthPassword('')
     setAuthConfirmPassword('')
     setAuthMode('login')
+    setChatId(null)
+    setMessages([])
   }, [])
 
   const sendMessage = useCallback(
@@ -161,13 +184,16 @@ export default function App() {
       setLastSubmittedQuestion(textToSend)
 
       try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(CHAT_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ message: textToSend }),
+          body: JSON.stringify({
+            message: textToSend,
+            ...(chatId ? { chat_id: chatId } : {}),
+          }),
         })
 
         let data: unknown = null
@@ -180,7 +206,7 @@ export default function App() {
 
         const safeData =
           typeof data === 'object' && data !== null
-            ? (data as { reply?: string; detail?: string })
+            ? (data as { chat_id?: number; reply?: string; detail?: string })
             : {}
 
         if (response.status === 401) {
@@ -191,6 +217,9 @@ export default function App() {
         }
 
         if (!response.ok) {
+          if (response.status === 409) {
+            setChatId(null)
+          }
           throw new Error(
             safeData.detail || `Request failed with status ${response.status}`
           )
@@ -198,6 +227,10 @@ export default function App() {
 
         const assistantReply =
           safeData.reply?.trim() || 'No reply received from server.'
+
+        if (typeof safeData.chat_id === 'number') {
+          setChatId(safeData.chat_id)
+        }
 
         setMessages((prev) => [...prev, createMessage('assistant', assistantReply)])
       } catch (err) {
@@ -220,7 +253,7 @@ export default function App() {
         setLoading(false)
       }
     },
-    [input, loading, token]
+    [chatId, input, loading, token]
   )
 
   const handleSend = useCallback(() => {
@@ -287,7 +320,7 @@ export default function App() {
         <header className="chat-header">
           <div className="context-bar">
             <span>Basel • {currentTime}</span>
-            <span>{authUser?.role === 'admin' ? 'Admin access' : 'User access'}</span>
+            <span>{authUser?.role === 'Admin' ? 'Admin access' : 'User access'}</span>
           </div>
 
           <div className="brand-mark" aria-hidden="true">

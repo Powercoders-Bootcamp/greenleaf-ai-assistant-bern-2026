@@ -1,12 +1,12 @@
-export type UserRole = 'admin' | 'user'
+export type UserRole = 'Admin' | 'Employee'
 
 export type AuthMode = 'login' | 'register' | 'forgot-password'
 
 export type AuthUser = {
-  id: string
+  id: string | number
   email: string
   role: UserRole
-  name?: string
+  display_name?: string | null
 }
 
 export type AuthResponse = {

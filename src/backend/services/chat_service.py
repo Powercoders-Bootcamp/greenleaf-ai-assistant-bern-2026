@@ -110,7 +110,10 @@ def _append_assistant_message(messages: list[dict[str, Any]], assistant_msg: Any
     messages.append(entry)
 
 
-def run_chat(user_message: str) -> str:
+def run_chat(
+    user_message: str,
+    conversation_messages: list[dict[str, str]] | None = None,
+) -> str:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set")
@@ -120,8 +123,10 @@ def run_chat(user_message: str) -> str:
     tools = load_tool_definitions()
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": load_system_prompt()},
-        {"role": "user", "content": user_message},
     ]
+    if conversation_messages:
+        messages.extend(conversation_messages)
+    messages.append({"role": "user", "content": user_message})
 
     for _ in range(MAX_TOOL_ROUNDS):
         response = client.chat.completions.create(

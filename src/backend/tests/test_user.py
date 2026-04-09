@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
 import sys
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -20,8 +23,9 @@ for candidate in (SRC_DIR, BACKEND_DIR):
 
 from backend.db.base import Base
 from backend.db.session import get_db
-from backend.api.routes import auth, users
+from backend.api.routes import auth, chat, users
 from backend.api.routes import history
+from backend.models.message import Message
 from backend.models.user import User
 from backend.models.chat import Chat
 from backend.core.security import hash_password
@@ -31,6 +35,7 @@ app = FastAPI()
 app.include_router(auth.router, prefix="/auth")
 app.include_router(users.router, prefix="/users")
 app.include_router(history.router, prefix="/history")
+app.include_router(chat.router, prefix="/chat")
 
 
 class UserAuthSmokeTests(unittest.TestCase):
@@ -416,6 +421,152 @@ class UserAuthSmokeTests(unittest.TestCase):
             headers=owner_two_headers,
         )
         self.assertEqual(owner_two_detail_response.status_code, 404)
+
+    def test_chat_masks_pii_persists_messages_and_returns_chat_id(self) -> None:
+        self.create_test_user(
+            email="chat.user@greenleaf.ch",
+            password="chatsecret",
+            display_name="Chat User",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={"email": "chat.user@greenleaf.ch", "password": "chatsecret"},
+        )
+        self.assertEqual(login_response.status_code, 200)
+        auth_headers = {
+            "Authorization": f"Bearer {login_response.json()['access_token']}"
+        }
+
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}), patch(
+            "backend.api.routes.chat.run_chat",
+            return_value="I will email jane@example.com with the answer.",
+        ) as run_chat_mock:
+            chat_response = self.client.post(
+                "/chat",
+                headers=auth_headers,
+                json={
+                    "message": (
+                        "My email is person@example.com. "
+                        "Is 2026-05-01 a public holiday in Basel?"
+                    )
+                },
+            )
+
+        self.assertEqual(chat_response.status_code, 200)
+        payload = chat_response.json()
+        self.assertIsInstance(payload["chat_id"], int)
+        self.assertEqual(
+            payload["reply"], "I will email jane@example.com with the answer."
+        )
+
+        called_user_message = run_chat_mock.call_args.args[0]
+        self.assertIn("[EMAIL]", called_user_message)
+        self.assertIn("2026-05-01", called_user_message)
+
+        db = self.TestingSessionLocal()
+        try:
+            stored_messages = (
+                db.query(Message)
+                .filter(Message.chat_id == payload["chat_id"])
+                .order_by(Message.id.asc())
+                .all()
+            )
+            self.assertEqual(len(stored_messages), 2)
+            self.assertEqual(stored_messages[0].sender_type, "user")
+            self.assertIn("[EMAIL]", stored_messages[0].content_masked)
+            self.assertEqual(stored_messages[1].sender_type, "assistant")
+            self.assertIn("[EMAIL]", stored_messages[1].content_masked)
+        finally:
+            db.close()
+
+    def test_chat_reuses_active_session_context_for_multiturn(self) -> None:
+        self.create_test_user(
+            email="multiturn.user@greenleaf.ch",
+            password="chatsecret",
+            display_name="Multiturn User",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={"email": "multiturn.user@greenleaf.ch", "password": "chatsecret"},
+        )
+        self.assertEqual(login_response.status_code, 200)
+        auth_headers = {
+            "Authorization": f"Bearer {login_response.json()['access_token']}"
+        }
+
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}), patch(
+            "backend.api.routes.chat.run_chat",
+            side_effect=["First reply", "Second reply"],
+        ) as run_chat_mock:
+            first_response = self.client.post(
+                "/chat",
+                headers=auth_headers,
+                json={"message": "Can I take vacation next week?"},
+            )
+            self.assertEqual(first_response.status_code, 200)
+            chat_id = first_response.json()["chat_id"]
+
+            second_response = self.client.post(
+                "/chat",
+                headers=auth_headers,
+                json={"chat_id": chat_id, "message": "What about the week after?"},
+            )
+
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(second_response.json()["chat_id"], chat_id)
+
+        second_call_history = run_chat_mock.call_args_list[1].kwargs[
+            "conversation_messages"
+        ]
+        self.assertEqual(second_call_history[0]["role"], "user")
+        self.assertEqual(
+            second_call_history[0]["content"], "Can I take vacation next week?"
+        )
+        self.assertEqual(second_call_history[1]["role"], "assistant")
+        self.assertEqual(second_call_history[1]["content"], "First reply")
+
+    def test_chat_rejects_expired_session(self) -> None:
+        self.create_test_user(
+            email="expired.chat@greenleaf.ch",
+            password="chatsecret",
+            display_name="Expired Chat User",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={"email": "expired.chat@greenleaf.ch", "password": "chatsecret"},
+        )
+        self.assertEqual(login_response.status_code, 200)
+        auth_headers = {
+            "Authorization": f"Bearer {login_response.json()['access_token']}"
+        }
+
+        create_chat_response = self.client.post(
+            "/history",
+            headers=auth_headers,
+            json={"title": "Old chat"},
+        )
+        self.assertEqual(create_chat_response.status_code, 201)
+        chat_id = create_chat_response.json()["id"]
+
+        db = self.TestingSessionLocal()
+        try:
+            chat_record = db.query(Chat).filter(Chat.id == chat_id).one()
+            chat_record.updated_at = datetime.now(timezone.utc) - timedelta(days=3)
+            db.commit()
+        finally:
+            db.close()
+
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            expired_response = self.client.post(
+                "/chat",
+                headers=auth_headers,
+                json={"chat_id": chat_id, "message": "Continue this chat"},
+            )
+
+        self.assertEqual(expired_response.status_code, 409)
 
 
 if __name__ == "__main__":

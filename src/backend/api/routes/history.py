@@ -74,7 +74,7 @@ def get_history_chat(
     summary="Append message to own anonymous chat",
     description=(
         "Persists a message under the current user's anonymous chat. "
-        "PII masking will be applied in a later slice before this write path."
+        "PII masking is applied before storage."
     ),
 )
 def create_history_message(

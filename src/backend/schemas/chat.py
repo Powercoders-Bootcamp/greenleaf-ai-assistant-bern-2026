@@ -47,3 +47,35 @@ class ChatRead(BaseModel):
 
 class ChatDetail(ChatRead):
     messages: list[MessageRead] = []
+
+
+class ChatTurnRequest(BaseModel):
+    message: str = Field(
+        ...,
+        min_length=1,
+        description="Current user turn. The backend masks PII before sending it to the LLM.",
+        examples=["Is 2026-05-01 a public holiday in Basel?"],
+    )
+    chat_id: int | None = Field(
+        default=None,
+        description=(
+            "Ephemeral frontend chat session id. Omit it to start a new anonymous chat."
+        ),
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"message": "Hello"},
+                {"chat_id": 12, "message": "What about the Friday after that?"},
+            ],
+        }
+    }
+
+
+class ChatTurnResponse(BaseModel):
+    chat_id: int = Field(
+        ...,
+        description="Anonymous chat id to reuse only while the current frontend chat UI stays open.",
+    )
+    reply: str = Field(..., description="Beat-Bot answer to show in the UI.")
