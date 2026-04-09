@@ -128,6 +128,10 @@ def get_user_or_404(db: Session, user_id: int) -> User:
     return user
 
 
+def is_superadmin(user: User) -> bool:
+    return bool(SUPERADMIN_EMAIL) and user.email == SUPERADMIN_EMAIL
+
+
 def update_user(
     db: Session,
     target_user: User,
@@ -150,6 +154,11 @@ def update_user(
         target_user.password_hash = hash_password(payload.password)
 
     if payload.role is not None:
+        if is_superadmin(target_user) and payload.role != "Admin":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The superadmin role cannot be removed.",
+            )
         if target_user.id == acting_user.user_id and payload.role != "Admin":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -158,6 +167,11 @@ def update_user(
         target_user.role = payload.role
 
     if payload.is_active is not None:
+        if is_superadmin(target_user) and payload.is_active is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The superadmin account cannot be deactivated.",
+            )
         if target_user.id == acting_user.user_id and payload.is_active is False:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -171,6 +185,12 @@ def update_user(
 
 
 def delete_user(db: Session, target_user: User, acting_user: AuthContext) -> None:
+    if is_superadmin(target_user):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The superadmin account cannot be deleted.",
+        )
+
     if target_user.id == acting_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -261,6 +261,60 @@ class UserAuthSmokeTests(unittest.TestCase):
         )
         self.assertEqual(new_login_response.status_code, 200)
 
+    def test_superadmin_cannot_be_deleted_deactivated_or_demoted(self) -> None:
+        self.create_test_user(
+            email="superadmin@greenleaf.ch",
+            password="supersecret",
+            role="Admin",
+            display_name="Super Admin",
+        )
+        self.create_test_user(
+            email="other.admin@greenleaf.ch",
+            password="adminsecret",
+            role="Admin",
+            display_name="Other Admin",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "other.admin@greenleaf.ch",
+                "password": "adminsecret",
+            },
+        )
+        self.assertEqual(login_response.status_code, 200)
+        admin_token = login_response.json()["access_token"]
+        auth_headers = {"Authorization": f"Bearer {admin_token}"}
+
+        users_response = self.client.get("/users", headers=auth_headers)
+        self.assertEqual(users_response.status_code, 200)
+        superadmin = next(
+            user
+            for user in users_response.json()
+            if user["email"] == "superadmin@greenleaf.ch"
+        )
+        superadmin_id = superadmin["id"]
+
+        demote_response = self.client.put(
+            f"/users/{superadmin_id}",
+            headers=auth_headers,
+            json={"role": "Employee"},
+        )
+        self.assertEqual(demote_response.status_code, 400)
+
+        deactivate_response = self.client.put(
+            f"/users/{superadmin_id}",
+            headers=auth_headers,
+            json={"is_active": False},
+        )
+        self.assertEqual(deactivate_response.status_code, 400)
+
+        delete_response = self.client.delete(
+            f"/users/{superadmin_id}",
+            headers=auth_headers,
+        )
+        self.assertEqual(delete_response.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
