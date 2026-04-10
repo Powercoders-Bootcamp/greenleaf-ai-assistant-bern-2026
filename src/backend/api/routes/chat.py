@@ -24,7 +24,7 @@ from backend.services.chat_history_service import (
     get_or_create_active_chat,
     list_recent_messages_for_llm,
 )
-from backend.services.chat_service import run_chat
+from backend.services.langchain_service import run_chat
 from backend.services.user_service import get_current_auth_context
 
 logger = logging.getLogger(__name__)
