@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 PROMPTS_DIR = REPO_ROOT / "prompts"
 TOOLS_DIR = PROMPTS_DIR / "tools_definitions"
 SYSTEM_PROMPT_PATH = PROMPTS_DIR / "system_prompt.txt"
-HANDBOOK_PATH = BACKEND_ROOT / "data" / "processed" / "handbook-key-rules.md"
+HANDBOOK_PATH = REPO_ROOT / "data" / "processed" / "handbook-key-rules.md"
 SESSION_TIMEZONE = ZoneInfo("Europe/Zurich")
 
 DEFAULT_MODEL = "gpt-4o"
