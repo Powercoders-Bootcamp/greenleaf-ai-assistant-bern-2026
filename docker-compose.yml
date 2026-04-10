@@ -29,9 +29,14 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./src/backend:/app
+      - ./src/backend:/app/src/backend
+      - ./prompts:/app/prompts:ro
+      - ./data:/app/data:ro
     env_file:
       - ./src/backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://appuser:apppassword@db:5432/appdb
+      AUTH_PROVIDER: docker-compose-postgres
 
   frontend:
     build:

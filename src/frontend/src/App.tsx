@@ -13,7 +13,7 @@ import {
 import type { AuthMode, AuthUser } from './types/auth'
 import type { Message } from './types/chat'
 
-const API_BASE_URL = 'http://localhost:8000/chat'
+const API_BASE_URL = 'http://localhost:8000'
 const CHAT_API_URL = `${API_BASE_URL}/chat`
 const LOGIN_API_URL = `${API_BASE_URL}/auth/login`
 
@@ -55,7 +55,7 @@ export default function App() {
 
   useEffect(() => {
     const storedToken = getStoredToken()
-    const storedUser = getStoredUser<AuthUser>()
+    const storedUser = getStoredUser()
 
     if (storedToken && storedUser) {
       setToken(storedToken)
@@ -347,7 +347,7 @@ export default function App() {
           <div className="chat-header__actions">
             <div className="context-bar context-bar--right">
               <span>Basel • {currentTime}</span>
-              <span>{authUser?.role === 'admin' ? 'Admin access' : 'User access'}</span>
+              <span>{authUser?.role === 'Admin' ? 'Admin access' : 'User access'}</span>
             </div>
 
             <div className="chat-header__actions-row">
