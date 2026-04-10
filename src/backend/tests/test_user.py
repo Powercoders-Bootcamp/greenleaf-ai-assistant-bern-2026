@@ -481,6 +481,10 @@ class UserAuthSmokeTests(unittest.TestCase):
             self.assertIn("[EMAIL]", stored_messages[0].content_masked)
             self.assertEqual(stored_messages[1].sender_type, "assistant")
             self.assertIn("[EMAIL]", stored_messages[1].content_masked)
+
+            stored_chat = db.query(Chat).filter(Chat.id == payload["chat_id"]).one()
+            self.assertIn("[EMAIL]", stored_chat.title)
+            self.assertNotIn("person@example.com", stored_chat.title)
         finally:
             db.close()
 
