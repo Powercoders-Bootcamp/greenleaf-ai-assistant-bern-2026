@@ -3,6 +3,7 @@ import './App.css'
 import ChatInput from './components/ChatInput'
 import ChatWindow from './components/ChatWindow'
 import LeafScene from './components/LeafScene'
+import AdminPanel from './components/admin/AdminPanel'
 import AuthShell from './components/auth/AuthShell'
 import {
   clearAuthSession,
@@ -50,6 +51,7 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
+  const [view, setView] = useState<'chat' | 'admin'>('chat')
 
   const endRef = useRef<HTMLDivElement | null>(null)
 
@@ -78,6 +80,7 @@ export default function App() {
   }, [])
 
   const isAuthenticated = Boolean(token && authUser)
+  const isAdmin = authUser?.role?.toLowerCase() === 'admin'
 
   const statusText = useMemo(() => {
     if (loading) return 'Checking policy context'
@@ -152,6 +155,7 @@ export default function App() {
       persistAuthSession(safeData.access_token, safeData.user)
       setToken(safeData.access_token)
       setAuthUser(safeData.user)
+      setView('chat')
 
       setAuthPassword('')
       setAuthConfirmPassword('')
@@ -175,6 +179,7 @@ export default function App() {
     setAuthMode('login')
     setChatId(null)
     setMessages([])
+    setView('chat')
   }, [])
 
   const sendMessage = useCallback(
@@ -221,6 +226,7 @@ export default function App() {
           clearAuthSession()
           setToken(null)
           setAuthUser(null)
+          setView('chat')
           throw new Error('Your session expired. Please sign in again.')
         }
 
@@ -324,87 +330,116 @@ export default function App() {
             </div>
 
             <div className="chat-header__copy">
-              <p className="eyebrow">Internal AI Assistant</p>
-              <h1>Beat-Bot</h1>
+              <p className="eyebrow">
+                {view === 'admin' ? 'Admin workspace' : 'Internal AI Assistant'}
+              </p>
+              <h1>{view === 'admin' ? 'Admin Panel' : 'Beat-Bot'}</h1>
               <p className="subtext">
-                Fast answers for internal policies, holidays, handbook questions,
-                and common internal rules.
+                {view === 'admin'
+                  ? 'Review anonymous chat history, retention settings and managed users.'
+                  : 'Fast answers for internal policies, holidays, handbook questions, and common internal rules.'}
               </p>
             </div>
           </div>
 
           <div className="chat-header__actions">
-            <button type="button" className="logout-button" onClick={handleLogout}>
-                Logout
-              </button>
             <div className="chat-header__actions-row">
+              {isAdmin && (
+                <>
+                  <button
+                    type="button"
+                    className={`chat-card__action-button ${view === 'chat' ? 'is-active' : ''}`}
+                    onClick={() => setView('chat')}
+                  >
+                    Assistant
+                  </button>
+                  <button
+                    type="button"
+                    className={`chat-card__action-button ${view === 'admin' ? 'is-active' : ''}`}
+                    onClick={() => setView('admin')}
+                  >
+                    Admin Panel
+                  </button>
+                </>
+              )}
+
               <div
-                className={`status-badge ${loading ? 'is-loading' : ''} ${
-                  error ? 'is-error' : ''
+                className={`status-badge ${loading && view === 'chat' ? 'is-loading' : ''} ${
+                  error && view === 'chat' ? 'is-error' : ''
                 }`}
                 aria-live="polite"
               >
                 <span className="status-dot" />
-                {statusText}
+                {view === 'admin' ? 'Admin access enabled' : statusText}
               </div>
+
+              <button type="button" className="logout-button" onClick={handleLogout}>
+                Logout
+              </button>
             </div>
           </div>
 
           <div className="context-bar">
             <span>Basel • {currentTime}</span>
-            <span>
-              {authUser?.role?.toLowerCase() === 'admin' ? 'Admin access' : 'User access'}
-            </span>
+            <span>{isAdmin ? 'Admin access' : 'User access'}</span>
           </div>
         </header>
 
-        <section className="chat-card">
-          <div className="chat-card__top">
-            <div className="chat-card__title-wrap">
-              <h2>Chat</h2>
-              <p>Ask a question and review the response in one clean thread.</p>
+        {view === 'admin' ? (
+          <section className="chat-card">
+            <div className="chat-card__body chat-card__body--admin">
+              <AdminPanel token={token} />
+            </div>
+          </section>
+        ) : (
+          <section className="chat-card">
+            <div className="chat-card__top">
+              <div className="chat-card__title-wrap">
+                <h2>Chat</h2>
+                <p>Ask a question and review the response in one clean thread.</p>
+              </div>
+
+              <div className="chat-card__actions">
+                <button
+                  type="button"
+                  className="chat-card__action-button"
+                  onClick={handleRetry}
+                  disabled={!lastSubmittedQuestion || loading}
+                >
+                  Retry last
+                </button>
+
+                <button
+                  type="button"
+                  className="chat-card__action-button"
+                  onClick={handleCopyLastAnswer}
+                  disabled={!messages.some((message) => message.role === 'assistant')}
+                >
+                  Copy answer
+                </button>
+              </div>
             </div>
 
-            <div className="chat-card__actions">
-              <button
-                type="button"
-                className="chat-card__action-button"
-                onClick={handleRetry}
-                disabled={!lastSubmittedQuestion || loading}
-              >
-                Retry last
-              </button>
-
-              <button
-                type="button"
-                className="chat-card__action-button"
-                onClick={handleCopyLastAnswer}
-                disabled={!messages.some((message) => message.role === 'assistant')}
-              >
-                Copy answer
-              </button>
+            <div className="chat-card__body">
+              <ChatWindow
+                messages={messages}
+                loading={loading}
+                error={error}
+                onSendPreset={handlePreset}
+                bottomRef={endRef}
+              />
             </div>
-          </div>
 
-          <div className="chat-card__body">
-            <ChatWindow
-              messages={messages}
-              loading={loading}
-              error={error}
-              onSendPreset={handlePreset}
-              bottomRef={endRef}
-            />
-          </div>
-
-          <div className="chat-card__footer">
-            <ChatInput
-              input={input}
-              loading={loading}
-              onChange={setInput}
-              onSend={handleSend}
-            />
-          </div>
-        </section>
+            <div className="chat-card__footer">
+              <ChatInput
+                input={input}
+                loading={loading}
+                onChange={setInput}
+                onSend={handleSend}
+              />
+            </div>
+          </section>
+        )}
       </section>
     </main>
   )

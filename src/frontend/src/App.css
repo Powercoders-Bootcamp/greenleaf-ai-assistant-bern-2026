@@ -43,6 +43,17 @@
   min-width: 0;
 }
 
+.chat-card__body--admin {
+  padding: 18px;
+  align-items: stretch;
+}
+
+.chat-card__action-button.is-active {
+  background: rgba(240, 253, 244, 0.92);
+  border-color: rgba(34, 197, 94, 0.2);
+  color: #166534;
+}
+
 .context-bar {
   grid-area: meta;
   display: flex;
