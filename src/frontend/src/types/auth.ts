@@ -10,6 +10,7 @@ export type AuthUser = {
 }
 
 export type AuthResponse = {
-  token: string
+  access_token: string
+  token_type: 'bearer'
   user: AuthUser
 }

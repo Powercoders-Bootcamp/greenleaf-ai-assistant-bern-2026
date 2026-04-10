@@ -42,9 +42,10 @@ def create_chat(
     payload: ChatCreate,
 ) -> Chat:
     """Create a new chat owned by the user's anonymous HMAC key."""
+    title = mask_pii(payload.title) if payload.title else None
     chat = Chat(
         anonymous_user_key=anonymous_user_key(auth_context),
-        title=payload.title,
+        title=title,
     )
     db.add(chat)
     db.commit()
