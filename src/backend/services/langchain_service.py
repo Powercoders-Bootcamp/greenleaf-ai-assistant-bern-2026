@@ -38,16 +38,22 @@ from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from langchain.tools import tool
 from langchain_core.documents import Document
-from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage, AIMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 
-from holidays_checker import HolidayAPIError, is_day_a_holiday, parse_iso_date
+from .holidays_checker import HolidayAPIError, is_day_a_holiday, parse_iso_date
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+from pathlib import Path
+import os
+
+SERVICE_FILE = Path(__file__).resolve()
+
+REPO_ROOT = SERVICE_FILE.parents[3]
 SRC_ROOT = REPO_ROOT / "src"
 BACKEND_ROOT = SRC_ROOT / "backend"
+SERVICES_ROOT = BACKEND_ROOT / "services"
 
 PROMPTS_DIR = REPO_ROOT / "prompts"
 SYSTEM_PROMPT_PATH = PROMPTS_DIR / "system_prompt.txt"
@@ -55,7 +61,6 @@ SYSTEM_PROMPT_PATH = PROMPTS_DIR / "system_prompt.txt"
 HANDBOOK_RAW_PATH = REPO_ROOT / "data" / "raw" / "Handbook GreenLeaf Logistics.pdf"
 HANDBOOK_PATH = REPO_ROOT / "data" / "processed" / "handbook-structured.md"
 
-# Where the FAISS index will be stored on disk
 FAISS_DIR = Path(
     os.getenv(
         "HANDBOOK_FAISS_DIR",
@@ -282,8 +287,24 @@ def get_llm() -> ChatOpenAI:
 
     return ChatOpenAI(**kwargs)
 
+def _convert_history(conversation_messages: list[dict[str, str]]) -> list[Any]:
+    result = []
 
-def run_chat(user_message: str) -> str:
+    for msg in conversation_messages:
+        role = msg.get("role")
+        content = msg.get("content", "")
+
+        if role == "user":
+            result.append(HumanMessage(content=content))
+        elif role == "assistant":
+            result.append(AIMessage(content=content))
+        # system можна додати за потреби
+
+    return result
+
+def run_chat(user_message: str,
+             conversation_messages: list[dict[str, str]] | None = None,
+             ) -> str:
     llm = get_llm()
     tools = [check_holiday, search_handbook]
     llm_with_tools = llm.bind_tools(tools)
@@ -292,8 +313,12 @@ def run_chat(user_message: str) -> str:
 
     messages: list[Any] = [
         SystemMessage(content=load_system_prompt()),
-        HumanMessage(content=user_message),
     ]
+
+    if conversation_messages:
+        messages.extend(_convert_history(conversation_messages))
+
+    messages.append(HumanMessage(content=user_message))
 
     for _ in range(MAX_TOOL_ROUNDS):
         ai_msg = llm_with_tools.invoke(messages)
