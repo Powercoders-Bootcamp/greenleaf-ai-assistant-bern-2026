@@ -318,27 +318,25 @@ export default function App() {
 
       <section className="chat-page">
         <header className="chat-header">
-          <div className="context-bar">
-            <span>Basel • {currentTime}</span>
-            <span>
-              {authUser?.role?.toLowerCase() === 'admin' ? 'Admin access' : 'User access'}
-            </span>
-          </div>
+          <div className="chat-hero">
+            <div className="brand-mark" aria-hidden="true">
+              <LeafScene loading={loading} />
+            </div>
 
-          <div className="brand-mark" aria-hidden="true">
-            <LeafScene loading={loading} />
-          </div>
-
-          <div className="chat-header__copy">
-            <p className="eyebrow">Internal AI Assistant</p>
-            <h1>Beat-Bot</h1>
-            <p className="subtext">
-              Fast answers for internal policies, holidays, handbook questions,
-              and common internal rules.
-            </p>
+            <div className="chat-header__copy">
+              <p className="eyebrow">Internal AI Assistant</p>
+              <h1>Beat-Bot</h1>
+              <p className="subtext">
+                Fast answers for internal policies, holidays, handbook questions,
+                and common internal rules.
+              </p>
+            </div>
           </div>
 
           <div className="chat-header__actions">
+            <button type="button" className="logout-button" onClick={handleLogout}>
+                Logout
+              </button>
             <div className="chat-header__actions-row">
               <div
                 className={`status-badge ${loading ? 'is-loading' : ''} ${
@@ -349,11 +347,14 @@ export default function App() {
                 <span className="status-dot" />
                 {statusText}
               </div>
-
-              <button type="button" className="logout-button" onClick={handleLogout}>
-                Logout
-              </button>
             </div>
+          </div>
+
+          <div className="context-bar">
+            <span>Basel • {currentTime}</span>
+            <span>
+              {authUser?.role?.toLowerCase() === 'admin' ? 'Admin access' : 'User access'}
+            </span>
           </div>
         </header>
 
