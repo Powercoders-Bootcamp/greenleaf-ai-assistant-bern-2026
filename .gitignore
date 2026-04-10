@@ -147,6 +147,18 @@ ENV/
 env.bak/
 venv.bak/
 
+# Vector databases (FAISS / embeddings)
+data/vectorstore/
+**/vectorstore/
+
+# FAISS index files
+*.faiss
+*.pkl
+
+# LangChain vector stores
+faiss_index/
+handbook_faiss/
+
 # Spyder project settings
 .spyderproject
 .spyproject
