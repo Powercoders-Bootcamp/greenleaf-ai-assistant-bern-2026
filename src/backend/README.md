@@ -1,133 +1,112 @@
-# Beat-Bot backend — quick start
+# Beat-Bot Backend Quick Start
 
-This folder is a **FastAPI** service: it exposes `/chat`, calls **OpenAI** (GPT-4o by default), and runs tools (`check_holiday`, `search_handbook`) defined under `prompts/`. Data and prompts live **outside** this folder at the **repository root** (e.g. `data/`, `prompts/`), so always run the app from **`src/backend`** as below.
+This folder contains the FastAPI backend for GreenLeaf Beat-Bot. It exposes authenticated chat, auth/user management, anonymous chat history, and LLM tool orchestration for `check_holiday` and `search_handbook`.
 
----
+Data and prompts live at the repository root, for example `data/` and `prompts/`.
 
 ## Prerequisites
 
-- **Python 3.10+** (3.11+ recommended)
-- An **OpenAI API key** with **billing / quota** enabled (free tier exhaustion shows `429 insufficient_quota`)
+- Python 3.10+.
+- PostgreSQL running locally or in Docker Compose.
+- An OpenAI/OpenRouter-compatible API key configured as `OPENAI_API_KEY`.
 
----
+## Install
 
-## 1. Go to the backend folder
-
-From the repo root:
-
-```bash
-cd src/backend
-```
-
----
-
-## 2. Create and activate a virtual environment
-
-**macOS / Linux:**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-**Windows (PowerShell):**
+From the repository root:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+cd src\backend
+python -m venv myenv
+.\myenv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
----
+## Environment
 
-## 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 4. Configure environment variables
-
-Create a file named **`.env`** in **`src/backend/`** (same folder as `main.py`).
-
-Minimal example:
+Create `src/backend/.env`.
 
 ```env
+DATABASE_URL=postgresql+psycopg://appuser:apppassword@localhost:5432/appdb
 OPENAI_API_KEY=sk-...
+SECRET_KEY=change-me
+HISTORY_ANONYMIZATION_SECRET=change-me
+SUPERADMIN_EMAIL=superadmin@greenleaf.ch
+SUPERADMIN_PASSWORD=ChangeThisSuperAdmin123!
+SUPERADMIN_DISPLAY_NAME=GreenLeaf Superadmin
 ```
 
-Optional:
+Useful optional settings:
 
 | Variable | Purpose |
 |----------|---------|
-| `OPENAI_MODEL` | Override model (default: `gpt-4o`) |
-| `CORS_ORIGINS` | Comma-separated allowed origins (default: `*`) |
+| `OPENAI_MODEL` | Override model, default is `gpt-4o`. |
+| `CORS_ORIGINS` | Comma-separated allowed origins, default is `*`. |
+| `CHAT_CONTEXT_TTL_MINUTES` | Active multi-turn chat window, default is `30`. |
+| `CHAT_CONTEXT_MESSAGE_LIMIT` | Number of masked prior messages sent to the LLM, default is `12`. |
+| `AUTO_CREATE_DB_TABLES` | Emergency local fallback for `Base.metadata.create_all`; keep `false` and use Alembic. |
 
-The app loads `.env` automatically via `python-dotenv`. Do **not** commit `.env` (it is gitignored).
+Do not commit `.env`.
 
----
+## Database Migrations
 
-## 5. Run the API
+Schema changes are managed by Alembic. From `src/backend`:
 
-**Development** (auto-reload on code changes):
-
-```bash
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```powershell
+.\myenv\Scripts\python.exe -m alembic -c alembic.ini upgrade head
 ```
 
-You should be able to open:
+The initial migration creates `users`, `chats`, and `messages`. It uses `IF NOT EXISTS` guards so it can safely mark an existing local dev database as migrated.
 
-- **Interactive docs (Swagger UI):** http://127.0.0.1:8000/docs  
-- **Health check:** http://127.0.0.1:8000/health  
+## Run The API
 
----
+Run Uvicorn from `src` so `backend.*` package imports resolve correctly:
 
-## 6. Smoke test
-
-**Health:**
-
-```bash
-curl -s http://127.0.0.1:8000/health
+```powershell
+cd .. 
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-**Chat:**
+Open:
 
-```bash
-curl -s -X POST http://127.0.0.1:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Hello"}'
+- Swagger UI: http://127.0.0.1:8000/docs
+- Health check: http://127.0.0.1:8000/health
+
+## Chat Smoke Test
+
+Log in first via `/auth/login`, then call `/chat` with the bearer token.
+
+```powershell
+curl -X POST http://127.0.0.1:8000/chat `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer <token>" `
+  -d "{\"message\":\"Hello\"}"
 ```
 
-A successful response looks like: `{"reply":"..."}`.
+A successful response looks like:
 
----
+```json
+{"chat_id":1,"reply":"..."}
+```
 
-## Common errors (quick reference)
+To continue the same open frontend chat session, send the returned `chat_id`. If the page is refreshed, the frontend drops `chat_id` from memory and a new chat starts.
+
+## Common Errors
 
 | HTTP / symptom | Likely cause |
 |----------------|--------------|
-| `503` + `OPENAI_API_KEY is not configured` | Missing or empty `OPENAI_API_KEY` in `.env` (or server not restarted after editing `.env`) |
-| `502` + `OpenAI error` + `429` / `insufficient_quota` | OpenAI account needs credits / billing; not a bug in this repo |
-| `500` + `Server file or I/O error` | Missing repo files the backend reads (e.g. `prompts/system_prompt.txt`, handbook under `data/processed/`) — run from `src/backend` and ensure the **full repo** is present |
-| JSON validation errors on `/chat` | Request body must be `{"message": "your text"}` with `Content-Type: application/json` |
+| `503` + `OPENAI_API_KEY is not configured` | Missing or empty `OPENAI_API_KEY` in `.env`, or server not restarted after editing `.env`. |
+| `502` + `OpenAI error` | OpenAI/OpenRouter network, auth, quota, or rate-limit issue. |
+| `409` on `/chat` | The frontend sent an expired `chat_id`; start a new chat without `chat_id`. |
+| `500` + `Server file or I/O error` | Missing repo files such as `prompts/system_prompt.txt` or `data/processed/handbook-key-rules.md`. |
+| Import error for `backend` | Run Uvicorn from `src` with `uvicorn backend.main:app --reload`. |
 
----
-
-## Project layout (backend-related)
+## Project Layout
 
 | Path | Role |
 |------|------|
-| `main.py` | FastAPI app, `/health`, `/chat`, CORS |
-| `chat_service.py` | OpenAI calls, tool loop, handbook search |
-| `holidays_checker.py` | Holiday tool implementation |
-| `../prompts/` (from repo root) | System prompt + tool JSON schemas |
-| `../../data/` (from repo root) | Handbook and other data |
-
----
-
-## Further reading (design / architecture)
-
-- `docs/01-project-overview.md` — product goal and scope  
-- `docs/08-backend-implementation-blueprint.md` — backend blueprint  
-- `docs/22-backend-component-map.md` — component map  
+| `main.py` | FastAPI app bootstrap, routers, CORS, superadmin seed. |
+| `api/routes/chat.py` | Authenticated `/chat`, anonymous history persistence, PII-masked multi-turn flow. |
+| `services/chat_service.py` | OpenAI/OpenRouter calls, tool loop, handbook search. |
+| `services/chat_history_service.py` | Anonymous HMAC owner key, chat session TTL, masked message persistence. |
+| `migrations/` | Alembic database migrations. |
+| `holidays_checker.py` | Holiday tool implementation. |
