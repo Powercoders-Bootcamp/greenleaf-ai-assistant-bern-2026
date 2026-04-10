@@ -45,7 +45,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 
-from .holidays_checker import HolidayAPIError, is_day_a_holiday, parse_iso_date
+from .holidays_checker import HolidayAPIError, is_day_a_holiday, get_basel_holidays, parse_iso_date
 
 load_dotenv()
 
@@ -351,6 +351,55 @@ def check_holiday(date: str) -> str:
         return json.dumps({"error": str(excep)}, ensure_ascii=False)
 
 
+@tool
+def list_basel_holidays(year: int) -> str:
+    """
+    Return all Basel non-working holidays for the given year.
+    """
+    logger.info("list_basel_holidays called | year=%r", year)
+
+    if not isinstance(year, int):
+        logger.warning("Invalid year passed to list_basel_holidays: %r", year)
+        return json.dumps(
+            {
+                "error": "Invalid year. Provide an integer year, for example 2026.",
+                "received": year,
+            },
+            ensure_ascii=False,
+        )
+
+    try:
+        holidays = get_basel_holidays(year)
+
+        payload = {
+            "year": year,
+            "holidays": [
+                {
+                    "date": holiday.date.isoformat(),
+                    "name": holiday.name,
+                }
+                for holiday in holidays
+            ],
+        }
+
+        logger.info(
+            "list_basel_holidays returned %s holidays for year %s",
+            len(holidays),
+            year,
+        )
+        return json.dumps(payload, ensure_ascii=False)
+
+    except Exception as exc:
+        logger.exception("list_basel_holidays failed | year=%r", year)
+        return json.dumps(
+            {
+                "error": f"Failed to get Basel holidays: {exc}",
+                "year": year,
+            },
+            ensure_ascii=False,
+        )
+
+
 def get_llm() -> ChatOpenAI:
     llm_api_key = OPENAI_API_KEY
     if not llm_api_key:
@@ -390,7 +439,7 @@ def run_chat(user_message: str,
              conversation_messages: list[dict[str, str]] | None = None,
              ) -> str:
     llm = get_llm()
-    tools = [check_holiday, search_handbook]
+    tools = [check_holiday, search_handbook, list_basel_holidays]
     llm_with_tools = llm.bind_tools(tools)
 
     tool_registry = {tool.name: tool for tool in tools}
