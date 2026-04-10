@@ -10,7 +10,7 @@ import {
   getStoredUser,
   persistAuthSession,
 } from './lib/auth'
-import type { AuthMode, AuthUser } from './types/auth'
+import type { AuthMode, AuthResponse, AuthUser } from './types/auth'
 import type { Message } from './types/chat'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -140,7 +140,7 @@ export default function App() {
 
       const safeData =
         typeof data === 'object' && data !== null
-          ? (data as { access_token?: string; user?: AuthUser; detail?: string })
+          ? (data as Partial<AuthResponse> & { detail?: string })
           : {}
 
       if (!response.ok || !safeData.access_token || !safeData.user) {
@@ -149,7 +149,11 @@ export default function App() {
         )
       }
 
-      persistAuthSession(safeData.access_token, safeData.user)
+      persistAuthSession({
+        access_token: safeData.access_token,
+        token_type: safeData.token_type ?? 'bearer',
+        user: safeData.user,
+      })
       setToken(safeData.access_token)
       setAuthUser(safeData.user)
 

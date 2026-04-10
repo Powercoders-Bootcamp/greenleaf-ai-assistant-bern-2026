@@ -42,6 +42,6 @@ export function clearAuthSession(): void {
 }
 
 export function persistAuthSession(payload: AuthResponse): void {
-  setStoredToken(payload.token)
+  setStoredToken(payload.access_token)
   setStoredUser(payload.user)
 }
