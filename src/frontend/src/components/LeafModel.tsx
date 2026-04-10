@@ -28,9 +28,9 @@ export default function LeafModel({
         mesh.receiveShadow = true
 
         if (mesh.material && 'roughness' in mesh.material) {
-          mesh.material.roughness = 0.68
-          mesh.material.metalness = 0.03
-          mesh.material.envMapIntensity = 1.1
+          mesh.material.roughness = 0.36
+          mesh.material.metalness = 0.12
+          mesh.material.envMapIntensity = 1.6
         }
       }
     })
@@ -42,7 +42,7 @@ export default function LeafModel({
 
     cloned.position.sub(center)
 
-    const targetSize = variant === 'auth' ? 1.42 : 1.55
+    const targetSize = variant === 'auth' ? 1.34 : 1.42
     const scale = targetSize / maxAxis
     cloned.scale.setScalar(scale)
 
@@ -50,7 +50,8 @@ export default function LeafModel({
     const scaledCenter = scaledBox.getCenter(new Vector3())
     cloned.position.sub(scaledCenter)
 
-    cloned.position.y += variant === 'auth' ? 0.01 : 0.02
+    cloned.position.y += variant === 'auth' ? 0.005 : 0.015
+    cloned.position.x += variant === 'auth' ? 0 : 0.01
 
     return cloned
   }, [gltf.scene, variant])
@@ -62,27 +63,27 @@ export default function LeafModel({
     const t = state.clock.getElapsedTime()
 
     if (variant === 'auth') {
-      group.rotation.z = Math.sin(t * 0.9) * 0.025
-      group.rotation.y = Math.sin(t * 0.65) * 0.07
-      group.rotation.x = Math.cos(t * 0.8) * 0.015
-      group.position.y = Math.sin(t * 1.1) * 0.012
-      group.position.x = Math.cos(t * 0.6) * 0.008
+      group.rotation.z = Math.sin(t * 0.8) * 0.012
+      group.rotation.y = Math.sin(t * 0.6) * 0.03
+      group.rotation.x = Math.cos(t * 0.7) * 0.01
+      group.position.y = Math.sin(t * 0.9) * 0.006
+      group.position.x = 0
       group.scale.setScalar(1)
       return
     }
 
-    const motion = loading ? 1 : 0.55
+    const motion = loading ? 0.85 : 0.4
 
-    group.rotation.z = Math.sin(t * 1.15) * 0.05 * motion
-    group.rotation.y = Math.sin(t * 0.8) * 0.14 * motion
-    group.rotation.x = Math.cos(t * 0.95) * 0.035 * motion
+    group.rotation.z = Math.sin(t * 1.0) * 0.022 * motion
+    group.rotation.y = Math.sin(t * 0.75) * 0.06 * motion
+    group.rotation.x = Math.cos(t * 0.85) * 0.015 * motion
 
-    group.position.y = Math.sin(t * 1.4) * 0.035 * motion
-    group.position.x = Math.cos(t * 0.75) * 0.02 * motion
+    group.position.y = Math.sin(t * 1.15) * 0.012 * motion
+    group.position.x = Math.cos(t * 0.7) * 0.006 * motion
 
     const scaleBase = 1
-    const scalePulse = loading ? 0.035 : 0.018
-    const scale = scaleBase + Math.sin(t * 1.7) * scalePulse
+    const scalePulse = loading ? 0.012 : 0.006
+    const scale = scaleBase + Math.sin(t * 1.4) * scalePulse
     group.scale.setScalar(scale)
   })
 

@@ -27,9 +27,9 @@
 
 .chat-header {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 1.5rem;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.25rem;
 }
 
 .brand-mark {
@@ -41,6 +41,7 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
   background:
     radial-gradient(
       circle at 30% 30%,
@@ -62,7 +63,7 @@
     transform 0.22s ease,
     box-shadow 0.22s ease,
     filter 0.22s ease;
-  animation: brandIdle 4.8s ease-in-out infinite;
+  animation: none;
 }
 
 .brand-mark::before {
@@ -131,13 +132,13 @@
   pointer-events: none;
   background: radial-gradient(
     circle,
-    rgba(160, 255, 190, 0.38),
-    rgba(160, 255, 190, 0.14) 45%,
+    rgba(160, 255, 190, 0.32),
+    rgba(160, 255, 190, 0.1) 45%,
     transparent 75%
   );
   filter: blur(14px);
-  opacity: 0.88;
-  animation: leafAura 4.2s ease-in-out infinite;
+  opacity: 0.72;
+  animation: none;
 }
 
 .leaf-scene.is-loading::after {
@@ -455,18 +456,33 @@
 
 @media (max-width: 1100px) {
   .chat-header {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'meta meta meta'
+      'logo copy actions';
+    align-items: center;
+  }
+
+  .context-bar {
+    grid-area: meta;
+  }
+
+  .brand-mark {
+    grid-area: logo;
+  }
+
+  .chat-header__copy {
+    grid-area: copy;
   }
 
   .chat-header__actions {
-    grid-column: 1 / -1;
-    justify-self: stretch;
-    align-items: flex-start;
+    grid-area: actions;
+    justify-self: end;
+    align-items: flex-end;
   }
 
-  .context-bar--right,
   .chat-header__actions-row {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 }
 
@@ -479,18 +495,36 @@
 
   .chat-header {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'meta'
+      'logo'
+      'copy'
+      'actions';
     gap: 12px;
+    align-items: start;
+  }
+
+  .context-bar,
+  .chat-header__copy,
+  .chat-header__actions {
+    justify-self: stretch;
   }
 
   .brand-mark {
     width: 72px;
     height: 72px;
     border-radius: 24px;
+    justify-self: start;
   }
 
   .chat-header__actions {
-    justify-self: stretch;
     align-items: stretch;
+  }
+
+  .chat-header__actions-row {
+    align-items: stretch;
+    gap: 0.65rem;
+    justify-content: flex-start;
   }
 
   .context-bar {
@@ -499,11 +533,6 @@
 
   .context-bar span {
     white-space: normal;
-  }
-
-  .chat-header__actions-row {
-    align-items: stretch;
-    gap: 0.65rem;
   }
 
   .status-badge,
