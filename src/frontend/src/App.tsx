@@ -69,13 +69,13 @@ export default function App() {
 
   const [currentTime, setCurrentTime] = useState(() => formatTime())
 
-    useEffect(() => {
-      const interval = window.setInterval(() => {
-        setCurrentTime(formatTime())
-      }, 1000 * 30)
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentTime(formatTime())
+    }, 1000 * 30)
 
-      return () => window.clearInterval(interval)
-    }, [])
+    return () => window.clearInterval(interval)
+  }, [])
 
   const isAuthenticated = Boolean(token && authUser)
 
@@ -249,14 +249,6 @@ export default function App() {
 
         console.error(err)
         setError(message)
-
-        setMessages((prev) => [
-          ...prev,
-          createMessage(
-            'assistant',
-            `Sorry, I could not reach the backend right now.\n\nReason: ${message}`
-          ),
-        ])
       } finally {
         setLoading(false)
       }
@@ -328,7 +320,9 @@ export default function App() {
         <header className="chat-header">
           <div className="context-bar">
             <span>Basel • {currentTime}</span>
-            <span>{authUser?.role === 'Admin' ? 'Admin access' : 'User access'}</span>
+            <span>
+              {authUser?.role?.toLowerCase() === 'admin' ? 'Admin access' : 'User access'}
+            </span>
           </div>
 
           <div className="brand-mark" aria-hidden="true">
@@ -345,11 +339,6 @@ export default function App() {
           </div>
 
           <div className="chat-header__actions">
-            <div className="context-bar context-bar--right">
-              <span>Basel • {currentTime}</span>
-              <span>{authUser?.role === 'Admin' ? 'Admin access' : 'User access'}</span>
-            </div>
-
             <div className="chat-header__actions-row">
               <div
                 className={`status-badge ${loading ? 'is-loading' : ''} ${
