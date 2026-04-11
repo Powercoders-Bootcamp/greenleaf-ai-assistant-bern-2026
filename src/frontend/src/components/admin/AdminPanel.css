@@ -667,6 +667,101 @@
   gap: 12px;
 }
 
+.admin-thread-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 260px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.admin-thread-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-thread-panel__header h4 {
+  margin: 0 0 6px;
+  font-size: 0.98rem;
+  color: #0f172a;
+}
+
+.admin-thread-panel__header p {
+  margin: 0;
+  color: rgba(31, 41, 55, 0.62);
+  font-size: 0.9rem;
+}
+
+.admin-thread-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.admin-thread-message {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 88%;
+}
+
+.admin-thread-message--user {
+  align-self: flex-end;
+}
+
+.admin-thread-message--assistant {
+  align-self: flex-start;
+}
+
+.admin-thread-message__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: rgba(31, 41, 55, 0.62);
+}
+
+.admin-thread-message__meta strong {
+  color: #0f172a;
+  font-size: 0.8rem;
+}
+
+.admin-thread-message--user .admin-thread-message__meta {
+  justify-content: flex-end;
+}
+
+.admin-thread-message__bubble {
+  padding: 14px 16px;
+  border-radius: 18px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.admin-thread-message--assistant .admin-thread-message__bubble {
+  background: rgba(255, 255, 255, 0.82);
+  color: #1f2937;
+  border-bottom-left-radius: 10px;
+}
+
+.admin-thread-message--user .admin-thread-message__bubble {
+  background: rgba(220, 252, 231, 0.9);
+  color: #102418;
+  border-color: rgba(34, 197, 94, 0.12);
+  border-bottom-right-radius: 10px;
+}
+
 @media (max-width: 1100px) {
   .admin-inspector-grid {
     grid-template-columns: 1fr;
@@ -688,6 +783,10 @@
   .admin-sidebar__summary {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-thread-message {
+    max-width: 100%;
   }
 }
 

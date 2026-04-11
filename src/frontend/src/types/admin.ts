@@ -1,9 +1,21 @@
 export type AdminChatItem = {
   id: number
-  title: string
+  title: string | null
   created_at: string
   updated_at: string
   message_count: number
+}
+
+export type AdminChatMessage = {
+  id: number
+  chat_id: number
+  sender_type: 'user' | 'assistant' | 'system'
+  content_masked: string
+  created_at: string
+}
+
+export type AdminChatDetail = AdminChatItem & {
+  messages: AdminChatMessage[]
 }
 
 export type AdminChatPageResponse = {

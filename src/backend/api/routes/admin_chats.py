@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
 from backend.schemas.chat import (
+    AdminChatDetail,
     AdminChatPage,
     AdminChatRead,
     ChatRetentionCleanupResponse,
@@ -22,6 +23,7 @@ from backend.schemas.user import AuthContext
 from backend.services.chat_history_service import (
     delete_chat_by_id,
     delete_expired_chats,
+    get_chat_or_404,
     paginate_all_chats_for_admin,
 )
 from backend.services.user_service import require_admin
@@ -75,6 +77,47 @@ def get_admin_chats(
         page_size=page_size,
         total_items=total_items,
         total_pages=total_pages,
+    )
+
+
+@router.get(
+    "/chats/{chat_id}",
+    response_model=AdminChatDetail,
+    summary="Get anonymous chat detail",
+    description=(
+        "Admin-only endpoint that returns one anonymous chat with its masked "
+        "message thread. Direct user identifiers and anonymous owner keys are not exposed."
+    ),
+    responses={
+        200: {"description": "Anonymous chat detail returned successfully."},
+        401: {"description": "Token is missing, invalid, or expired."},
+        403: {"description": "Admin access is required."},
+        404: {"description": "Chat was not found."},
+    },
+)
+def get_admin_chat_detail(
+    chat_id: int,
+    _: AuthContext = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> AdminChatDetail:
+    """Return one anonymous chat plus its masked messages for admin review."""
+    chat = get_chat_or_404(db, chat_id)
+    return AdminChatDetail(
+        id=chat.id,
+        title=chat.title,
+        created_at=chat.created_at,
+        updated_at=chat.updated_at,
+        message_count=len(chat.messages),
+        messages=[
+            {
+                "id": message.id,
+                "chat_id": message.chat_id,
+                "sender_type": message.sender_type,
+                "content_masked": message.content_masked,
+                "created_at": message.created_at,
+            }
+            for message in sorted(chat.messages, key=lambda item: item.created_at)
+        ],
     )
 
 

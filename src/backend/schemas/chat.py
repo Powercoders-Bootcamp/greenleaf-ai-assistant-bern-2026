@@ -53,6 +53,10 @@ class AdminChatRead(ChatRead):
     message_count: int = 0
 
 
+class AdminChatDetail(AdminChatRead):
+    messages: list[MessageRead] = []
+
+
 class ChatPage(BaseModel):
     """Spring Page-like response for the current user's chat history."""
 

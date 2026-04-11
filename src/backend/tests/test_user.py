@@ -764,6 +764,68 @@ class UserAuthSmokeTests(unittest.TestCase):
         )
         self.assertEqual(owner_detail_response.status_code, 404)
 
+    def test_admin_can_view_anonymous_chat_detail_with_messages(self) -> None:
+        self.create_test_user(
+            email="detail.admin@greenleaf.ch",
+            password="adminsecret",
+            role="Admin",
+            display_name="Detail Admin",
+        )
+        self.create_test_user(
+            email="detail.owner@greenleaf.ch",
+            password="ownersecret",
+            display_name="Detail Owner",
+        )
+
+        admin_login = self.client.post(
+            "/auth/login",
+            json={"email": "detail.admin@greenleaf.ch", "password": "adminsecret"},
+        )
+        owner_login = self.client.post(
+            "/auth/login",
+            json={"email": "detail.owner@greenleaf.ch", "password": "ownersecret"},
+        )
+        self.assertEqual(admin_login.status_code, 200)
+        self.assertEqual(owner_login.status_code, 200)
+
+        admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+        owner_headers = {"Authorization": f"Bearer {owner_login.json()['access_token']}"}
+
+        create_chat_response = self.client.post(
+            "/history",
+            headers=owner_headers,
+            json={"title": "Thread detail chat"},
+        )
+        self.assertEqual(create_chat_response.status_code, 201)
+        chat_id = create_chat_response.json()["id"]
+
+        first_message = self.client.post(
+            f"/history/{chat_id}/messages",
+            headers=owner_headers,
+            json={"sender_type": "user", "content_masked": "First masked message"},
+        )
+        second_message = self.client.post(
+            f"/history/{chat_id}/messages",
+            headers=owner_headers,
+            json={"sender_type": "assistant", "content_masked": "Second masked message"},
+        )
+        self.assertEqual(first_message.status_code, 201)
+        self.assertEqual(second_message.status_code, 201)
+
+        detail_response = self.client.get(
+            f"/admin/chats/{chat_id}",
+            headers=admin_headers,
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        payload = detail_response.json()
+        self.assertEqual(payload["id"], chat_id)
+        self.assertEqual(payload["message_count"], 2)
+        self.assertEqual(
+            [message["content_masked"] for message in payload["messages"]],
+            ["First masked message", "Second masked message"],
+        )
+        self.assertNotIn("anonymous_user_key", payload)
+
     def test_employee_cannot_access_admin_chat_retention_routes(self) -> None:
         self.create_test_user(
             email="chat.employee@greenleaf.ch",
