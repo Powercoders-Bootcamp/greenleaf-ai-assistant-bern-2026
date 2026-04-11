@@ -294,6 +294,52 @@
   color: rgba(31, 41, 55, 0.62);
 }
 
+.admin-sidebar__pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-sidebar__page-indicator {
+  min-width: 98px;
+  text-align: center;
+}
+
+.admin-page-link {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: rgba(31, 41, 55, 0.82);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.admin-page-link:hover:not(:disabled) {
+  background: rgba(240, 253, 244, 0.96);
+  border-color: rgba(34, 197, 94, 0.18);
+  color: #166534;
+  transform: translateY(-1px);
+}
+
+.admin-page-link:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
 .admin-chat-list {
   display: flex;
   flex-direction: column;
@@ -345,15 +391,6 @@
   margin-top: 8px;
   font-size: 0.78rem;
   color: rgba(31, 41, 55, 0.62);
-}
-
-.admin-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 14px;
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .admin-detail {
@@ -648,6 +685,30 @@
   color: rgba(31, 41, 55, 0.62);
 }
 
+.admin-sidebar__page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: rgba(31, 41, 55, 0.62);
+}
+
+.admin-sidebar__page-size select {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #111827;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.admin-sidebar__page-size select:focus {
+  border-color: rgba(34, 197, 94, 0.28);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.08);
+}
+
 .admin-chat-card__footer {
   display: flex;
   align-items: center;
@@ -783,6 +844,16 @@
   .admin-sidebar__summary {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-sidebar__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-sidebar__pagination {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .admin-thread-message {
