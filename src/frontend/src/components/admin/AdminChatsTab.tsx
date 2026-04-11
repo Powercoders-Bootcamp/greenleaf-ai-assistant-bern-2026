@@ -423,35 +423,9 @@ export default function AdminChatsTab({ token }: Props) {
         <aside className="admin-sidebar">
           <div className="admin-sidebar__head">
             <span>{totalItems} conversations total</span>
-            <div className="admin-sidebar__pagination">
-              <button
-                type="button"
-                className="admin-page-link"
-                disabled={!canGoPrev || loading || refreshing}
-                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                aria-label="Previous page"
-              >
-                &lt;
-              </button>
-
-              <span className="admin-sidebar__page-indicator">
-                Page {page} / {Math.max(totalPages, 1)}
-              </span>
-
-              <button
-                type="button"
-                className="admin-page-link"
-                disabled={!canGoNext || loading || refreshing}
-                onClick={() => setPage((prev) => prev + 1)}
-                aria-label="Next page"
-              >
-                &gt;
-              </button>
-            </div>
           </div>
 
           <div className="admin-sidebar__summary">
-            <span>{visibleItems.length} visible on this page</span>
             <label className="admin-sidebar__page-size">
               <span>Per page</span>
               <select
@@ -468,6 +442,32 @@ export default function AdminChatsTab({ token }: Props) {
                 <option value={50}>50</option>
               </select>
             </label>
+
+            <div className="admin-sidebar__pagination">
+              <button
+                type="button"
+                className="admin-page-link"
+                disabled={!canGoPrev || loading || refreshing}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                aria-label="Previous page"
+              >
+                <span aria-hidden="true">‹</span>
+              </button>
+
+              <span className="admin-sidebar__page-indicator">
+                Page {page} of {Math.max(totalPages, 1)}
+              </span>
+
+              <button
+                type="button"
+                className="admin-page-link"
+                disabled={!canGoNext || loading || refreshing}
+                onClick={() => setPage((prev) => prev + 1)}
+                aria-label="Next page"
+              >
+                <span aria-hidden="true">›</span>
+              </button>
+            </div>
           </div>
 
           <div className="admin-chat-list">
