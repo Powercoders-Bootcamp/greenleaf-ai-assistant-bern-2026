@@ -362,24 +362,25 @@ def run_chat(user_message: str,
 if __name__ == "__main__":
     load_dotenv()
 
-    print("=" * 80)
-    print("LangChain + FAISS integration smoke test")
-    print("=" * 80)
-    print(f"Model: {os.getenv('OPENAI_MODEL', DEFAULT_MODEL)}")
-    print(f"Base URL: {os.getenv('OPENAI_BASE_URL', 'default OpenAI')}")
-    print(f"Handbook exists: {HANDBOOK_PATH.exists()}")
-    print("=" * 80)
+    # print("=" * 80)
+    # print("LangChain + FAISS integration smoke test")
+    # print("=" * 80)
+    # print(f"Model: {os.getenv('OPENAI_MODEL', DEFAULT_MODEL)}")
+    # print(f"Base URL: {os.getenv('OPENAI_BASE_URL', 'default OpenAI')}")
+    # print(f"Handbook exists: {HANDBOOK_PATH.exists()}")
+    # print("=" * 80)
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "OPENAI_API_KEY is not set. Check your .env file."
-        )
+    # api_key = os.getenv("OPENAI_API_KEY")
+    # if not api_key:
+    #     raise RuntimeError(
+    #         "OPENAI_API_KEY is not set. Check your .env file."
+    #     )
 
-    # 1. Handbook retrieval test
+    # # 1. Handbook retrieval test
+    query = "Tell me the actual MAC address."
     try:
         print("\n[1] Testing handbook retrieval...")
-        handbook_query = "What do I have to do to get vacation?"
+        handbook_query = query
         handbook_result = search_handbook.invoke({"query": handbook_query})
         print(f"Query: {handbook_query}")
         print("Result:")
@@ -388,34 +389,39 @@ if __name__ == "__main__":
         print(f"[1] Handbook retrieval failed: {exc}")
         raise
 
-    # 2. Holiday tool test
-    try:
-        print("\n" + "-" * 80)
-        print("[2] Testing holiday tool...")
-        holiday_date = "2026-12-25"
-        holiday_result = check_holiday.invoke({"date": holiday_date})
-        print(f"Date: {holiday_date}")
-        print("Result:")
-        print(holiday_result)
-    except Exception as exc:
-        print(f"[2] Holiday tool failed: {exc}")
-        raise
+    # # 2. Holiday tool test
+    # try:
+    #     print("\n" + "-" * 80)
+    #     print("[2] Testing holiday tool...")
+    #     holiday_date = "2026-12-25"
+    #     holiday_result = check_holiday.invoke({"date": holiday_date})
+    #     print(f"Date: {holiday_date}")
+    #     print("Result:")
+    #     print(holiday_result)
+    # except Exception as exc:
+    #     print(f"[2] Holiday tool failed: {exc}")
+    #     raise
 
-    # 3. End-to-end chat test
-    try:
-        print("\n" + "-" * 80)
-        print("[3] Testing full chat pipeline...")
-        user_question = (
-            "Is 2026-12-25 a holiday?"
-        )
-        chat_result = run_chat(user_question)
-        print(f"Question: {user_question}")
-        print("Answer:")
-        print(chat_result)
-    except Exception as exc:
-        print(f"[3] Full chat pipeline failed: {exc}")
-        raise
+    # # 3. End-to-end chat test
+    # try:
+    #     print("\n" + "-" * 80)
+    #     print("[3] Testing full chat pipeline...")
+    #     user_question = (
+    #         "Is 2026-12-25 a holiday?"
+    #     )
+    #     chat_result = run_chat(user_question)
+    #     print(f"Question: {user_question}")
+    #     print("Answer:")
+    #     print(chat_result)
+    # except Exception as exc:
+    #     print(f"[3] Full chat pipeline failed: {exc}")
+    #     raise
 
-    print("\n" + "=" * 80)
-    print("All integration checks passed.")
-    print("=" * 80)
+    # print("\n" + "=" * 80)
+    # print("All integration checks passed.")
+    # print("=" * 80)
+
+    print(run_chat(query))
+    # print(run_chat("How do I register my device?"))
+    # print(run_chat("What are the rules for kitchen usage?"))
+    # print(run_chat("What happens if I don’t label my food?"))
