@@ -63,9 +63,9 @@ A task is considered “done” when:
 
 Full setup (venv, dependencies, `.env`, API key, smoke tests, troubleshooting): **[src/backend/README.md](src/backend/README.md)**.
 
-cd src/backend  
-.\.venv\Scripts\Activate  
-uvicorn main:app --reload --port 8000  
+cd src  
+.\backend\myenv\Scripts\Activate  
+uvicorn backend.main:app --reload --port 8000  
 
 Backend: http://127.0.0.1:8000  
 Docs: http://127.0.0.1:8000/docs  

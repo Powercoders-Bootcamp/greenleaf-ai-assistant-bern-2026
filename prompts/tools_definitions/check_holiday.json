@@ -1,17 +1,17 @@
 {
-    "type": "function",
-    "function": {
-        "name": "check_holiday",
-        "description": "Check if a calendar date is a non-working day in Basel-Stadt (public holiday or weekend). Always use Basel-Stadt rules only.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string",
-                    "description": "Calendar date in ISO format YYYY-MM-DD."
-                }
-            },
-            "required": ["date"]
+  "type": "function",
+  "function": {
+    "name": "check_holiday",
+    "description": "Check the Basel-Stadt status of a calendar date. Return whether the date is an official holiday, whether it falls on a weekend, and whether it is a non-working day. Weekend and holiday status must be evaluated separately, because a date can satisfy both.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "Calendar date in ISO format YYYY-MM-DD."
         }
+      },
+      "required": ["date"]
     }
+  }
 }

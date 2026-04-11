@@ -38,10 +38,16 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
-import spacy
+try:
+    import spacy
+except ImportError:  # pragma: no cover - depends on local optional setup
+    spacy = None
 
 
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm") if spacy is not None else None
+except OSError:  # pragma: no cover - depends on local optional setup
+    nlp = None
 
 
 REGEX_PATTERNS: dict[str, str] = {
@@ -107,16 +113,21 @@ def collect_regex_matches(text: str) -> list[Match]:
     return matches
 
 
-def collect_ner_matches(text: str) -> list[Match]:
+def collect_ner_matches(text: str, include_temporal: bool = False) -> list[Match]:
     """
     Detect entities using spaCy NER.
     """
+    if nlp is None:
+        return []
+
     matches: list[Match] = []
     doc = nlp(text)
 
     for ent in doc.ents:
         mapped_label = NER_LABEL_MAP.get(ent.label_)
         if not mapped_label:
+            continue
+        if not include_temporal and mapped_label in {"DATE", "TIME"}:
             continue
 
         candidate = Match(ent.start_char, ent.end_char, mapped_label)
@@ -165,7 +176,7 @@ def replace_matches(text: str, matches: list[Match]) -> str:
     return result
 
 
-def mask_pii(text: str) -> str:
+def mask_pii(text: str, include_temporal: bool = False) -> str:
     """
     Main pipeline:
     1. Validate input
@@ -180,7 +191,7 @@ def mask_pii(text: str) -> str:
         raise ValueError("mask_pii received empty text")
 
     regex_matches = collect_regex_matches(text)
-    ner_matches = collect_ner_matches(text)
+    ner_matches = collect_ner_matches(text, include_temporal=include_temporal)
 
     all_matches = regex_matches + ner_matches
     ordered_matches = sort_matches(all_matches)

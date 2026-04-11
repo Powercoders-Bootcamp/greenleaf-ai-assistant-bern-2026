@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+#lib/
 lib64/
 parts/
 sdist/
@@ -60,6 +60,8 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+test.db
+**/test.db
 
 # Flask stuff:
 instance/
@@ -146,6 +148,18 @@ env/
 ENV/
 env.bak/
 venv.bak/
+
+# Vector databases (FAISS / embeddings)
+data/vectorstore/
+**/vectorstore/
+
+# FAISS index files
+*.faiss
+*.pkl
+
+# LangChain vector stores
+faiss_index/
+handbook_faiss/
 
 # Spyder project settings
 .spyderproject
