@@ -5,8 +5,8 @@ import { Suspense } from 'react'
 import LeafModel from './LeafModel'
 
 type Props = {
-  loading?: boolean
-  variant?: 'default' | 'auth'
+  readonly loading?: boolean
+  readonly variant?: 'default' | 'auth'
 }
 
 export default function LeafScene({
@@ -19,6 +19,7 @@ export default function LeafScene({
     <div
       className={`leaf-scene ${loading ? 'is-loading' : ''} ${isAuth ? 'is-auth' : ''}`}
     >
+      {/* sonarqube-ignore S6747 -- R3F extends JSX with custom properties for Three.js objects */}
       <Canvas
         dpr={[1, 2]}
         gl={{ alpha: true, antialias: true }}

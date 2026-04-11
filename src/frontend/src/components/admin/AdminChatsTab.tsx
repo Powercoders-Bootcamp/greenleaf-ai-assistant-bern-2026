@@ -7,6 +7,8 @@ type Props = {
   token: string | null
 }
 
+type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc' | 'messages_desc'
+
 function formatDate(value: string) {
   const date = new Date(value)
 
@@ -23,6 +25,68 @@ function formatDate(value: string) {
   })
 }
 
+function matchesSearch(chat: AdminChatItem, query: string) {
+  const normalizedQuery = query.trim().toLowerCase()
+
+  if (!normalizedQuery) return true
+
+  const title = String(chat.title ?? '').toLowerCase()
+  const idText = String(chat.id)
+  const messageCountText = String(chat.message_count)
+
+  return (
+    title.includes(normalizedQuery) ||
+    idText.includes(normalizedQuery) ||
+    messageCountText.includes(normalizedQuery)
+  )
+}
+
+function sortChats(items: AdminChatItem[], sort: SortOption) {
+  const next = [...items]
+
+  next.sort((a, b) => {
+    const updatedA = new Date(a.updated_at).getTime()
+    const updatedB = new Date(b.updated_at).getTime()
+    const createdA = new Date(a.created_at).getTime()
+    const createdB = new Date(b.created_at).getTime()
+
+    switch (sort) {
+      case 'updated_asc':
+        return updatedA - updatedB
+
+      case 'created_desc':
+        return createdB - createdA
+
+      case 'created_asc':
+        return createdA - createdB
+
+      case 'messages_desc':
+        return b.message_count - a.message_count
+
+      case 'updated_desc':
+      default:
+        return updatedB - updatedA
+    }
+  })
+
+  return next
+}
+
+function getRecencyLabel(updatedAt: string) {
+  const updated = new Date(updatedAt).getTime()
+
+  if (Number.isNaN(updated)) return 'Unknown'
+
+  const diffMs = Date.now() - updated
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffHours < 1) return 'Updated recently'
+  if (diffHours < 24) return `Updated ${diffHours}h ago`
+  if (diffDays === 1) return 'Updated yesterday'
+  return `Updated ${diffDays}d ago`
+}
+
 export default function AdminChatsTab({ token }: Props) {
   const [items, setItems] = useState<AdminChatItem[]>([])
   const [page, setPage] = useState(1)
@@ -35,10 +99,8 @@ export default function AdminChatsTab({ token }: Props) {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const selectedChat = useMemo(
-    () => items.find((item) => item.id === selectedChatId) ?? null,
-    [items, selectedChatId]
-  )
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState<SortOption>('updated_desc')
 
   const syncSelection = useCallback(
     (nextItems: AdminChatItem[]) => {
@@ -101,6 +163,33 @@ export default function AdminChatsTab({ token }: Props) {
     void fetchChats()
   }, [fetchChats])
 
+  const visibleItems = useMemo(() => {
+    const filtered = items.filter((chat) => matchesSearch(chat, search))
+    return sortChats(filtered, sortBy)
+  }, [items, search, sortBy])
+
+  const selectedChat = useMemo(
+    () => visibleItems.find((item) => item.id === selectedChatId) ?? items.find((item) => item.id === selectedChatId) ?? null,
+    [items, selectedChatId, visibleItems]
+  )
+
+  useEffect(() => {
+    if (visibleItems.length === 0) {
+      return
+    }
+
+    if (!selectedChatId) {
+      setSelectedChatId(visibleItems[0].id)
+      return
+    }
+
+    const existsInVisible = visibleItems.some((item) => item.id === selectedChatId)
+
+    if (!existsInVisible) {
+      setSelectedChatId(visibleItems[0].id)
+    }
+  }, [selectedChatId, visibleItems])
+
   const handleRefresh = async () => {
     await fetchChats('refresh')
   }
@@ -134,6 +223,7 @@ export default function AdminChatsTab({ token }: Props) {
 
   const canGoPrev = page > 1
   const canGoNext = page < totalPages
+  const hasFilters = Boolean(search.trim()) || sortBy !== 'updated_desc'
 
   return (
     <section className="admin-tab admin-chats-tab">
@@ -141,7 +231,7 @@ export default function AdminChatsTab({ token }: Props) {
         <div>
           <h2>Anonymous chats</h2>
           <p>
-            Review conversation metadata, timestamps and retention state.
+            Review chat metadata, timestamps, retention state and conversation volume.
           </p>
         </div>
 
@@ -164,21 +254,65 @@ export default function AdminChatsTab({ token }: Props) {
         }}
       />
 
+      <div className="admin-toolbar">
+        <label className="admin-field admin-field--search">
+          <span>Search</span>
+          <input
+            type="text"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by title, chat id or message count"
+          />
+        </label>
+
+        <label className="admin-field admin-field--compact">
+          <span>Sort by</span>
+          <select
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value as SortOption)}
+          >
+            <option value="updated_desc">Recently updated</option>
+            <option value="updated_asc">Oldest updated</option>
+            <option value="created_desc">Recently created</option>
+            <option value="created_asc">Oldest created</option>
+            <option value="messages_desc">Most messages</option>
+          </select>
+        </label>
+
+        {hasFilters && (
+          <button
+            type="button"
+            className="admin-button admin-button--ghost"
+            onClick={() => {
+              setSearch('')
+              setSortBy('updated_desc')
+            }}
+          >
+            Reset filters
+          </button>
+        )}
+      </div>
+
       {loading && <p className="admin-feedback">Loading conversations...</p>}
       {error && <p className="admin-feedback admin-feedback--error">{error}</p>}
 
       <div className="admin-master-detail">
         <aside className="admin-sidebar">
           <div className="admin-sidebar__head">
-            <span>{totalItems} conversations</span>
+            <span>{totalItems} conversations total</span>
             <span>
               Page {page} / {Math.max(totalPages, 1)}
             </span>
           </div>
 
+          <div className="admin-sidebar__summary">
+            <span>{visibleItems.length} visible on this page</span>
+            <span>{pageSize} per page</span>
+          </div>
+
           <div className="admin-chat-list">
             {!loading &&
-              items.map((chat) => {
+              visibleItems.map((chat) => {
                 const isActive = chat.id === selectedChatId
 
                 return (
@@ -197,15 +331,26 @@ export default function AdminChatsTab({ token }: Props) {
                     </div>
 
                     <div className="admin-chat-card__meta">
+                      <span>ID: #{chat.id}</span>
                       <span>Created: {formatDate(chat.created_at)}</span>
                       <span>Updated: {formatDate(chat.updated_at)}</span>
+                    </div>
+
+                    <div className="admin-chat-card__footer">
+                      <span className="admin-pill admin-pill--soft">
+                        {getRecencyLabel(chat.updated_at)}
+                      </span>
                     </div>
                   </button>
                 )
               })}
 
-            {!loading && items.length === 0 && (
-              <div className="admin-empty">No conversations found.</div>
+            {!loading && visibleItems.length === 0 && (
+              <div className="admin-empty">
+                {items.length === 0
+                  ? 'No conversations found.'
+                  : 'No conversations match the current filters.'}
+              </div>
             )}
           </div>
 
@@ -265,12 +410,32 @@ export default function AdminChatsTab({ token }: Props) {
                 </div>
               </div>
 
+              <div className="admin-inspector-grid">
+                <div className="admin-detail__placeholder">
+                  <h4>Conversation overview</h4>
+                  <p>
+                    This chat is available in the admin list endpoint and can be reviewed
+                    through metadata such as title, message count, creation time and last
+                    update.
+                  </p>
+                </div>
+
+                <div className="admin-detail__placeholder">
+                  <h4>Retention and privacy</h4>
+                  <p>
+                    Anonymous chat review is intentionally limited. The current admin API
+                    exposes retention-safe metadata only and does not return the full
+                    message thread or direct identifiers.
+                  </p>
+                </div>
+              </div>
+
               <div className="admin-detail__placeholder">
-                <h4>Conversation detail</h4>
+                <h4>What you can do here</h4>
                 <p>
-                  This panel already shows conversation metadata and timestamps from the
-                  admin list endpoint. To render the full message thread here, connect it
-                  to an admin chat detail endpoint when that backend route is available.
+                  Use this panel to inspect activity patterns, review stale conversations,
+                  identify chats with unusually high message counts and apply retention
+                  cleanup when needed.
                 </p>
               </div>
             </>

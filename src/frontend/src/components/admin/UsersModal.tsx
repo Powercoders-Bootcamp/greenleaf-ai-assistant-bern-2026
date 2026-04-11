@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type {
   AdminUser,
   AdminUserCreatePayload,
+  AdminUserRole,
   AdminUserUpdatePayload,
 } from '../../types/admin'
 
@@ -21,7 +22,7 @@ type FormState = {
   email: string
   display_name: string
   password: string
-  role: string
+  role: AdminUserRole
   is_active: boolean
 }
 
@@ -29,7 +30,7 @@ const INITIAL_FORM: FormState = {
   email: '',
   display_name: '',
   password: '',
-  role: 'employee',
+  role: 'Employee',
   is_active: true,
 }
 
@@ -42,31 +43,36 @@ export default function UsersModal({
   onClose,
   onSubmit,
 }: Props) {
-  const [form, setForm] = useState<FormState>(INITIAL_FORM)
+  const initialForm = useMemo<FormState>(() => {
+    if (mode === 'edit' && user) {
+      return {
+        email: user.email ?? '',
+        display_name: user.display_name ?? '',
+        password: '',
+        role: user.role === 'Admin' ? 'Admin' : 'Employee',
+        is_active: user.is_active ?? true,
+      }
+    }
+
+    return INITIAL_FORM
+  }, [mode, user])
+
+  const [form, setForm] = useState<FormState>(initialForm)
 
   useEffect(() => {
     if (!open) return
 
-    if (mode === 'edit' && user) {
-      setForm({
-        email: user.email ?? '',
-        display_name: user.display_name ?? '',
-        password: '',
-        role: user.role ?? 'employee',
-        is_active: user.is_active ?? true,
-      })
-      return
-    }
+    const frameId = window.requestAnimationFrame(() => {
+      setForm(initialForm)
+    })
 
-    setForm(INITIAL_FORM)
-  }, [open, mode, user])
+    return () => window.cancelAnimationFrame(frameId)
+  }, [open, initialForm])
 
   const title = useMemo(
     () => (mode === 'create' ? 'Create user' : 'Edit user'),
     [mode]
   )
-
-  if (!open) return null
 
   const updateField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -78,7 +84,7 @@ export default function UsersModal({
     const email = form.email.trim()
     const displayName = form.display_name.trim()
     const password = form.password.trim()
-    const role = form.role.trim()
+    const role = form.role
 
     if (mode === 'create') {
       await onSubmit({
@@ -94,11 +100,13 @@ export default function UsersModal({
     await onSubmit({
       email,
       display_name: displayName,
-      password: password ? password : undefined,
+      password: password || undefined,
       role,
       is_active: form.is_active,
     })
   }
+
+  if (!open) return null
 
   return (
     <div
@@ -171,12 +179,13 @@ export default function UsersModal({
             <span>Role</span>
             <select
               value={form.role}
-              onChange={(event) => updateField('role', event.target.value)}
+              onChange={(event) =>
+                updateField('role', event.target.value as AdminUserRole)
+              }
               disabled={loading}
             >
-              <option value="employee">employee</option>
-              <option value="admin">admin</option>
-              <option value="user">user</option>
+              <option value="Employee">Employee</option>
+              <option value="Admin">Admin</option>
             </select>
           </label>
 

@@ -11,7 +11,7 @@ type UserSubmitPayload = {
   email: string
   display_name: string
   password?: string
-  role: string
+  role: 'Admin' | 'Employee'
   is_active: boolean
 }
 

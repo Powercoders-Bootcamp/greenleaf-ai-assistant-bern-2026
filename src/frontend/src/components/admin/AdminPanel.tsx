@@ -12,25 +12,22 @@ export default function AdminPanel({ token }: Props) {
 
   return (
     <section className="admin-panel">
-      <div className="admin-panel__header">
-        <div>
-          <p className="eyebrow">Admin workspace</p>
-          <h1>Admin Panel</h1>
-          <p className="subtext">
-            Review anonymous chat history, retention state and managed users.
-          </p>
-        </div>
-
-        <div className="admin-tabs">
+      <div className="admin-panel__header admin-panel__header--compact">
+        <div className="admin-tabs" role="tablist" aria-label="Admin sections">
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === 'chats'}
             className={`admin-tab-button ${tab === 'chats' ? 'is-active' : ''}`}
             onClick={() => setTab('chats')}
           >
             Chats
           </button>
+
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === 'users'}
             className={`admin-tab-button ${tab === 'users' ? 'is-active' : ''}`}
             onClick={() => setTab('users')}
           >

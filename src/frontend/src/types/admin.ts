@@ -18,7 +18,23 @@ export type ChatRetentionCleanupResponse = {
   deleted_count: number
 }
 
-export type AdminUserRole = 'admin' | 'employee' | 'user'
+export type AdminUserRole = 'Admin' | 'Employee'
+
+export type AdminUserCreatePayload = {
+  email: string
+  display_name: string
+  password: string
+  role: AdminUserRole
+  is_active: boolean
+}
+
+export type AdminUserUpdatePayload = {
+  email: string
+  display_name: string
+  password?: string
+  role: AdminUserRole
+  is_active: boolean
+}
 
 export type AdminUser = {
   id: number
@@ -28,20 +44,4 @@ export type AdminUser = {
   is_active: boolean
   created_at?: string
   updated_at?: string
-}
-
-export type AdminUserCreatePayload = {
-  email: string
-  display_name: string
-  password: string
-  role: string
-  is_active: boolean
-}
-
-export type AdminUserUpdatePayload = {
-  email: string
-  display_name: string
-  password?: string
-  role: string
-  is_active: boolean
 }
