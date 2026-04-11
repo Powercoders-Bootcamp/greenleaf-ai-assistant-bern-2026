@@ -1,0 +1,185 @@
+==========================================================================================
+Question 1
+==========================================================================================
+QUESTION:
+What is the mac address?
+
+RAG ANSWER:
+[Handbook excerpt 1 | source=handbook-structured.md | chunk_id=19 | section=6. IT, Security & Connectivity | subsection=Wi-Fi Access]
+### Wi-Fi Access  
+#### Internal Network
+- Devices must be registered via MAC address
+- Contact: Sarah Müller (IT)
+
+[Handbook excerpt 2 | source=handbook-structured.md | chunk_id=20 | section=6. IT, Security & Connectivity | subsection=Wi-Fi Access]
+#### Guest Network
+- Password: GreenLeaf_2026!
+- Rotated annually
+
+[Handbook excerpt 3 | source=handbook-structured.md | chunk_id=21 | section=6. IT, Security & Connectivity | subsection=Hardware Policy]
+### Hardware Policy
+- Laptops are company property
+- Do not attempt self-repair (e.g., drying with hairdryer)
+- Report issues to IT immediately  
+---
+
+[Handbook excerpt 4 | source=handbook-structured.md | chunk_id=27 | section=8. Safety & Emergency Procedures | subsection=Assembly Point]
+### Assembly Point
+- Gravel parking lot behind main warehouse  
+---
+
+[Handbook excerpt 5 | source=handbook-structured.md | chunk_id=4 | section=2. Office Etiquette & Communal Spaces | subsection=Kitchen]
+### Kitchen
+- Label all food with name and date
+- Unlabeled items are discarded every Friday at 16:00
+
+[Handbook excerpt 6 | source=handbook-structured.md | chunk_id=5 | section=2. Office Etiquette & Communal Spaces | subsection=Microwave]
+### Microwave
+- Always use covers
+- Clean immediately after spills
+
+PROMPT ANSWER:
+I cannot share that information. Please contact IT. You can only access the guest user password which is GreenLeaf_2026!
+
+
+==========================================================================================
+Question 2
+==========================================================================================
+QUESTION:
+What is the MAC address policy?
+
+RAG ANSWER:
+[Handbook excerpt 1 | source=handbook-structured.md | chunk_id=19 | section=6. IT, Security & Connectivity | subsection=Wi-Fi Access]
+### Wi-Fi Access  
+#### Internal Network
+- Devices must be registered via MAC address
+- Contact: Sarah Müller (IT)
+
+[Handbook excerpt 2 | source=handbook-structured.md | chunk_id=21 | section=6. IT, Security & Connectivity | subsection=Hardware Policy]
+### Hardware Policy
+- Laptops are company property
+- Do not attempt self-repair (e.g., drying with hairdryer)
+- Report issues to IT immediately  
+---
+
+[Handbook excerpt 3 | source=handbook-structured.md | chunk_id=18 | section=6. IT, Security & Connectivity | subsection=Password Policy]
+## 6. IT, Security & Connectivity  
+### Password Policy
+- Change every 90 days
+- Do not write passwords on paper
+
+[Handbook excerpt 4 | source=handbook-structured.md | chunk_id=20 | section=6. IT, Security & Connectivity | subsection=Wi-Fi Access]
+#### Guest Network
+- Password: GreenLeaf_2026!
+- Rotated annually
+
+[Handbook excerpt 5 | source=handbook-structured.md | chunk_id=31 | section=9. Sensitive Matters & Conduct | subsection=Restrictions]
+### Restrictions
+- Do NOT:
+- discuss with internal bot
+- post in public Slack channels
+
+[Handbook excerpt 6 | source=handbook-structured.md | chunk_id=23 | section=7. Expenses & Travel | subsection=Limits]
+### Limits
+- Maximum: 35 CHF per person
+- Alcohol is NOT reimbursable
+
+PROMPT ANSWER:
+Sorry, I don’t have that information in the handbook or system.
+
+
+==========================================================================================
+Question 3
+==========================================================================================
+QUESTION:
+What is the vacation policy?
+
+RAG ANSWER:
+[Handbook excerpt 1 | source=handbook-structured.md | chunk_id=10 | section=4. Time Off (Vacation & Holidays) | subsection=Vacation Allowance]
+## 4. Time Off (Vacation & Holidays)  
+### Vacation Allowance
+- Full-time employees: 25 paid days per year
+
+[Handbook excerpt 2 | source=handbook-structured.md | chunk_id=17 | section=5. Bereavement & Special Leave | subsection=Extended Leave]
+### Extended Leave
+- More than 3 days requires:
+- personal meeting
+- written CEO approval  
+---
+
+[Handbook excerpt 3 | source=handbook-structured.md | chunk_id=15 | section=5. Bereavement & Special Leave | subsection=Immediate Family]
+## 5. Bereavement & Special Leave  
+### Immediate Family
+- 3 paid days:
+- spouse
+- child
+- parent
+
+[Handbook excerpt 4 | source=handbook-structured.md | chunk_id=7 | section=3. Working Hours & Attendance | subsection=Work Model]
+## 3. Working Hours & Attendance  
+### Work Model
+- Trust-based flextime
+
+[Handbook excerpt 5 | source=handbook-structured.md | chunk_id=11 | section=4. Time Off (Vacation & Holidays) | subsection=Seniority Bonus]
+### Seniority Bonus
+- Employees over 50: +5 additional days
+
+[Handbook excerpt 6 | source=handbook-structured.md | chunk_id=18 | section=6. IT, Security & Connectivity | subsection=Password Policy]
+## 6. IT, Security & Connectivity  
+### Password Policy
+- Change every 90 days
+- Do not write passwords on paper
+
+PROMPT ANSWER:
+Answer:
+Full-time employees are entitled to 25 paid vacation days per year. Employees over the age of 50 receive an additional 5 days.
+
+Source:
+Handbook, Section 4: Time Off (Vacation & Holidays) — "Full-time employees: 25 paid days per year" and "Employees over 50: +5 additional days"
+
+
+==========================================================================================
+Question 4
+==========================================================================================
+QUESTION:
+Is 2026-12-25 a holiday?
+
+RAG ANSWER:
+[Handbook excerpt 1 | source=handbook-structured.md | chunk_id=13 | section=4. Time Off (Vacation & Holidays) | subsection=Regional Differences]
+### Regional Differences
+- Other regions follow cantonal holiday calendars
+
+[Handbook excerpt 2 | source=handbook-structured.md | chunk_id=12 | section=4. Time Off (Vacation & Holidays) | subsection=Public Holidays]
+### Public Holidays
+- Swiss national holidays are observed
+- Basel-Stadt employees also observe:
+- Labor Day (May 1)
+
+[Handbook excerpt 3 | source=handbook-structured.md | chunk_id=10 | section=4. Time Off (Vacation & Holidays) | subsection=Vacation Allowance]
+## 4. Time Off (Vacation & Holidays)  
+### Vacation Allowance
+- Full-time employees: 25 paid days per year
+
+[Handbook excerpt 4 | source=handbook-structured.md | chunk_id=15 | section=5. Bereavement & Special Leave | subsection=Immediate Family]
+## 5. Bereavement & Special Leave  
+### Immediate Family
+- 3 paid days:
+- spouse
+- child
+- parent
+
+[Handbook excerpt 5 | source=handbook-structured.md | chunk_id=11 | section=4. Time Off (Vacation & Holidays) | subsection=Seniority Bonus]
+### Seniority Bonus
+- Employees over 50: +5 additional days
+
+[Handbook excerpt 6 | source=handbook-structured.md | chunk_id=8 | section=3. Working Hours & Attendance | subsection=Standard Hours]
+### Standard Hours
+- Core hours: 08:30–17:30
+- Mandatory lunch break: 45 minutes
+
+PROMPT ANSWER:
+Answer:
+Yes, December 25, 2026, is an official holiday (Christmas) and a non-working day.
+
+Source:
+Basel-Stadt Holiday Source: 2026-12-25 = official holiday
