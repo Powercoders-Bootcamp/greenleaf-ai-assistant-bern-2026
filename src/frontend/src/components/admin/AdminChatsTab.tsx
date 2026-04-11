@@ -132,6 +132,8 @@ export default function AdminChatsTab({ token }: Props) {
   const [sortBy, setSortBy] = useState<SortOption>('updated_desc')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [mobileDateFiltersOpen, setMobileDateFiltersOpen] = useState(false)
 
   const syncSelection = useCallback(
     (nextItems: AdminChatItem[]) => {
@@ -350,6 +352,20 @@ export default function AdminChatsTab({ token }: Props) {
         }}
       />
 
+      <section className="admin-filter-card">
+      <div className="admin-filter-card__mobile-toggle">
+        <button
+          type="button"
+          className="admin-button admin-button--ghost admin-button--compact"
+          aria-expanded={mobileFiltersOpen}
+          onClick={() => setMobileFiltersOpen((prev) => !prev)}
+        >
+          <span>Search and filters</span>
+          <span aria-hidden="true">{mobileFiltersOpen ? '−' : '+'}</span>
+        </button>
+      </div>
+
+      <div className={`admin-filter-card__body ${mobileFiltersOpen ? 'is-open' : ''}`}>
       <div className="admin-toolbar">
         <label className="admin-field admin-field--search">
           <span>Search</span>
@@ -361,29 +377,47 @@ export default function AdminChatsTab({ token }: Props) {
             />
         </label>
 
-        <label className="admin-field admin-field--compact">
-          <span>Updated from</span>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(event) => {
-              setDateFrom(event.target.value)
-              setPage(1)
-            }}
-          />
-        </label>
+        <div className="admin-toolbar__mobile-toggle">
+          <button
+            type="button"
+            className="admin-button admin-button--ghost admin-button--compact"
+            aria-expanded={mobileDateFiltersOpen}
+            onClick={() => setMobileDateFiltersOpen((prev) => !prev)}
+          >
+            <span>Date filters</span>
+            <span aria-hidden="true">{mobileDateFiltersOpen ? '−' : '+'}</span>
+          </button>
+        </div>
 
-        <label className="admin-field admin-field--compact">
-          <span>Updated to</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(event) => {
-              setDateTo(event.target.value)
-              setPage(1)
-            }}
-          />
-        </label>
+        <div
+          className={`admin-toolbar__date-filters ${
+            mobileDateFiltersOpen ? 'is-open' : ''
+          }`}
+        >
+          <label className="admin-field admin-field--compact">
+            <span>Updated from</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(event) => {
+                setDateFrom(event.target.value)
+                setPage(1)
+              }}
+            />
+          </label>
+
+          <label className="admin-field admin-field--compact">
+            <span>Updated to</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(event) => {
+                setDateTo(event.target.value)
+                setPage(1)
+              }}
+            />
+          </label>
+        </div>
 
         <label className="admin-field admin-field--compact">
           <span>Sort by</span>
@@ -415,6 +449,8 @@ export default function AdminChatsTab({ token }: Props) {
           </button>
         )}
       </div>
+      </div>
+      </section>
 
       {loading && <p className="admin-feedback">Loading conversations...</p>}
       {error && <p className="admin-feedback admin-feedback--error">{error}</p>}

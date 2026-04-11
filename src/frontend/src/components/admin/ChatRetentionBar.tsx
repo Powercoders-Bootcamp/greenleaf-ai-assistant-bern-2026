@@ -20,6 +20,7 @@ export default function ChatRetentionBar({
   token,
   onCleanupSuccess,
 }: Props) {
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [days, setDays] = useState(DEFAULT_DAYS)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -68,47 +69,61 @@ export default function ChatRetentionBar({
 
   return (
     <div className="admin-retention">
-      <div className="admin-retention__copy">
-        <h3>Chat retention cleanup</h3>
-        <p>Delete anonymous chats older than the selected number of days.</p>
-      </div>
-
-      <div className="admin-retention__controls">
-        <label className="admin-field">
-          <span>Older than</span>
-          <input
-            type="number"
-            min={MIN_DAYS}
-            max={MAX_DAYS}
-            step={1}
-            value={days}
-            onChange={(event) => handleDaysChange(event.target.value)}
-            onBlur={() => setDays((prev) => clampDays(prev))}
-            disabled={isDisabled}
-          />
-        </label>
-
+      <div className="admin-retention__mobile-toggle">
         <button
           type="button"
-          className="admin-button admin-button--danger"
-          onClick={handleCleanup}
-          disabled={isDisabled}
+          className="admin-button admin-button--ghost admin-button--compact"
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((prev) => !prev)}
         >
-          {loading ? 'Cleaning up...' : 'Delete expired chats'}
+          <span>Chat retention cleanup</span>
+          <span aria-hidden="true">{mobileOpen ? '−' : '+'}</span>
         </button>
       </div>
 
-      {message && (
-        <p className="admin-feedback admin-feedback--success">
-          {message}
-        </p>
-      )}
+      <div className={`admin-retention__body ${mobileOpen ? 'is-open' : ''}`}>
+        <div className="admin-retention__copy">
+          <h3>Chat retention cleanup</h3>
+          <p>Delete anonymous chats older than the selected number of days.</p>
+        </div>
 
-      {error && (
-        <p className="admin-feedback admin-feedback--error">
-          {error}
-        </p>
-      )}
+        <div className="admin-retention__controls">
+          <label className="admin-field">
+            <span>Older than</span>
+            <input
+              type="number"
+              min={MIN_DAYS}
+              max={MAX_DAYS}
+              step={1}
+              value={days}
+              onChange={(event) => handleDaysChange(event.target.value)}
+              onBlur={() => setDays((prev) => clampDays(prev))}
+              disabled={isDisabled}
+            />
+          </label>
+
+          <button
+            type="button"
+            className="admin-button admin-button--danger"
+            onClick={handleCleanup}
+            disabled={isDisabled}
+          >
+            {loading ? 'Cleaning up...' : 'Delete expired chats'}
+          </button>
+        </div>
+
+        {message && (
+          <p className="admin-feedback admin-feedback--success">
+            {message}
+          </p>
+        )}
+
+        {error && (
+          <p className="admin-feedback admin-feedback--error">
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   )
 }
