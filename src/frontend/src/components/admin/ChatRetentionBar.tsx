@@ -20,7 +20,6 @@ export default function ChatRetentionBar({
   token,
   onCleanupSuccess,
 }: Props) {
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [days, setDays] = useState(DEFAULT_DAYS)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -69,19 +68,7 @@ export default function ChatRetentionBar({
 
   return (
     <div className="admin-retention">
-      <div className="admin-retention__mobile-toggle">
-        <button
-          type="button"
-          className="admin-button admin-button--ghost admin-button--compact"
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen((prev) => !prev)}
-        >
-          <span>Chat retention cleanup</span>
-          <span aria-hidden="true">{mobileOpen ? '−' : '+'}</span>
-        </button>
-      </div>
-
-      <div className={`admin-retention__body ${mobileOpen ? 'is-open' : ''}`}>
+      <div className="admin-retention__body">
         <div className="admin-retention__copy">
           <h3>Chat retention cleanup</h3>
           <p>Delete anonymous chats older than the selected number of days.</p>
