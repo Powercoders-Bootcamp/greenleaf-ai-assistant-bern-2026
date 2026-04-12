@@ -5,11 +5,13 @@ import csv
 import json
 import sys
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Callable
 
 CURRENT_FILE = Path(__file__).resolve()
 SRC_ROOT = CURRENT_FILE.parents[2]  # /app/src
+RUN_TIMEZONE = ZoneInfo("Europe/Zurich")
 
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
@@ -83,7 +85,7 @@ def discover_fixture_files(file_name: str | None) -> list[Path]:
 
 
 def create_run_directory() -> Path:
-    timestamp = datetime.now().strftime("run_%Y-%m-%d_%H-%M-%S")
+    timestamp = datetime.now(RUN_TIMEZONE).strftime("run_%Y-%m-%d_%H-%M-%S")
     run_dir = ARTIFACTS_DIR / timestamp
     run_dir.mkdir(parents=True, exist_ok=True)
     return run_dir
