@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../lib/api'
-import type { AdminChatItem, AdminChatPageResponse } from '../../types/admin'
+import type {
+  AdminChatDetail,
+  AdminChatItem,
+  AdminChatMessage,
+  AdminChatPageResponse,
+} from '../../types/admin'
 import ChatRetentionBar from './ChatRetentionBar'
 
 type Props = {
@@ -87,20 +92,48 @@ function getRecencyLabel(updatedAt: string) {
   return `Updated ${diffDays}d ago`
 }
 
+function formatThreadTimestamp(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toLocaleString([], {
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function getMessageAuthor(message: AdminChatMessage) {
+  if (message.sender_type === 'user') return 'Employee'
+  if (message.sender_type === 'assistant') return 'Beat-Bot'
+  return 'System'
+}
+
 export default function AdminChatsTab({ token }: Props) {
   const [items, setItems] = useState<AdminChatItem[]>([])
+  const [selectedChatDetail, setSelectedChatDetail] = useState<AdminChatDetail | null>(null)
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null)
 
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [detailError, setDetailError] = useState<string | null>(null)
 
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('updated_desc')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [mobileDateFiltersOpen, setMobileDateFiltersOpen] = useState(false)
 
   const syncSelection = useCallback(
     (nextItems: AdminChatItem[]) => {
@@ -136,8 +169,21 @@ export default function AdminChatsTab({ token }: Props) {
       setError(null)
 
       try {
+        const params = new URLSearchParams({
+          page: String(page),
+          page_size: String(pageSize),
+        })
+
+        if (dateFrom) {
+          params.set('date_from', `${dateFrom}T00:00:00`)
+        }
+
+        if (dateTo) {
+          params.set('date_to', `${dateTo}T23:59:59`)
+        }
+
         const data = await apiRequest<AdminChatPageResponse>(
-          `/admin/chats?page=${page}&page_size=${pageSize}`,
+          `/admin/chats?${params.toString()}`,
           { token }
         )
 
@@ -156,12 +202,55 @@ export default function AdminChatsTab({ token }: Props) {
         setRefreshing(false)
       }
     },
-    [page, pageSize, syncSelection, token]
+    [dateFrom, dateTo, page, pageSize, syncSelection, token]
   )
 
   useEffect(() => {
     void fetchChats()
   }, [fetchChats])
+
+  useEffect(() => {
+    if (!token || !selectedChatId) {
+      setSelectedChatDetail(null)
+      setDetailError(null)
+      return
+    }
+
+    let cancelled = false
+
+    const fetchDetail = async () => {
+      setSelectedChatDetail(null)
+      setDetailLoading(true)
+      setDetailError(null)
+
+      try {
+        const data = await apiRequest<AdminChatDetail>(`/admin/chats/${selectedChatId}`, {
+          token,
+        })
+
+        if (!cancelled) {
+          setSelectedChatDetail(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setSelectedChatDetail(null)
+          setDetailError(
+            err instanceof Error ? err.message : 'Failed to load conversation detail.'
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setDetailLoading(false)
+        }
+      }
+    }
+
+    void fetchDetail()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedChatId, token])
 
   const visibleItems = useMemo(() => {
     const filtered = items.filter((chat) => matchesSearch(chat, search))
@@ -172,6 +261,7 @@ export default function AdminChatsTab({ token }: Props) {
     () => visibleItems.find((item) => item.id === selectedChatId) ?? items.find((item) => item.id === selectedChatId) ?? null,
     [items, selectedChatId, visibleItems]
   )
+  const hasSelectedThread = Boolean(selectedChatDetail && selectedChatDetail.messages.length > 0)
 
   useEffect(() => {
     if (visibleItems.length === 0) {
@@ -208,6 +298,10 @@ export default function AdminChatsTab({ token }: Props) {
         token,
       })
 
+      if (selectedChatId === chatId) {
+        setSelectedChatDetail(null)
+      }
+
       const remainingItems = items.filter((item) => item.id !== chatId)
 
       if (remainingItems.length === 0 && page > 1) {
@@ -223,7 +317,11 @@ export default function AdminChatsTab({ token }: Props) {
 
   const canGoPrev = page > 1
   const canGoNext = page < totalPages
-  const hasFilters = Boolean(search.trim()) || sortBy !== 'updated_desc'
+  const hasFilters =
+    Boolean(search.trim()) ||
+    sortBy !== 'updated_desc' ||
+    Boolean(dateFrom) ||
+    Boolean(dateTo)
 
   return (
     <section className="admin-tab admin-chats-tab">
@@ -254,6 +352,20 @@ export default function AdminChatsTab({ token }: Props) {
         }}
       />
 
+      <section className="admin-filter-card">
+      <div className="admin-filter-card__mobile-toggle">
+        <button
+          type="button"
+          className="admin-button admin-button--ghost admin-button--compact"
+          aria-expanded={mobileFiltersOpen}
+          onClick={() => setMobileFiltersOpen((prev) => !prev)}
+        >
+          <span>Search and filters</span>
+          <span aria-hidden="true">{mobileFiltersOpen ? '−' : '+'}</span>
+        </button>
+      </div>
+
+      <div className={`admin-filter-card__body ${mobileFiltersOpen ? 'is-open' : ''}`}>
       <div className="admin-toolbar">
         <label className="admin-field admin-field--search">
           <span>Search</span>
@@ -262,8 +374,50 @@ export default function AdminChatsTab({ token }: Props) {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by title, chat id or message count"
-          />
+            />
         </label>
+
+        <div className="admin-toolbar__mobile-toggle">
+          <button
+            type="button"
+            className="admin-button admin-button--ghost admin-button--compact"
+            aria-expanded={mobileDateFiltersOpen}
+            onClick={() => setMobileDateFiltersOpen((prev) => !prev)}
+          >
+            <span>Date filters</span>
+            <span aria-hidden="true">{mobileDateFiltersOpen ? '−' : '+'}</span>
+          </button>
+        </div>
+
+        <div
+          className={`admin-toolbar__date-filters ${
+            mobileDateFiltersOpen ? 'is-open' : ''
+          }`}
+        >
+          <label className="admin-field admin-field--compact">
+            <span>Updated from</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(event) => {
+                setDateFrom(event.target.value)
+                setPage(1)
+              }}
+            />
+          </label>
+
+          <label className="admin-field admin-field--compact">
+            <span>Updated to</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(event) => {
+                setDateTo(event.target.value)
+                setPage(1)
+              }}
+            />
+          </label>
+        </div>
 
         <label className="admin-field admin-field--compact">
           <span>Sort by</span>
@@ -286,12 +440,17 @@ export default function AdminChatsTab({ token }: Props) {
             onClick={() => {
               setSearch('')
               setSortBy('updated_desc')
+              setDateFrom('')
+              setDateTo('')
+              setPage(1)
             }}
           >
             Reset filters
           </button>
         )}
       </div>
+      </div>
+      </section>
 
       {loading && <p className="admin-feedback">Loading conversations...</p>}
       {error && <p className="admin-feedback admin-feedback--error">{error}</p>}
@@ -300,14 +459,51 @@ export default function AdminChatsTab({ token }: Props) {
         <aside className="admin-sidebar">
           <div className="admin-sidebar__head">
             <span>{totalItems} conversations total</span>
-            <span>
-              Page {page} / {Math.max(totalPages, 1)}
-            </span>
           </div>
 
           <div className="admin-sidebar__summary">
-            <span>{visibleItems.length} visible on this page</span>
-            <span>{pageSize} per page</span>
+            <label className="admin-sidebar__page-size">
+              <span>Per page</span>
+              <select
+                value={pageSize}
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value))
+                  setPage(1)
+                }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={30}>30</option>
+                <option value={50}>50</option>
+              </select>
+            </label>
+
+            <div className="admin-sidebar__pagination">
+              <button
+                type="button"
+                className="admin-page-link"
+                disabled={!canGoPrev || loading || refreshing}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                aria-label="Previous page"
+              >
+                <span aria-hidden="true">‹</span>
+              </button>
+
+              <span className="admin-sidebar__page-indicator">
+                Page {page} of {Math.max(totalPages, 1)}
+              </span>
+
+              <button
+                type="button"
+                className="admin-page-link"
+                disabled={!canGoNext || loading || refreshing}
+                onClick={() => setPage((prev) => prev + 1)}
+                aria-label="Next page"
+              >
+                <span aria-hidden="true">›</span>
+              </button>
+            </div>
           </div>
 
           <div className="admin-chat-list">
@@ -353,26 +549,6 @@ export default function AdminChatsTab({ token }: Props) {
               </div>
             )}
           </div>
-
-          <div className="admin-pagination">
-            <button
-              type="button"
-              className="admin-button admin-button--ghost"
-              disabled={!canGoPrev || loading || refreshing}
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            >
-              Previous
-            </button>
-
-            <button
-              type="button"
-              className="admin-button admin-button--ghost"
-              disabled={!canGoNext || loading || refreshing}
-              onClick={() => setPage((prev) => prev + 1)}
-            >
-              Next
-            </button>
-          </div>
         </aside>
 
         <section className="admin-detail">
@@ -410,34 +586,75 @@ export default function AdminChatsTab({ token }: Props) {
                 </div>
               </div>
 
-              <div className="admin-inspector-grid">
-                <div className="admin-detail__placeholder">
-                  <h4>Conversation overview</h4>
-                  <p>
-                    This chat is available in the admin list endpoint and can be reviewed
-                    through metadata such as title, message count, creation time and last
-                    update.
-                  </p>
+              {!hasSelectedThread && (
+                <div className="admin-inspector-grid">
+                  <div className="admin-detail__placeholder">
+                    <h4>Conversation overview</h4>
+                    <p>
+                      This panel now shows the masked thread stored for the selected
+                      anonymous chat. Message bodies are still privacy-safe and are shown
+                      without exposing direct user identifiers.
+                    </p>
+                  </div>
+
+                  <div className="admin-detail__placeholder">
+                    <h4>Retention and privacy</h4>
+                    <p>
+                      Anonymous chat review is intentionally limited. The current admin API
+                      exposes retention-safe metadata only and does not return the full
+                      message thread or direct identifiers.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <section className="admin-thread-panel">
+                <div className="admin-thread-panel__header">
+                  <div>
+                    <h4>Conversation thread</h4>
+                    <p>Masked message history for admin review.</p>
+                  </div>
+                  {detailLoading && <span className="admin-pill admin-pill--muted">Loading...</span>}
                 </div>
 
-                <div className="admin-detail__placeholder">
-                  <h4>Retention and privacy</h4>
-                  <p>
-                    Anonymous chat review is intentionally limited. The current admin API
-                    exposes retention-safe metadata only and does not return the full
-                    message thread or direct identifiers.
-                  </p>
-                </div>
-              </div>
+                {detailError && (
+                  <p className="admin-feedback admin-feedback--error">{detailError}</p>
+                )}
 
-              <div className="admin-detail__placeholder">
-                <h4>What you can do here</h4>
-                <p>
-                  Use this panel to inspect activity patterns, review stale conversations,
-                  identify chats with unusually high message counts and apply retention
-                  cleanup when needed.
-                </p>
-              </div>
+                {!detailLoading && !detailError && selectedChatDetail?.messages.length === 0 && (
+                  <div className="admin-empty">
+                    No messages have been stored for this conversation yet.
+                  </div>
+                )}
+
+                {!detailError && selectedChatDetail && selectedChatDetail.messages.length > 0 && (
+                  <div className="admin-thread-view">
+                    {selectedChatDetail.messages.map((message) => {
+                      const isUser = message.sender_type === 'user'
+
+                      return (
+                        <article
+                          key={message.id}
+                          className={`admin-thread-message ${
+                            isUser
+                              ? 'admin-thread-message--user'
+                              : 'admin-thread-message--assistant'
+                          }`}
+                        >
+                          <div className="admin-thread-message__meta">
+                            <strong>{getMessageAuthor(message)}</strong>
+                            <span>{formatThreadTimestamp(message.created_at)}</span>
+                          </div>
+
+                          <div className="admin-thread-message__bubble">
+                            {message.content_masked}
+                          </div>
+                        </article>
+                      )
+                    })}
+                  </div>
+                )}
+              </section>
             </>
           ) : (
             <div className="admin-empty admin-empty--detail">

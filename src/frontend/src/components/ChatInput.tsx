@@ -17,8 +17,18 @@ export default function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
-  textareaRef.current?.focus()
+    textareaRef.current?.focus()
   }, [])
+
+  useEffect(() => {
+    if (loading) return
+
+    const frameId = window.requestAnimationFrame(() => {
+      textareaRef.current?.focus()
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [loading])
 
   useEffect(() => {
     const el = textareaRef.current

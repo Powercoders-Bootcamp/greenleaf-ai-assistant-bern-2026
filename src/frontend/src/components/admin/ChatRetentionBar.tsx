@@ -68,47 +68,49 @@ export default function ChatRetentionBar({
 
   return (
     <div className="admin-retention">
-      <div className="admin-retention__copy">
-        <h3>Chat retention cleanup</h3>
-        <p>Delete anonymous chats older than the selected number of days.</p>
-      </div>
+      <div className="admin-retention__body">
+        <div className="admin-retention__copy">
+          <h3>Chat retention cleanup</h3>
+          <p>Delete anonymous chats older than the selected number of days.</p>
+        </div>
 
-      <div className="admin-retention__controls">
-        <label className="admin-field">
-          <span>Older than</span>
-          <input
-            type="number"
-            min={MIN_DAYS}
-            max={MAX_DAYS}
-            step={1}
-            value={days}
-            onChange={(event) => handleDaysChange(event.target.value)}
-            onBlur={() => setDays((prev) => clampDays(prev))}
+        <div className="admin-retention__controls">
+          <label className="admin-field">
+            <span>Older than</span>
+            <input
+              type="number"
+              min={MIN_DAYS}
+              max={MAX_DAYS}
+              step={1}
+              value={days}
+              onChange={(event) => handleDaysChange(event.target.value)}
+              onBlur={() => setDays((prev) => clampDays(prev))}
+              disabled={isDisabled}
+            />
+          </label>
+
+          <button
+            type="button"
+            className="admin-button admin-button--danger"
+            onClick={handleCleanup}
             disabled={isDisabled}
-          />
-        </label>
+          >
+            {loading ? 'Cleaning up...' : 'Delete expired chats'}
+          </button>
+        </div>
 
-        <button
-          type="button"
-          className="admin-button admin-button--danger"
-          onClick={handleCleanup}
-          disabled={isDisabled}
-        >
-          {loading ? 'Cleaning up...' : 'Delete expired chats'}
-        </button>
+        {message && (
+          <p className="admin-feedback admin-feedback--success">
+            {message}
+          </p>
+        )}
+
+        {error && (
+          <p className="admin-feedback admin-feedback--error">
+            {error}
+          </p>
+        )}
       </div>
-
-      {message && (
-        <p className="admin-feedback admin-feedback--success">
-          {message}
-        </p>
-      )}
-
-      {error && (
-        <p className="admin-feedback admin-feedback--error">
-          {error}
-        </p>
-      )}
     </div>
   )
 }

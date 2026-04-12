@@ -5,6 +5,7 @@ import ChatWindow from './components/ChatWindow'
 import LeafScene from './components/LeafScene'
 import AdminPanel from './components/admin/AdminPanel'
 import AuthShell from './components/auth/AuthShell'
+import { AUTH_EXPIRED_EVENT } from './lib/api'
 import {
   clearAuthSession,
   getStoredToken,
@@ -185,6 +186,19 @@ export default function App() {
     setMessages([])
     setView('chat')
   }, [])
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      handleLogout()
+      setAuthError('Your session expired. Please sign in again.')
+    }
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired)
+
+    return () => {
+      window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired)
+    }
+  }, [handleLogout])
 
   const sendMessage = useCallback(
     async (rawText?: string) => {
