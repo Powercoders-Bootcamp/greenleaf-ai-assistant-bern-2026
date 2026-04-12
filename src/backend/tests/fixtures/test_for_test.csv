@@ -1,0 +1,6 @@
+id,history,question
+1,,"Can I expense a 30 CHF lunch with a client?"
+2,,"Can I expense a 36 CHF lunch with a client?"
+3,,"My lunch cost 35 CHF exactly with a client. Can I claim it?"
+4,"[{""role"": ""user"", ""content"": ""Can I expense a lunch with a client?""}, {""role"": ""assistant"", ""content"": ""What was the amount?""}]","30 CHF"
+5,"[{""role"": ""user"", ""content"": ""Can I expense a lunch with a client?""}, {""role"": ""assistant"", ""content"": ""What was the amount?""}]","36 CHF"
