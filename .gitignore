@@ -161,6 +161,10 @@ data/vectorstore/
 faiss_index/
 handbook_faiss/
 
+# Test output
+src/backend/tests/artifacts/*
+!src/backend/tests/artifacts/.gitkeep
+
 # Spyder project settings
 .spyderproject
 .spyproject
