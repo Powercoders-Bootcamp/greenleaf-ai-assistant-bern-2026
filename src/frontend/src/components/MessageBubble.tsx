@@ -34,14 +34,8 @@ export default function MessageBubble({ message, isLatest = false }: Props) {
   return (
     <div className={`message-row ${isUser ? 'message-row--user' : 'message-row--assistant'}`}>
       <div className="message-head">
-        {!isUser && (
-          <div className="message-avatar" aria-hidden="true">
-            GL
-          </div>
-        )}
-
         <div className="message-head__meta">
-          <span className="message-author">{isUser ? 'You' : 'GreenLeaf AI'}</span>
+          <span className="message-author">{isUser ? 'You' : 'Assistant'}</span>
           <span className="message-time">{message.timestamp}</span>
           {!isUser && isLatest && <span className="message-badge">Latest answer</span>}
         </div>
