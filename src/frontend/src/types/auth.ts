@@ -1,7 +1,5 @@
 export type UserRole = 'Admin' | 'Employee'
 
-export type AuthMode = 'login' | 'register' | 'forgot-password'
-
 export type AuthUser = {
   id: string | number
   email: string

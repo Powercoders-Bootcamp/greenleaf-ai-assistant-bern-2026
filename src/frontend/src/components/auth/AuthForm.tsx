@@ -1,38 +1,29 @@
 type Props = {
-  mode: 'login' | 'register'
   email: string
   password: string
-  confirmPassword?: string
   loading?: boolean
   error?: string | null
   onEmailChange: (value: string) => void
   onPasswordChange: (value: string) => void
-  onConfirmPasswordChange?: (value: string) => void
   onSubmit: () => void
 }
 
 export default function AuthForm({
-  mode,
   email,
   password,
-  confirmPassword = '',
   loading = false,
   error = null,
   onEmailChange,
   onPasswordChange,
-  onConfirmPasswordChange,
   onSubmit,
 }: Props) {
-  const isRegister = mode === 'register'
-
   return (
     <div className="auth-card__body">
       <div className="auth-card__heading">
-        <h2>{isRegister ? 'Create account' : 'Sign in'}</h2>
+        <h2>Sign in</h2>
         <p>
-          {isRegister
-            ? 'Create your account to access the internal assistant.'
-            : 'Access internal policies, handbook answers, and protected tools.'}
+          Access internal policies, handbook answers, and protected tools.
+          Account creation and password recovery are handled by your administrator.
         </p>
       </div>
 
@@ -60,26 +51,13 @@ export default function AuthForm({
         />
       </label>
 
-      {isRegister && onConfirmPasswordChange && (
-        <label className="auth-field">
-          <span>Confirm password</span>
-          <input
-            type="password"
-            placeholder="Repeat your password"
-            value={confirmPassword}
-            onChange={(e) => onConfirmPasswordChange(e.target.value)}
-            disabled={loading}
-          />
-        </label>
-      )}
-
       <button
         className="auth-submit"
         type="button"
         onClick={onSubmit}
         disabled={loading}
       >
-        {loading ? 'Please wait...' : isRegister ? 'Create account' : 'Sign in'}
+        {loading ? 'Please wait...' : 'Sign in'}
       </button>
     </div>
   )

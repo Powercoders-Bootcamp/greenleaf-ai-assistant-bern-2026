@@ -5,6 +5,7 @@ import ChatWindow from './components/ChatWindow'
 import LeafScene from './components/LeafScene'
 import AdminPanel from './components/admin/AdminPanel'
 import AuthShell from './components/auth/AuthShell'
+import UserChatHistory from './components/history/UserChatHistory'
 import { AUTH_EXPIRED_EVENT } from './lib/api'
 import {
   clearAuthSession,
@@ -12,10 +13,11 @@ import {
   getStoredUser,
   persistAuthSession,
 } from './lib/auth'
-import type { AuthMode, AuthResponse, AuthUser } from './types/auth'
+import type { AuthResponse, AuthUser } from './types/auth'
 import type { Message } from './types/chat'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000' //const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 const CHAT_API_URL = `${API_BASE_URL}/chat`
 const LOGIN_API_URL = `${API_BASE_URL}/auth/login`
 
@@ -44,16 +46,13 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [lastSubmittedQuestion, setLastSubmittedQuestion] = useState<string | null>(null)
 
-  const [authMode, setAuthMode] = useState<AuthMode>('login')
   const [authEmail, setAuthEmail] = useState('')
   const [authPassword, setAuthPassword] = useState('')
-  const [authConfirmPassword, setAuthConfirmPassword] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
-  const [view, setView] = useState<'chat' | 'admin'>('chat')
-
+  const [view, setView] = useState<'chat' | 'admin' | 'history'>('chat')
   const endRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -94,20 +93,14 @@ export default function App() {
 
     const email = authEmail.trim()
     const password = authPassword.trim()
-    const confirmPassword = authConfirmPassword.trim()
 
     if (!email) {
       setAuthError('Please enter your email.')
       return
     }
 
-    if (authMode !== 'forgot-password' && !password) {
+    if (!password) {
       setAuthError('Please enter your password.')
-      return
-    }
-
-    if (authMode === 'register' && password !== confirmPassword) {
-      setAuthError('Passwords do not match.')
       return
     }
 
@@ -115,16 +108,6 @@ export default function App() {
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 700))
-
-      if (authMode === 'forgot-password') {
-        setAuthError('Password reset flow is not connected to backend yet.')
-        return
-      }
-
-      if (authMode === 'register') {
-        setAuthError('Registration is admin-managed. Please ask an admin to create your account.')
-        return
-      }
 
       const response = await fetch(LOGIN_API_URL, {
         method: 'POST',
@@ -158,13 +141,11 @@ export default function App() {
         token_type: safeData.token_type ?? 'bearer',
         user: safeData.user,
       })
+
       setToken(safeData.access_token)
       setAuthUser(safeData.user)
       setView('chat')
-
       setAuthPassword('')
-      setAuthConfirmPassword('')
-      setAuthMode('login')
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Could not sign in right now.'
@@ -172,7 +153,7 @@ export default function App() {
     } finally {
       setAuthLoading(false)
     }
-  }, [authMode, authEmail, authPassword, authConfirmPassword])
+  }, [authEmail, authPassword])
 
   const handleLogout = useCallback(() => {
     clearAuthSession()
@@ -180,8 +161,6 @@ export default function App() {
     setAuthUser(null)
     setAuthEmail('')
     setAuthPassword('')
-    setAuthConfirmPassword('')
-    setAuthMode('login')
     setChatId(null)
     setMessages([])
     setView('chat')
@@ -252,6 +231,7 @@ export default function App() {
           if (response.status === 409) {
             setChatId(null)
           }
+
           throw new Error(
             safeData.detail || `Request failed with status ${response.status}`
           )
@@ -318,17 +298,12 @@ export default function App() {
         <div className="ambient ambient-2" />
 
         <AuthShell
-          mode={authMode}
           email={authEmail}
           password={authPassword}
-          confirmPassword={authConfirmPassword}
           loading={authLoading}
           error={authError}
-          success={null}
-          onModeChange={setAuthMode}
           onEmailChange={setAuthEmail}
           onPasswordChange={setAuthPassword}
-          onConfirmPasswordChange={setAuthConfirmPassword}
           onSubmit={handleAuthSubmit}
         />
       </main>
@@ -336,141 +311,200 @@ export default function App() {
   }
 
   return (
-     <main className="app-shell">
-    <div className="ambient ambient-1" />
-    <div className="ambient ambient-2" />
+    <main className="app-shell">
+      <div className="ambient ambient-1" />
+      <div className="ambient ambient-2" />
 
-    <section className={`chat-page ${view === 'admin' ? 'chat-page--admin' : ''}`}>
-      <header className={`app-header ${view === 'admin' ? 'app-header--admin' : 'app-header--chat'}`}>
-  <div className="app-header__main">
-    <div className="app-header__hero">
-      <div
-        className={`brand-mark ${view === 'admin' ? 'brand-mark--admin' : 'brand-mark--chat'}`}
-        aria-hidden="true"
-      >
-        <LeafScene loading={loading} variant={view === 'admin' ? 'auth' : 'default'} />
-      </div>
+      <section className={`chat-page ${view === 'admin' ? 'chat-page--admin' : ''}`}>
+        <header
+          className={`app-header ${
+            view === 'admin' ? 'app-header--admin' : 'app-header--chat'
+          }`}
+        >
+          <div className="app-header__main">
+            <div className="app-header__hero">
+              <div
+                className={`brand-mark ${
+                  view === 'admin' ? 'brand-mark--admin' : 'brand-mark--chat'
+                }`}
+                aria-hidden="true"
+              >
+                <LeafScene
+                  loading={loading}
+                  variant={view === 'admin' ? 'auth' : 'default'}
+                />
+              </div>
 
-      <div className="app-header__copy">
-        <p className="eyebrow">
-          {view === 'admin' ? 'Admin workspace' : 'Internal AI Assistant'}
-        </p>
+              <div className="app-header__copy">
+                <p className="eyebrow">
+                  {view === 'admin'
+                    ? 'Admin workspace'
+                    : view === 'history'
+                    ? 'Personal workspace'
+                    : 'Internal AI Assistant'}
+                </p>
 
-        <h1>{view === 'admin' ? 'Admin Panel' : 'Beat-Bot'}</h1>
+                <h1>
+                  {view === 'admin'
+                    ? 'Admin Panel'
+                    : view === 'history'
+                    ? 'Chat History'
+                    : 'Beat-Bot'}
+                </h1>
 
-        <p className={view === 'admin' ? 'app-header__subtext app-header__subtext--compact' : 'subtext'}>
-          {view === 'admin'
-            ? 'Manage chats, retention and users.'
-            : 'Fast answers for internal policies, holidays, handbook questions, and common internal rules.'}
-        </p>
-      </div>
-    </div>
-
-    <div className="app-header__controls">
-      {isAdmin && (
-        <div className="view-switch" role="tablist" aria-label="Workspace view">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'chat'}
-            className={`view-switch__button ${view === 'chat' ? 'is-active' : ''}`}
-            onClick={() => setView('chat')}
-          >
-            Assistant
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'admin'}
-            className={`view-switch__button ${view === 'admin' ? 'is-active' : ''}`}
-            onClick={() => setView('admin')}
-          >
-            Admin Panel
-          </button>
-        </div>
-      )}
-
-      <button type="button" className="logout-button logout-button--header" onClick={handleLogout}>
-        Logout
-      </button>
-    </div>
-  </div>
-
-  <div className="app-header__meta">
-    <div
-      className={`status-badge ${view === 'chat' && loading ? 'is-loading' : ''} ${
-        view === 'chat' && error ? 'is-error' : ''
-      }`}
-      aria-live="polite"
-    >
-      <span className="status-dot" />
-      {view === 'admin' ? 'Admin access enabled' : statusText}
-    </div>
-
-    <div className="context-bar context-bar--header">
-      <span>Basel • {currentTime}</span>
-      <span>{isAdmin ? 'Admin access' : 'User access'}</span>
-    </div>
-  </div>
-</header>
-
-      {view === 'admin' ? (
-        <section className="admin-card">
-          <div className="admin-card__body">
-            <AdminPanel token={token} />
-          </div>
-        </section>
-      ) : (
-        <section className="chat-card">
-          <div className="chat-card__top">
-            <div className="chat-card__title-wrap">
-              <h2>Chat</h2>
-              <p>Ask a question and review the response in one clean thread.</p>
+                <p
+                  className={
+                    view === 'admin'
+                      ? 'app-header__subtext app-header__subtext--compact'
+                      : 'subtext'
+                  }
+                >
+                  {view === 'admin'
+                    ? 'Manage chats, retention and users.'
+                    : view === 'history'
+                    ? 'Review your previous conversations with the assistant.'
+                    : 'Fast answers for internal policies, holidays, handbook questions, and common internal rules.'}
+                </p>
+              </div>
             </div>
 
-            <div className="chat-card__actions">
-              <button
-                type="button"
-                className="chat-card__action-button"
-                onClick={handleRetry}
-                disabled={!lastSubmittedQuestion || loading}
-              >
-                Retry last
-              </button>
+            <div className="app-header__controls">
+              {isAdmin ? (
+                <div className="view-switch" role="tablist" aria-label="Workspace view">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === 'chat'}
+                    className={`view-switch__button ${view === 'chat' ? 'is-active' : ''}`}
+                    onClick={() => setView('chat')}
+                  >
+                    Assistant
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === 'admin'}
+                    className={`view-switch__button ${view === 'admin' ? 'is-active' : ''}`}
+                    onClick={() => setView('admin')}
+                  >
+                    Admin Panel
+                  </button>
+                </div>
+              ) : (
+                <div className="view-switch" role="tablist" aria-label="Workspace view">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === 'chat'}
+                    className={`view-switch__button ${view === 'chat' ? 'is-active' : ''}`}
+                    onClick={() => setView('chat')}
+                  >
+                    Chat
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={view === 'history'}
+                    className={`view-switch__button ${view === 'history' ? 'is-active' : ''}`}
+                    onClick={() => setView('history')}
+                  >
+                    Chat History
+                  </button>
+                </div>
+              )}
 
               <button
                 type="button"
-                className="chat-card__action-button"
-                onClick={handleCopyLastAnswer}
-                disabled={!messages.some((message) => message.role === 'assistant')}
+                className="logout-button logout-button--header"
+                onClick={handleLogout}
               >
-                Copy answer
+                Logout
               </button>
             </div>
           </div>
 
-          <div className="chat-card__body">
-            <ChatWindow
-              messages={messages}
-              loading={loading}
-              error={error}
-              onSendPreset={handlePreset}
-              bottomRef={endRef}
-            />
-          </div>
+          <div className="app-header__meta">
+            <div
+              className={`status-badge ${view === 'chat' && loading ? 'is-loading' : ''} ${
+                view === 'chat' && error ? 'is-error' : ''
+              }`}
+              aria-live="polite"
+            >
+              <span className="status-dot" />
+              {view === 'admin' ? 'Admin access enabled' : statusText}
+            </div>
 
-          <div className="chat-card__footer">
-            <ChatInput
-              input={input}
-              loading={loading}
-              onChange={setInput}
-              onSend={handleSend}
-            />
+            <div className="context-bar context-bar--header">
+              <span>Basel • {currentTime}</span>
+              <span>{isAdmin ? 'Admin access' : 'User access'}</span>
+            </div>
           </div>
-        </section>
-      )}
-    </section>
-  </main>
+        </header>
+
+        {view === 'admin' ? (
+          <section className="admin-card">
+            <div className="admin-card__body">
+              <AdminPanel token={token} />
+            </div>
+          </section>
+        ) : view === 'history' ? (
+          <section className="admin-card">
+            <div className="admin-card__body">
+              <UserChatHistory token={token} />
+            </div>
+          </section>
+        ) : (
+          <section className="chat-card">
+            <div className="chat-card__top">
+              <div className="chat-card__title-wrap">
+                <h2>Chat</h2>
+                <p>Ask a question and review the response in one clean thread.</p>
+              </div>
+
+              <div className="chat-card__actions">
+                <button
+                  type="button"
+                  className="chat-card__action-button"
+                  onClick={handleRetry}
+                  disabled={!lastSubmittedQuestion || loading}
+                >
+                  Retry last
+                </button>
+
+                <button
+                  type="button"
+                  className="chat-card__action-button"
+                  onClick={handleCopyLastAnswer}
+                  disabled={!messages.some((message) => message.role === 'assistant')}
+                >
+                  Copy answer
+                </button>
+              </div>
+            </div>
+
+            <div className="chat-card__body">
+              <ChatWindow
+                messages={messages}
+                loading={loading}
+                error={error}
+                onSendPreset={handlePreset}
+                bottomRef={endRef}
+              />
+            </div>
+
+            <div className="chat-card__footer">
+              <ChatInput
+                input={input}
+                loading={loading}
+                onChange={setInput}
+                onSend={handleSend}
+              />
+            </div>
+          </section>
+        )}
+      </section>
+    </main>
   )
 }
