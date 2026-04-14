@@ -63,18 +63,18 @@ REGEX_PATTERNS: dict[str, str] = {
     "IP": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
     "MAC": r"\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b",
     "CREDIT_CARD": r"\b(?:\d[ -]*?){13,19}\b",
-    "ID": r"\b(?:ID[:\s-]*)?[A-Z0-9]{6,20}\b",
+    "ID": r"\b(?:Employee\s*ID|User\s*ID|Case\s*ID|Ticket\s*ID|Passport\s*(?:No|Number)?|ID)(?:\s+is)?\s*[:#-]?\s*[A-Z0-9\-]{4,20}\b",
     "SSN": r"\b\d{3}[- ]?\d{2}[- ]?\d{4}\b",
 }
 
 NER_LABEL_MAP: dict[str, str] = {
     "PERSON": "PERSON",
-    "ORG": "ORG",
-    "GPE": "LOCATION",
-    "LOC": "LOCATION",
-    "FAC": "LOCATION",
-    "DATE": "DATE",
-    "TIME": "TIME",
+    #"ORG": "ORG",
+    #"GPE": "LOCATION",
+    #"LOC": "LOCATION",
+    #"FAC": "LOCATION",
+    #"DATE": "DATE",
+    #"TIME": "TIME",
 }
 
 
@@ -83,12 +83,15 @@ class Match:
     start: int
     end: int
     label: str
+    replacement: str | None = None
 
     @property
     def length(self) -> int:
         return self.end - self.start
 
     def placeholder(self) -> str:
+        if self.replacement is not None:
+            return self.replacement
         return f"[{self.label}]"
 
 def is_valid_span(start: int, end: int, text_length: int) -> bool:
@@ -130,9 +133,11 @@ def collect_ner_matches(text: str, include_temporal: bool = False) -> list[Match
         if not include_temporal and mapped_label in {"DATE", "TIME"}:
             continue
 
-        candidate = Match(ent.start_char, ent.end_char, mapped_label)
-        if is_valid_span(candidate.start, candidate.end, len(text)):
-            matches.append(candidate)
+        start, end = ent.start_char, ent.end_char
+        if not is_valid_span(start, end, len(text)):
+            continue
+
+        matches.append(Match(start, end, mapped_label))
 
     return matches
 
@@ -201,16 +206,71 @@ def mask_pii(text: str, include_temporal: bool = False) -> str:
 
 
 if __name__ == "__main__":
-    test_text = """
-    John Smith lives in London.
-    He works at Google since 2022.
-    Contact him at john.smith@gmail.com or +44 7700 900123.
-    His ID is ABX992211 and server IP is 192.168.1.1.
-    Website: https://example.com
-    """
+    test_cases = [
+        {
+            "title": "Basel stays visible",
+            "text": "Do I need to work in Basel tomorrow?",
+            "expected": "Do I need to work in Basel tomorrow?",
+        },
+        {
+            "title": "Other city stays visible",
+            "text": "Do I need to work in Zurich tomorrow?",
+            "expected": "Do I need to work in Zurich tomorrow?",
+        },
+        {
+            "title": "Currency should stay visible",
+            "text": "The reimbursement limit is 100 CHF per day.",
+            "expected": "The reimbursement limit is 100 CHF per day.",
+        },
+        {
+            "title": "IP masking",
+            "text": "Server IP is 192.168.1.1",
+            "expected": "Server IP is [IP]",
+        },
+        {
+            "title": "Email masking",
+            "text": "Contact me at john.smith@gmail.com",
+            "expected": "Contact me at [EMAIL]",
+        },
+        {
+            "title": "Phone masking",
+            "text": "Call me at +44 7700 900123",
+            "expected": "Call me at [PHONE]",
+        },
+        {
+            "title": "ID masking",
+            "text": "His ID is ABX992211",
+            "expected": "His [ID]",
+        },
+        {
+            "title": "Address stays visible",
+            "text": "The office is at Musterstrasse 10, Basel",
+            "expected": "The office is at Musterstrasse 10, Basel",
+        },
+        {
+            "title": "Mixed example",
+            "text": (
+                "John Smith works in Basel. "
+                "His email is john.smith@gmail.com and server IP is 192.168.1.1."
+            ),
+            "expected": (
+                "[PERSON] works in Basel. "
+                "His email is [EMAIL] and server IP is [IP]."
+            ),
+        },
+    ]
 
-    print("=== ORIGINAL ===")
-    print(test_text)
+    for case in test_cases:
+        print(f"\n=== {case['title'].upper()} ===")
+        print("ORIGINAL:")
+        print(case["text"])
 
-    print("\n=== ANONYMIZED ===")
-    print(mask_pii(test_text))
+        result = mask_pii(case["text"])
+
+        print("\nANONYMIZED:")
+        print(result)
+
+        print("\nEXPECTED:")
+        print(case["expected"])
+
+        print("\nMATCH:", "OK" if result == case["expected"] else "DIFF")

@@ -12,15 +12,14 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
+from contextlib import asynccontextmanager
 
 from backend.api.routes import admin_chats, auth, chat, history, users
 from backend.core.config import AUTO_CREATE_DB_TABLES, DATABASE_URL
 from backend.db.base import Base
 from backend.db.session import SessionLocal, engine
-from backend.models.chat import Chat
-from backend.models.message import Message
-from backend.models.user import User
 from backend.services.user_service import ensure_superadmin
+from backend.services.langchain_service import initialize_vectorstore
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -45,6 +44,16 @@ with SessionLocal() as db:
     if seeded_superadmin is not None:
         logger.info("Superadmin ready for %s", seeded_superadmin.email)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting application...")
+    initialize_vectorstore()
+    logger.info("Vectorstore initialized")
+    yield
+    logger.info("Shutting down application...")
+
+
 app = FastAPI(
     title="GreenLeaf Beat-Bot API",
     version="0.1.0",
@@ -53,6 +62,7 @@ app = FastAPI(
         "OpenAI with registered tools (`check_holiday`, `search_handbook`) "
         "and returns the assistant reply."
     ),
+    lifespan=lifespan,
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])

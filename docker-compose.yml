@@ -27,7 +27,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "10000:10000"
     volumes:
       - ./src/backend:/app/src/backend
       - ./prompts:/app/prompts:ro
