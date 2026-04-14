@@ -54,9 +54,9 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 
-HANDBOOK_CHUNK_SIZE = int(os.getenv("HANDBOOK_CHUNK_SIZE", "7500"))
+HANDBOOK_CHUNK_SIZE = int(os.getenv("HANDBOOK_CHUNK_SIZE", "750"))
 HANDBOOK_CHUNK_OVERLAP = int(os.getenv("HANDBOOK_CHUNK_OVERLAP", "150"))
-HANDBOOK_RETRIEVAL_K = int(os.getenv("HANDBOOK_RETRIEVAL_K", "5"))
+HANDBOOK_RETRIEVAL_K = int(os.getenv("HANDBOOK_RETRIEVAL_K", "3"))
 
 MAX_TOOL_ROUNDS = int(os.getenv("MAX_TOOL_ROUNDS", "6"))
 
@@ -133,7 +133,8 @@ logger.info(
     SESSION_TIMEZONE,
 )
 
-logger.info("FAISS_DIR writable: %s", os.access(FAISS_DIR, os.W_OK))
+FAISS_DIR.parent.mkdir(parents=True, exist_ok=True)
+logger.info("FAISS parent writable: %s", os.access(FAISS_DIR.parent, os.W_OK))
 
 
 def load_system_prompt() -> str:
@@ -306,6 +307,17 @@ def _format_docs_for_llm(docs: list[Document]) -> str:
         parts.append(f"{header}\n{doc.page_content}")
 
     return "\n\n".join(parts)
+
+
+def initialize_vectorstore() -> None:
+    """
+    Warm up FAISS on application startup:
+    - load existing index if present
+    - otherwise build a new one
+    """
+    logger.info("Initializing vectorstore on startup...")
+    get_vectorstore()
+    logger.info("Vectorstore is ready")
 
 
 @tool
