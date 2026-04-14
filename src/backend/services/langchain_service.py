@@ -54,8 +54,8 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 
-HANDBOOK_CHUNK_SIZE = int(os.getenv("HANDBOOK_CHUNK_SIZE", "350"))
-HANDBOOK_CHUNK_OVERLAP = int(os.getenv("HANDBOOK_CHUNK_OVERLAP", "50"))
+HANDBOOK_CHUNK_SIZE = int(os.getenv("HANDBOOK_CHUNK_SIZE", "7500"))
+HANDBOOK_CHUNK_OVERLAP = int(os.getenv("HANDBOOK_CHUNK_OVERLAP", "150"))
 HANDBOOK_RETRIEVAL_K = int(os.getenv("HANDBOOK_RETRIEVAL_K", "5"))
 
 MAX_TOOL_ROUNDS = int(os.getenv("MAX_TOOL_ROUNDS", "6"))
@@ -185,8 +185,6 @@ def _split_handbook_into_documents(text: str) -> list[Document]:
 
     headers_to_split_on = [
         ("##", "section"),
-        ("###", "subsection"),
-        ("####", "subsubsection"),
     ]
 
     md_splitter = MarkdownHeaderTextSplitter(
