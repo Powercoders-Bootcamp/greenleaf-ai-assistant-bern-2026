@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import ChatInput from './components/ChatInput'
 import ChatWindow from './components/ChatWindow'
@@ -68,24 +68,8 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, loading])
 
-  const [currentTime, setCurrentTime] = useState(() => formatTime())
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setCurrentTime(formatTime())
-    }, 1000 * 30)
-
-    return () => window.clearInterval(interval)
-  }, [])
-
   const isAuthenticated = Boolean(token && authUser)
   const isAdmin = authUser?.role?.toLowerCase() === 'admin'
-
-  const statusText = useMemo(() => {
-    if (loading) return 'Checking policy context'
-    if (error) return 'Connection issue'
-    return 'Connected to internal knowledge'
-  }, [loading, error])
 
   const handleAuthSubmit = useCallback(async () => {
     setAuthError(null)
@@ -423,23 +407,6 @@ export default function App() {
               </button>
             </div>
           </div>
-
-          <div className="app-header__meta">
-            <div
-              className={`status-badge ${view === 'chat' && loading ? 'is-loading' : ''} ${
-                view === 'chat' && error ? 'is-error' : ''
-              }`}
-              aria-live="polite"
-            >
-              <span className="status-dot" />
-              {view === 'admin' ? 'Admin access enabled' : statusText}
-            </div>
-
-            <div className="context-bar context-bar--header">
-              <span>Basel • {currentTime}</span>
-              <span>{isAdmin ? 'Admin access' : 'User access'}</span>
-            </div>
-          </div>
         </header>
 
         {view === 'admin' ? (
@@ -458,7 +425,13 @@ export default function App() {
           <section className="chat-card">
             <div className="chat-card__top">
               <div className="chat-card__title-wrap">
-                <h2>Chat</h2>
+                <div className="chat-card__heading-row">
+                  <h2>Chat</h2>
+                  <span className="chat-card__mode-badge">
+                    {isAdmin ? 'Admin access' : 'User access'}
+                  </span>
+                </div>
+
                 <p>Ask a question and review the response in one clean thread.</p>
               </div>
 

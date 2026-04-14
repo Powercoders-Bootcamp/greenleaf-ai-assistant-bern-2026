@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AdminChatsTab from './AdminChatsTab'
 import './AdminPanel.css'
+import AdminRetentionTab from './AdminRetentionTab'
 import AdminUsersTab from './AdminUsersTab'
 
 type Props = {
@@ -8,7 +9,7 @@ type Props = {
 }
 
 export default function AdminPanel({ token }: Props) {
-  const [tab, setTab] = useState<'chats' | 'users'>('chats')
+  const [tab, setTab] = useState<'chats' | 'users' | 'retention'>('chats')
 
   return (
     <section className="admin-panel">
@@ -33,10 +34,22 @@ export default function AdminPanel({ token }: Props) {
           >
             Users
           </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'retention'}
+            className={`admin-tab-button ${tab === 'retention' ? 'is-active' : ''}`}
+            onClick={() => setTab('retention')}
+          >
+            Retention
+          </button>
         </div>
       </div>
 
-      {tab === 'chats' ? <AdminChatsTab token={token} /> : <AdminUsersTab token={token} />}
+      {tab === 'chats' && <AdminChatsTab token={token} />}
+      {tab === 'users' && <AdminUsersTab token={token} />}
+      {tab === 'retention' && <AdminRetentionTab token={token} />}
     </section>
   )
 }

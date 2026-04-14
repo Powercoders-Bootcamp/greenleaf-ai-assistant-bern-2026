@@ -365,8 +365,8 @@ export default function UserChatHistory({ token }: Props) {
                     <div className="history-chat-card__top">
                       <strong>{chat.title?.trim() || `Chat #${chat.id}`}</strong>
 
-                      <span className="history-pill history-pill--muted">
-                        {chat.message_count} msgs
+                      <span className="history-msg-count">
+                        💬 {chat.message_count}
                       </span>
                     </div>
 

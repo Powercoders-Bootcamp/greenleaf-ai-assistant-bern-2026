@@ -6,13 +6,17 @@ import type {
   AdminChatMessage,
   AdminChatPageResponse,
 } from '../../types/admin'
-import ChatRetentionBar from './ChatRetentionBar'
 
 type Props = {
   token: string | null
 }
 
-type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc' | 'messages_desc'
+type SortOption =
+  | 'updated_desc'
+  | 'updated_asc'
+  | 'created_desc'
+  | 'created_asc'
+  | 'messages_desc'
 
 function formatDate(value: string) {
   const date = new Date(value)
@@ -58,16 +62,12 @@ function sortChats(items: AdminChatItem[], sort: SortOption) {
     switch (sort) {
       case 'updated_asc':
         return updatedA - updatedB
-
       case 'created_desc':
         return createdB - createdA
-
       case 'created_asc':
         return createdA - createdB
-
       case 'messages_desc':
         return b.message_count - a.message_count
-
       case 'updated_desc':
       default:
         return updatedB - updatedA
@@ -258,10 +258,16 @@ export default function AdminChatsTab({ token }: Props) {
   }, [items, search, sortBy])
 
   const selectedChat = useMemo(
-    () => visibleItems.find((item) => item.id === selectedChatId) ?? items.find((item) => item.id === selectedChatId) ?? null,
+    () =>
+      visibleItems.find((item) => item.id === selectedChatId) ??
+      items.find((item) => item.id === selectedChatId) ??
+      null,
     [items, selectedChatId, visibleItems]
   )
-  const hasSelectedThread = Boolean(selectedChatDetail && selectedChatDetail.messages.length > 0)
+
+  const hasSelectedThread = Boolean(
+    selectedChatDetail && selectedChatDetail.messages.length > 0
+  )
 
   useEffect(() => {
     if (visibleItems.length === 0) {
@@ -279,10 +285,6 @@ export default function AdminChatsTab({ token }: Props) {
       setSelectedChatId(visibleItems[0].id)
     }
   }, [selectedChatId, visibleItems])
-
-  const handleRefresh = async () => {
-    await fetchChats('refresh')
-  }
 
   const handleDeleteChat = async (chatId: number) => {
     if (!token) return
@@ -328,128 +330,108 @@ export default function AdminChatsTab({ token }: Props) {
       <div className="admin-tab__header">
         <div>
           <h2>Anonymous chats</h2>
-          <p>
-            Review chat metadata, timestamps, retention state and conversation volume.
-          </p>
-        </div>
-
-        <div className="admin-tab__actions">
-          <button
-            type="button"
-            className="admin-button admin-button--ghost"
-            onClick={handleRefresh}
-            disabled={loading || refreshing}
-          >
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
+          <p>Review chat metadata, timestamps, and conversation volume.</p>
         </div>
       </div>
-
-      <ChatRetentionBar
-        token={token}
-        onCleanupSuccess={() => {
-          void fetchChats('refresh')
-        }}
-      />
 
       <section className="admin-filter-card">
-      <div className="admin-filter-card__mobile-toggle">
-        <button
-          type="button"
-          className="admin-button admin-button--ghost admin-button--compact"
-          aria-expanded={mobileFiltersOpen}
-          onClick={() => setMobileFiltersOpen((prev) => !prev)}
-        >
-          <span>Search and filters</span>
-          <span aria-hidden="true">{mobileFiltersOpen ? '−' : '+'}</span>
-        </button>
-      </div>
-
-      <div className={`admin-filter-card__body ${mobileFiltersOpen ? 'is-open' : ''}`}>
-      <div className="admin-toolbar">
-        <label className="admin-field admin-field--search">
-          <span>Search</span>
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by title, chat id or message count"
-            />
-        </label>
-
-        <div className="admin-toolbar__mobile-toggle">
+        <div className="admin-filter-card__mobile-toggle">
           <button
             type="button"
             className="admin-button admin-button--ghost admin-button--compact"
-            aria-expanded={mobileDateFiltersOpen}
-            onClick={() => setMobileDateFiltersOpen((prev) => !prev)}
+            aria-expanded={mobileFiltersOpen}
+            onClick={() => setMobileFiltersOpen((prev) => !prev)}
           >
-            <span>Date filters</span>
-            <span aria-hidden="true">{mobileDateFiltersOpen ? '−' : '+'}</span>
+            <span>Search and filters</span>
+            <span aria-hidden="true">{mobileFiltersOpen ? '−' : '+'}</span>
           </button>
         </div>
 
-        <div
-          className={`admin-toolbar__date-filters ${
-            mobileDateFiltersOpen ? 'is-open' : ''
-          }`}
-        >
-          <label className="admin-field admin-field--compact">
-            <span>Updated from</span>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(event) => {
-                setDateFrom(event.target.value)
-                setPage(1)
-              }}
-            />
-          </label>
+        <div className={`admin-filter-card__body ${mobileFiltersOpen ? 'is-open' : ''}`}>
+          <div className="admin-toolbar">
+            <label className="admin-field admin-field--search">
+              <span>Search</span>
+              <input
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by title, chat id or message count"
+              />
+            </label>
 
-          <label className="admin-field admin-field--compact">
-            <span>Updated to</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(event) => {
-                setDateTo(event.target.value)
-                setPage(1)
-              }}
-            />
-          </label>
+            <div className="admin-toolbar__mobile-toggle">
+              <button
+                type="button"
+                className="admin-button admin-button--ghost admin-button--compact"
+                aria-expanded={mobileDateFiltersOpen}
+                onClick={() => setMobileDateFiltersOpen((prev) => !prev)}
+              >
+                <span>Date filters</span>
+                <span aria-hidden="true">{mobileDateFiltersOpen ? '−' : '+'}</span>
+              </button>
+            </div>
+
+            <div
+              className={`admin-toolbar__date-filters ${
+                mobileDateFiltersOpen ? 'is-open' : ''
+              }`}
+            >
+              <label className="admin-field admin-field--compact">
+                <span>Updated from</span>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(event) => {
+                    setDateFrom(event.target.value)
+                    setPage(1)
+                  }}
+                />
+              </label>
+
+              <label className="admin-field admin-field--compact">
+                <span>Updated to</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(event) => {
+                    setDateTo(event.target.value)
+                    setPage(1)
+                  }}
+                />
+              </label>
+            </div>
+
+            <label className="admin-field admin-field--compact">
+              <span>Sort by</span>
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+              >
+                <option value="updated_desc">Recently updated</option>
+                <option value="updated_asc">Oldest updated</option>
+                <option value="created_desc">Recently created</option>
+                <option value="created_asc">Oldest created</option>
+                <option value="messages_desc">Most messages</option>
+              </select>
+            </label>
+
+            {hasFilters && (
+              <button
+                type="button"
+                className="admin-button admin-button--ghost"
+                onClick={() => {
+                  setSearch('')
+                  setSortBy('updated_desc')
+                  setDateFrom('')
+                  setDateTo('')
+                  setPage(1)
+                }}
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
         </div>
-
-        <label className="admin-field admin-field--compact">
-          <span>Sort by</span>
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value as SortOption)}
-          >
-            <option value="updated_desc">Recently updated</option>
-            <option value="updated_asc">Oldest updated</option>
-            <option value="created_desc">Recently created</option>
-            <option value="created_asc">Oldest created</option>
-            <option value="messages_desc">Most messages</option>
-          </select>
-        </label>
-
-        {hasFilters && (
-          <button
-            type="button"
-            className="admin-button admin-button--ghost"
-            onClick={() => {
-              setSearch('')
-              setSortBy('updated_desc')
-              setDateFrom('')
-              setDateTo('')
-              setPage(1)
-            }}
-          >
-            Reset filters
-          </button>
-        )}
-      </div>
-      </div>
       </section>
 
       {loading && <p className="admin-feedback">Loading conversations...</p>}
@@ -521,8 +503,12 @@ export default function AdminChatsTab({ token }: Props) {
                     <div className="admin-chat-card__top">
                       <strong>{chat.title?.trim() || `Chat #${chat.id}`}</strong>
 
-                      <span className="admin-pill admin-pill--muted">
-                        {chat.message_count} msgs
+                      <span
+                        className="admin-msg-count"
+                        aria-label={`${chat.message_count} messages`}
+                      >
+                        <span aria-hidden="true">💬</span>
+                        {chat.message_count}
                       </span>
                     </div>
 
@@ -533,7 +519,7 @@ export default function AdminChatsTab({ token }: Props) {
                     </div>
 
                     <div className="admin-chat-card__footer">
-                      <span className="admin-pill admin-pill--soft">
+                      <span className="admin-chat-card__recency">
                         {getRecencyLabel(chat.updated_at)}
                       </span>
                     </div>
@@ -598,11 +584,11 @@ export default function AdminChatsTab({ token }: Props) {
                   </div>
 
                   <div className="admin-detail__placeholder">
-                    <h4>Retention and privacy</h4>
+                    <h4>Privacy scope</h4>
                     <p>
                       Anonymous chat review is intentionally limited. The current admin API
-                      exposes retention-safe metadata only and does not return the full
-                      message thread or direct identifiers.
+                      exposes retention-safe metadata only and does not return direct user
+                      identifiers.
                     </p>
                   </div>
                 </div>
@@ -614,46 +600,53 @@ export default function AdminChatsTab({ token }: Props) {
                     <h4>Conversation thread</h4>
                     <p>Masked message history for admin review.</p>
                   </div>
-                  {detailLoading && <span className="admin-pill admin-pill--muted">Loading...</span>}
+
+                  {detailLoading && (
+                    <span className="admin-thread-panel__loading">Loading...</span>
+                  )}
                 </div>
 
                 {detailError && (
                   <p className="admin-feedback admin-feedback--error">{detailError}</p>
                 )}
 
-                {!detailLoading && !detailError && selectedChatDetail?.messages.length === 0 && (
-                  <div className="admin-empty">
-                    No messages have been stored for this conversation yet.
-                  </div>
-                )}
+                {!detailLoading &&
+                  !detailError &&
+                  selectedChatDetail?.messages.length === 0 && (
+                    <div className="admin-empty">
+                      No messages have been stored for this conversation yet.
+                    </div>
+                  )}
 
-                {!detailError && selectedChatDetail && selectedChatDetail.messages.length > 0 && (
-                  <div className="admin-thread-view">
-                    {selectedChatDetail.messages.map((message) => {
-                      const isUser = message.sender_type === 'user'
+                {!detailError &&
+                  selectedChatDetail &&
+                  selectedChatDetail.messages.length > 0 && (
+                    <div className="admin-thread-view">
+                      {selectedChatDetail.messages.map((message) => {
+                        const isUser = message.sender_type === 'user'
 
-                      return (
-                        <article
-                          key={message.id}
-                          className={`admin-thread-message ${
-                            isUser
-                              ? 'admin-thread-message--user'
-                              : 'admin-thread-message--assistant'
-                          }`}
-                        >
-                          <div className="admin-thread-message__meta">
-                            <strong>{getMessageAuthor(message)}</strong>
-                            <span>{formatThreadTimestamp(message.created_at)}</span>
-                          </div>
+                        return (
+                          <article
+                            key={message.id}
+                            className={`admin-thread-message ${
+                              isUser
+                                ? 'admin-thread-message--user'
+                                : 'admin-thread-message--assistant'
+                            }`}
+                          >
+                            <div className="admin-thread-message__meta">
+                              <strong>{getMessageAuthor(message)}</strong>
+                              <span>{formatThreadTimestamp(message.created_at)}</span>
+                            </div>
 
-                          <div className="admin-thread-message__bubble">
-                            {message.content_masked}
-                          </div>
-                        </article>
-                      )
-                    })}
-                  </div>
-                )}
+                            <div className="admin-thread-message__bubble">
+                              {message.content_masked}
+                            </div>
+                          </article>
+                        )
+                      })}
+                    </div>
+                  )}
               </section>
             </>
           ) : (

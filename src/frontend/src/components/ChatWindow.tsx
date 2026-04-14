@@ -30,43 +30,42 @@ export default function ChatWindow({
     <div className="chat-window">
       {!hasStartedConversation && !loading && !error && (
         <div className="chat-empty-state">
-          <div className="chat-empty-state__icon">✦</div>
+          <div className="chat-empty-state__content">
+            <h3>Start the conversation</h3>
+            <p>Ask about holidays, internal rules, or company policies.</p>
 
-          <h3>Start the conversation</h3>
-          <p>Ask about holidays, internal rules, or company policies.</p>
-
-          <div className="chat-empty-state__chips">
-            {SUGGESTIONS.map((text) => (
-              <button
-                key={text}
-                type="button"
-                onClick={() => onSendPreset(text)}
-                className="chat-chip"
-              >
-                {text}
-              </button>
-            ))}
+            <div className="chat-empty-state__suggestions">
+              {SUGGESTIONS.map((text) => (
+                <button
+                  key={text}
+                  type="button"
+                  onClick={() => onSendPreset(text)}
+                  className="chat-suggestion"
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {hasStartedConversation && (
-      <div className="chat-thread">
-        {messages.map((message, index) => {
-          const isLastAssistant =
-            message.role === 'assistant' &&
-            index === messages.length - 1
+        <div className="chat-thread">
+          {messages.map((message, index) => {
+            const isLastAssistant =
+              message.role === 'assistant' && index === messages.length - 1
 
-          return (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isLatest={isLastAssistant}
-            />
-          )
-        })}
-      </div>
-    )}
+            return (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isLatest={isLastAssistant}
+              />
+            )
+          })}
+        </div>
+      )}
 
       {loading && (
         <div className="chat-thinking">
