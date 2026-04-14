@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from openai import OpenAIError
 from sqlalchemy.orm import Session
 
@@ -25,6 +25,7 @@ from backend.services.chat_history_service import (
     list_recent_messages_for_llm,
 )
 from backend.services.langchain_service import run_chat
+from backend.services.rate_limit_service import enforce_chat_rate_limit
 from backend.services.user_service import get_current_auth_context
 
 logger = logging.getLogger(__name__)
@@ -69,10 +70,13 @@ def _chat_title(message: str) -> str:
 )
 def chat(
     body: ChatTurnRequest,
+    request: Request,
     auth_context: AuthContext = Depends(get_current_auth_context),
     db: Session = Depends(get_db),
 ) -> ChatTurnResponse:
     """Run one chat turn and persist the masked user/assistant messages."""
+    enforce_chat_rate_limit(request, auth_context.user_id)
+
     if not os.getenv("OPENAI_API_KEY"):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

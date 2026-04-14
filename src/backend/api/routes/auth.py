@@ -6,7 +6,7 @@ log in, inspect their auth context/profile, and update only their own password.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
@@ -18,6 +18,7 @@ from backend.schemas.auth import (
 )
 from backend.schemas.user import AuthContext, UserRead
 from backend.services.auth_service import change_user_password, login_user, register_user
+from backend.services.rate_limit_service import enforce_login_rate_limit
 from backend.services.user_service import (
     get_current_auth_context,
     get_user_by_id,
@@ -70,8 +71,10 @@ def register(
 )
 def login(
     body: LoginRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
+    enforce_login_rate_limit(request, body.email)
     user, token = login_user(db, body.email, body.password)
     return TokenResponse(access_token=token, user=UserRead.model_validate(user))
 

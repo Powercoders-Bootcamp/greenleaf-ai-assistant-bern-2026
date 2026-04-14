@@ -7,7 +7,7 @@ cannot be deleted, deactivated, or demoted.
 
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from backend.core.config import (
@@ -21,6 +21,7 @@ from backend.core.security import decode_token, hash_password, oauth2_scheme
 from backend.db.session import get_db
 from backend.models.user import User
 from backend.schemas.user import AuthContext, UserAdminCreate, UserCreate, UserUpdate
+from backend.services.rate_limit_service import enforce_admin_rate_limit
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:
@@ -248,9 +249,12 @@ def get_current_auth_context(
 
 
 def require_admin(
+    request: Request,
     auth_context: AuthContext = Depends(get_current_auth_context),
 ) -> AuthContext:
     """FastAPI dependency that allows only active users with the Admin role."""
+    enforce_admin_rate_limit(request, auth_context.user_id)
+
     if auth_context.role != "Admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

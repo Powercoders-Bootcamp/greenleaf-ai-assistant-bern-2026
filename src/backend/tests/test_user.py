@@ -29,6 +29,7 @@ from backend.models.message import Message
 from backend.models.user import User
 from backend.models.chat import Chat
 from backend.core.security import hash_password
+from backend.services.rate_limit_service import RateLimitPolicy, rate_limiter
 
 
 app = FastAPI()
@@ -93,6 +94,9 @@ class UserAuthSmokeTests(unittest.TestCase):
             db.commit()
         finally:
             db.close()
+
+    def setUp(self) -> None:
+        rate_limiter.clear()
 
     def test_register_login_and_me_flow(self) -> None:
         self.create_test_user(
@@ -919,6 +923,103 @@ class UserAuthSmokeTests(unittest.TestCase):
             headers=owner_headers,
         )
         self.assertEqual(fresh_detail_response.status_code, 200)
+
+    def test_login_is_rate_limited_after_repeated_attempts(self) -> None:
+        self.create_test_user(
+            email="limited.login@greenleaf.ch",
+            password="secret123",
+            display_name="Limited Login",
+        )
+
+        for _ in range(5):
+            response = self.client.post(
+                "/auth/login",
+                json={
+                    "email": "limited.login@greenleaf.ch",
+                    "password": "wrong-password",
+                },
+            )
+            self.assertEqual(response.status_code, 401)
+
+        limited_response = self.client.post(
+            "/auth/login",
+            json={
+                "email": "limited.login@greenleaf.ch",
+                "password": "wrong-password",
+            },
+        )
+        self.assertEqual(limited_response.status_code, 429)
+        self.assertIn("Retry-After", limited_response.headers)
+
+    def test_chat_is_rate_limited_after_repeated_turns(self) -> None:
+        self.create_test_user(
+            email="limited.chat@greenleaf.ch",
+            password="chatsecret",
+            display_name="Limited Chat",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={"email": "limited.chat@greenleaf.ch", "password": "chatsecret"},
+        )
+        self.assertEqual(login_response.status_code, 200)
+        auth_headers = {
+            "Authorization": f"Bearer {login_response.json()['access_token']}"
+        }
+
+        with patch(
+            "backend.services.rate_limit_service.CHAT_POLICY",
+            RateLimitPolicy(scope="chat.turn", max_requests=2, window_seconds=60),
+        ), patch(
+            "backend.api.routes.chat.run_chat",
+            return_value="limited reply",
+        ), patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            first_response = self.client.post(
+                "/chat",
+                headers=auth_headers,
+                json={"message": "First turn"},
+            )
+            second_response = self.client.post(
+                "/chat",
+                headers=auth_headers,
+                json={"message": "Second turn"},
+            )
+            limited_response = self.client.post(
+                "/chat",
+                headers=auth_headers,
+                json={"message": "Third turn"},
+            )
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(limited_response.status_code, 429)
+
+    def test_admin_routes_are_rate_limited(self) -> None:
+        self.create_test_user(
+            email="limited.admin@greenleaf.ch",
+            password="adminsecret",
+            role="Admin",
+            display_name="Limited Admin",
+        )
+
+        login_response = self.client.post(
+            "/auth/login",
+            json={"email": "limited.admin@greenleaf.ch", "password": "adminsecret"},
+        )
+        self.assertEqual(login_response.status_code, 200)
+        admin_headers = {"Authorization": f"Bearer {login_response.json()['access_token']}"}
+
+        with patch(
+            "backend.services.rate_limit_service.ADMIN_POLICY",
+            RateLimitPolicy(scope="admin.route", max_requests=2, window_seconds=60),
+        ):
+            first_response = self.client.get("/admin/chats", headers=admin_headers)
+            second_response = self.client.get("/admin/chats", headers=admin_headers)
+            limited_response = self.client.get("/admin/chats", headers=admin_headers)
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(limited_response.status_code, 429)
 
 
 if __name__ == "__main__":
