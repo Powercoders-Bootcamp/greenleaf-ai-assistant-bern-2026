@@ -8,6 +8,8 @@ type Props = {
   onSend: () => void
 }
 
+const MAX_MESSAGE_LENGTH = 800
+
 export default function ChatInput({
   input,
   loading,
@@ -56,17 +58,18 @@ export default function ChatInput({
           disabled={loading}
           className="chat-input__field"
           rows={1}
+          maxLength={MAX_MESSAGE_LENGTH}
         />
 
         <div className="chat-input__helper">
           <span>Enter to send</span>
-          <span>Shift + Enter for new line</span>
+          <span>{input.length}/{MAX_MESSAGE_LENGTH}</span>
         </div>
       </div>
 
       <button
         onClick={onSend}
-        disabled={loading || !input.trim()}
+        disabled={loading || !input.trim() || input.length > MAX_MESSAGE_LENGTH}
         className="chat-input__button"
         aria-label="Send message"
         title="Send message"
