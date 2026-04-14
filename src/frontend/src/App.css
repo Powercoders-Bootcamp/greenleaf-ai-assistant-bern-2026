@@ -1,8 +1,8 @@
 .app-shell {
-  min-height: 100dvh;
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 100dvh;
   overflow-x: hidden;
   overflow-y: auto;
   background:
@@ -48,8 +48,8 @@
 
 .app-header__hero {
   display: flex;
-  align-items: flex-start;
-  gap: 18px;
+  align-items: center;
+  gap: 20px;
   min-width: 0;
   flex: 1 1 620px;
 }
@@ -122,10 +122,13 @@
 
 .brand-mark {
   position: relative;
+  top: 4px;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   overflow: hidden;
   background:
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.18)),
@@ -142,15 +145,17 @@
     filter 0.22s ease;
 }
 
+.brand-mark--admin,
 .brand-mark--chat {
   width: 88px;
   height: 88px;
+}
+
+.brand-mark--chat {
   border-radius: 28px;
 }
 
 .brand-mark--admin {
-  width: 72px;
-  height: 72px;
   border-radius: 22px;
 }
 
@@ -599,7 +604,9 @@
     max-width: 100%;
   }
 
-  .subtext {
+  .subtext,
+  .app-header__subtext,
+  .app-header__subtext--compact {
     max-width: 62ch;
   }
 }
@@ -622,7 +629,8 @@
   }
 
   .subtext,
-  .app-header__subtext {
+  .app-header__subtext,
+  .app-header__subtext--compact {
     max-width: none;
     font-size: 0.94rem;
     line-height: 1.55;
@@ -658,12 +666,13 @@
   .chat-card__actions {
     width: 100%;
     justify-content: flex-start;
+    gap: 8px;
   }
 }
 
 @media (max-width: 640px) {
   .chat-page {
-    min-height: 100%;
+    min-height: auto;
     width: min(100%, calc(100% - 16px));
     padding: 10px 0 14px;
     gap: 12px;
@@ -678,7 +687,18 @@
   }
 
   .app-header__hero {
+    flex-direction: row;
+    align-items: flex-start;
     gap: 12px;
+  }
+
+  .brand-mark,
+  .brand-mark--chat,
+  .brand-mark--admin {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    flex-shrink: 0;
   }
 
   .eyebrow {
@@ -687,7 +707,8 @@
   }
 
   .app-header__copy h1 {
-    font-size: clamp(1.9rem, 9vw, 2.5rem);
+    font-size: clamp(1.9rem, 9vw, 2.4rem);
+    line-height: 0.95;
     letter-spacing: -0.04em;
   }
 
@@ -700,38 +721,30 @@
     max-width: none;
   }
 
-  .brand-mark--chat {
-    width: 72px;
-    height: 72px;
-    border-radius: 22px;
-  }
-
-  .brand-mark--admin {
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
-  }
-
   .app-header__controls {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
+    width: 100%;
   }
 
   .view-switch {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .view-switch__button {
     width: 100%;
     min-width: 0;
+    min-height: 44px;
   }
 
   .logout-button--header {
     width: 100%;
     min-width: 0;
+    min-height: 44px;
   }
 
   .app-header__meta {
@@ -770,17 +783,32 @@
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+    padding-top: 14px;
+    padding-bottom: 12px;
   }
 
   .chat-card__top,
   .chat-card__body,
-  .chat-card__footer {
+  .chat-card__footer,
+  .admin-card__body {
     padding-left: 14px;
     padding-right: 14px;
   }
 
+  .chat-card__actions {
+    width: 100%;
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .chat-card__action-button {
+    flex: 1 1 0;
+    min-height: 40px;
+  }
+
   .admin-card__body {
-    padding: 14px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
 }
 
@@ -788,33 +816,32 @@
   .chat-page {
     width: calc(100% - 12px);
     padding: 8px 0 12px;
+    gap: 10px;
   }
 
   .app-header__hero {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
     gap: 10px;
   }
 
+  .brand-mark,
+  .brand-mark--chat,
+  .brand-mark--admin {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
+
   .app-header__copy h1 {
-    font-size: clamp(1.7rem, 10vw, 2.2rem);
+    font-size: clamp(1.7rem, 10vw, 2.1rem);
   }
 
   .subtext,
-  .app-header__subtext {
-    font-size: 0.88rem;
-  }
-
-  .brand-mark--chat {
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
-  }
-
-  .brand-mark--admin {
-    width: 58px;
-    height: 58px;
-    border-radius: 18px;
+  .app-header__subtext,
+  .app-header__subtext--compact {
+    font-size: 0.86rem;
+    line-height: 1.42;
   }
 
   .context-bar--header {
@@ -854,6 +881,23 @@
 }
 
 @media (max-width: 360px) {
+  .app-header__hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .view-switch {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-card__actions {
+    flex-direction: column;
+  }
+
+  .chat-card__action-button {
+    width: 100%;
+  }
+
   .context-bar--header {
     flex-direction: column;
     align-items: stretch;
@@ -863,10 +907,6 @@
     width: 100%;
     justify-content: center;
     white-space: normal;
-  }
-
-  .view-switch {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -879,5 +919,119 @@
   .view-switch__button {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Logout modal */
+
+.logout-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 14, 23, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+.logout-modal {
+  width: min(100%, 420px);
+  padding: 28px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(30, 41, 59, 0.08);
+  box-shadow:
+    0 24px 80px rgba(15, 23, 42, 0.18),
+    0 8px 24px rgba(15, 23, 42, 0.1);
+  text-align: center;
+}
+
+.logout-modal__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  background: linear-gradient(135deg, #dff7e8, #f3fbf6);
+  border: 1px solid rgba(74, 222, 128, 0.24);
+}
+
+.logout-modal h3 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.logout-modal p {
+  margin: 0 0 24px;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.logout-modal__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.logout-modal__button {
+  min-width: 132px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.logout-modal__button:hover {
+  transform: translateY(-1px);
+}
+
+.logout-modal__button--secondary {
+  color: #0f172a;
+  background: #eef2f7;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.logout-modal__button--secondary:hover {
+  background: #e2e8f0;
+}
+
+.logout-modal__button--danger {
+  color: #fff;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+.logout-modal__button--danger:hover {
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.22);
+}
+
+@media (max-width: 640px) {
+  .logout-modal {
+    padding: 22px;
+    border-radius: 20px;
+  }
+
+  .logout-modal__actions {
+    flex-direction: column;
+  }
+
+  .logout-modal__button {
+    width: 100%;
   }
 }
