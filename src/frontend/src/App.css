@@ -42,8 +42,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  gap: 24px;
+  flex-wrap: nowrap;
 }
 
 .app-header__hero {
@@ -51,7 +51,6 @@
   align-items: flex-start;
   gap: 18px;
   min-width: 0;
-  width: 100%;
   flex: 1 1 auto;
 }
 
@@ -96,11 +95,13 @@
 
 .app-header__controls {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-  flex: 0 1 auto;
+  gap: 12px;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-top: 6px;
 }
 
 .app-header__meta {
