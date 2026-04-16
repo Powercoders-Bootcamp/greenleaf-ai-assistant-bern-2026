@@ -1,10 +1,10 @@
-# GreenLeaf AI Assistant ("Beat-Bot")
+GreenLeaf AI Assistant ("Beat-Bot")
 
-An internal AI assistant designed for **GreenLeaf Logistics** to automate repetitive employee questions while strictly enforcing company policies, preventing hallucinations, and protecting sensitive data.
+An internal AI assistant designed for GreenLeaf Logistics to automate repetitive employee questions while strictly enforcing company policies, preventing hallucinations, and protecting sensitive data.
 
 ---
 
-## Overview
+OVERVIEW
 
 Beat-Bot is a policy-first AI system that ensures all responses are grounded in internal company rules and documentation. The assistant is designed to be predictable, secure, and resistant to misuse.
 
@@ -12,7 +12,7 @@ It combines retrieval-based answers with rule-based logic and explicit safety co
 
 ---
 
-## Core Features
+CORE FEATURES
 
 - Policy-based responses with no unsupported assumptions
 - Strict adherence to internal handbook content
@@ -24,9 +24,9 @@ It combines retrieval-based answers with rule-based logic and explicit safety co
 
 ---
 
-## Architecture
+ARCHITECTURE
 
-The system follows a **Policy-First RAG architecture**:
+The system follows a Policy-First RAG architecture:
 
 1. User input is received
 2. Privacy Gate processes and masks sensitive data
@@ -36,7 +36,7 @@ The system follows a **Policy-First RAG architecture**:
    - Reject unsafe or out-of-scope requests
 4. The assistant returns a validated, policy-compliant response
 
-### Example enforced rules
+Example enforced rules:
 
 - Expenses above 35 CHF are rejected
 - Alcohol-related expenses are not allowed
@@ -45,106 +45,139 @@ The system follows a **Policy-First RAG architecture**:
 
 ---
 
-## Tech Stack
+TECH STACK
 
-### Frontend
+Frontend:
 - React (Vite)
 - TypeScript
 - CSS
 
-### Backend
+Backend:
 - FastAPI (Python)
 - Uvicorn
 - OpenAI API
 
-### AI / Data
+AI / Data:
 - Retrieval-Augmented Generation (RAG)
 - Custom orchestration layer
 - Rule-based validation system
 
-### Tooling
+Tooling:
 - Git & GitHub
 - Postman (API testing)
 
 ---
 
-## Project Structure
+PROJECT STRUCTURE
 
-**    src/
-    ├── frontend/ # React user interface
-    ├── backend/ # FastAPI application
-    ├── docs/ # Project documentation (strategy, architecture, QA)**
+data/
+  raw/                # raw input documents
+  processed/          # processed data for RAG
+
+db/
+  logging_schema.sql  # database schema for logging
+
+docs/
+  adr/                # architectural decisions
+  diagrams/           # system diagrams
+  archive/            # archived docs
+  *.md                # architecture, QA, requirements, etc.
+
+prompts/
+  system_prompt.txt   # system instructions
+  tools_definitions/  # tool configs
+
+src/
+  backend/
+    api/              # API routes
+    core/             # core logic
+    services/         # orchestration & logic
+    models/           # data models
+    schemas/          # validation schemas
+    tests/            # backend tests
+    main.py           # entry point
+    pii_masker.py     # privacy gate
+  frontend/
+    src/              # React application
+    public/           # static assets
+
+docker-compose.yml     # container orchestration
+Docker_manual.md       # docker instructions
 
 ---
 
-## Running the Project Locally
-
-### Backend
-
-For full setup instructions (virtual environment, dependencies, environment variables), see:
-
-src/backend/README.md
-
-Run the backend:
-    **cd src
-    .\backend\myenv\Scripts\Activate
-    uvicorn backend.main:app --reload --port 8000**
+RUNNING THE PROJECT LOCALLY
 
 Backend:
-**  http://127.0.0.1:8000
-**
+
+See detailed setup in:
+src/backend/README.md
+
+Run:
+
+cd src
+.\backend\myenv\Scripts\Activate
+uvicorn backend.main:app --reload --port 8000
+
+Backend:
+http://127.0.0.1:8000
+
 API Docs:
-**  http://127.0.0.1:8000/docs
-**
----
-
-### Frontend
-  cd src/frontend
-  npm install
-  npm run dev
-
-
-  Frontend:
-      http://localhost:5173
+http://127.0.0.1:8000/docs
 
 ---
 
-## Documentation
+Frontend:
 
-The `/docs` folder contains supporting project materials:
+cd src/frontend
+npm install
+npm run dev
 
-- Strategy – product vision, scope, and use cases  
-- Architecture – system design and data flow  
-- QA – testing approach and validation strategy  
+Frontend:
+http://localhost:5173
 
 ---
 
-## Development Status
+DOCUMENTATION
+
+The docs folder contains:
+
+- Strategy: product vision and scope
+- Architecture: system design and flow
+- QA: testing approach
+- ADR: architectural decisions
+- Security: access control and compliance
+
+---
+
+DEVELOPMENT STATUS
 
 - Backend API implemented (FastAPI)
 - Frontend chat interface completed
 - End-to-end communication established
 - Error and loading handling implemented
 - Core policy enforcement in place
+- Privacy Gate implemented
+- Basic red-team protections added
 
 ---
 
-## Team
+TEAM
 
 Bern Group 2026
 
-- Product Owner / Project Manager: Fateme  
-- Scrum Master: Heba  
-- AI Engineers: Heba, Fateme  
-- Frontend Developers: Maksat, Pema Tsering, Yasar  
-- Backend Developers: Yurii, Yasar, Fateme, Maksat  
+- Product Owner / Project Manager: Fateme
+- Scrum Master: Heba
+- AI Engineers: Heba, Fateme
+- Frontend Developers:  Pema Tsering, Yasar, Maksat
+- Backend Developers: Yurii, Yasar, Fateme, Maksat
 
 ---
 
-## Mission
+MISSION
 
 To build a reliable internal AI assistant that delivers accurate, policy-compliant answers, reduces repetitive workload, and ensures safe usage of AI within the company.
 
 ---
 
-Built during Powercoders Bootcamp (Bern 2026)
+Powercoders Bootcamp (Bern 2026)
