@@ -1,5 +1,5 @@
-****GreenLeaf AI Assistant ("Beat-Bot")
-****
+**GreenLeaf AI Assistant ("Beat-Bot")**
+
 An internal AI assistant designed for GreenLeaf Logistics to automate repetitive employee questions while strictly enforcing company policies, preventing hallucinations, and protecting sensitive data.
 
 ---
