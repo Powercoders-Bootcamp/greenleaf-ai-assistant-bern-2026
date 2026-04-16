@@ -1,121 +1,149 @@
 # GreenLeaf AI Assistant ("Beat-Bot")
 
-An internal AI assistant designed to automate repetitive employee questions for **GreenLeaf Logistics**, strictly adhering to company policies without hallucinations or security breaches.
+An internal AI assistant designed for **GreenLeaf Logistics** to automate repetitive employee questions while strictly enforcing company policies, preventing hallucinations, and protecting sensitive data.
 
 ---
 
-## 👥 Team: Bern Group 2026
+## Overview
 
-- **Product Owner / Project Manager:** Fateme  
-- **Scrum Master:** Heba  
-- **AI Engineers:** Heba, Fateme  
-- **Frontend Developers:** Maksat, Pema Tsering, Yasar    
-- **Backend Developers:** Yurii, Yasar, Fateme, Maksat   
+Beat-Bot is a policy-first AI system that ensures all responses are grounded in internal company rules and documentation. The assistant is designed to be predictable, secure, and resistant to misuse.
 
-## 🤝 Team Charter
-
-### 🎯 Mission
-Our mission is to build a reliable internal AI assistant for GreenLeaf Logistics that provides accurate, policy-based answers, reduces repetitive employee questions, and ensures compliance with company rules.
+It combines retrieval-based answers with rule-based logic and explicit safety controls.
 
 ---
 
-### 💡 Values
-- **Transparency** – We communicate openly about progress, issues, and blockers  
-- **Ownership** – Everyone takes responsibility for their tasks and outcomes  
-- **Collaboration** – We support each other and share knowledge  
-- **Pragmatism** – We focus on simple, working solutions over perfection  
+## Core Features
+
+- Policy-based responses with no unsupported assumptions
+- Strict adherence to internal handbook content
+- PII masking via a dedicated Privacy Gate
+- Protection against prompt injection and misuse
+- Deterministic logic for critical rules (expenses, holidays, IT policies)
+- Controlled orchestration between RAG and business logic
+- Optional debug mode to expose internal decision flow
 
 ---
 
-### ⚙️ Ground Rules
+## Architecture
 
-**Decision Making**
-- We aim for team consensus  
-- If no agreement is reached, the Product Owner makes the final decision  
+The system follows a **Policy-First RAG architecture**:
 
-**Communication**
-- Main communication via Slack  
-- Important decisions are documented in GitHub  
-- Team members respond within a reasonable time (max 24h on working days)
+1. User input is received
+2. Privacy Gate processes and masks sensitive data
+3. Orchestrator determines the correct path:
+   - Retrieve information from internal documents (RAG)
+   - Apply strict business logic rules
+   - Reject unsafe or out-of-scope requests
+4. The assistant returns a validated, policy-compliant response
 
-**Handling Issues / Conflicts**
-- Issues are raised early and discussed openly  
-- We focus on solutions, not blame  
-- If needed, we escalate within the team  
+### Example enforced rules
 
----
-
-### ✅ Definition of Done
-
-A task is considered “done” when:
-- The feature works as expected  
-- Code is pushed and integrated into the future branch
-- No critical errors are present  
-- The functionality is tested manually  
-- The task is clearly understandable for the team
-- No major bugs or blockers remain
+- Expenses above 35 CHF are rejected
+- Alcohol-related expenses are not allowed
+- Basel holidays are handled via strict logic
+- Sensitive IT-related data is blocked
 
 ---
 
-## 🚀 How to Run Locally
+## Tech Stack
 
-### Backend (FastAPI)
+### Frontend
+- React (Vite)
+- TypeScript
+- CSS
 
-Full setup (venv, dependencies, `.env`, API key, smoke tests, troubleshooting): **[src/backend/README.md](src/backend/README.md)**.
+### Backend
+- FastAPI (Python)
+- Uvicorn
+- OpenAI API
 
-cd src  
-.\backend\myenv\Scripts\Activate  
-uvicorn backend.main:app --reload --port 8000  
+### AI / Data
+- Retrieval-Augmented Generation (RAG)
+- Custom orchestration layer
+- Rule-based validation system
 
-Backend: http://127.0.0.1:8000  
-Docs: http://127.0.0.1:8000/docs  
-
----
-
-### Frontend (React + Vite)
-
-cd src/frontend  
-npm install  
-npm run dev  
-
-Frontend: http://localhost:5173  
+### Tooling
+- Git & GitHub
+- Postman (API testing)
 
 ---
 
-## 🏗️ Architecture
+## Project Structure
 
-Policy-First RAG Architecture (Modular Monolith)
-
-Rules:
-- Expenses > 35 CHF → rejected  
-- Alcohol → rejected  
-- Basel holidays → strict logic  
-- Sensitive IT data → blocked  
+**    src/
+    ├── frontend/ # React user interface
+    ├── backend/ # FastAPI application
+    ├── docs/ # Project documentation (strategy, architecture, QA)**
 
 ---
 
-## 📚 Docs
+## Running the Project Locally
 
-/docs folder contains:
-- Strategy
-- Architecture
-- QA
+### Backend
+
+For full setup instructions (virtual environment, dependencies, environment variables), see:
+
+src/backend/README.md
+
+Run the backend:
+    **cd src
+    .\backend\myenv\Scripts\Activate
+    uvicorn backend.main:app --reload --port 8000**
+
+Backend:
+**  http://127.0.0.1:8000
+**
+API Docs:
+**  http://127.0.0.1:8000/docs
+**
+---
+
+### Frontend
+  cd src/frontend
+  npm install
+  npm run dev
+
+
+  Frontend:
+      http://localhost:5173
 
 ---
 
-## ✅ Sprint 1
+## Documentation
 
-- FastAPI /ask endpoint  
-- React UI  
-- End-to-end flow  
-- Loading & error handling  
+The `/docs` folder contains supporting project materials:
+
+- Strategy – product vision, scope, and use cases  
+- Architecture – system design and data flow  
+- QA – testing approach and validation strategy  
 
 ---
 
-## 🧠 Stack
+## Development Status
 
-Frontend: React + Vite  
-Backend: FastAPI  
+- Backend API implemented (FastAPI)
+- Frontend chat interface completed
+- End-to-end communication established
+- Error and loading handling implemented
+- Core policy enforcement in place
+
+---
+
+## Team
+
+Bern Group 2026
+
+- Product Owner / Project Manager: Fateme  
+- Scrum Master: Heba  
+- AI Engineers: Heba, Fateme  
+- Frontend Developers: Maksat, Pema Tsering, Yasar  
+- Backend Developers: Yurii, Yasar, Fateme, Maksat  
+
+---
+
+## Mission
+
+To build a reliable internal AI assistant that delivers accurate, policy-compliant answers, reduces repetitive workload, and ensures safe usage of AI within the company.
 
 ---
 
