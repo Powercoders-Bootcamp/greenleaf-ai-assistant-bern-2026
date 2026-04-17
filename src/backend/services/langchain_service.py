@@ -517,10 +517,12 @@ def _convert_history(conversation_messages: list[dict[str, str]]) -> list[Any]:
 def run_chat(
     user_message: str,
     conversation_messages: list[dict[str, str]] | None = None,
+    mode: str = "production",
 ) -> str:
     llm = get_llm()
     tools = [check_holiday, search_handbook, list_basel_holidays, check_expenses]
     llm_with_tools = llm.bind_tools(tools)
+    debug_enabled = mode == "debug"
 
     tool_registry = {tool.name: tool for tool in tools}
 
@@ -549,7 +551,7 @@ def run_chat(
         tool_calls = getattr(ai_msg, "tool_calls", None) or []
         logger.info("Tool calls in this round: %s", len(tool_calls))
 
-        if DEBUG_MODE:
+        if debug_enabled:
             debug_log.append(f"Round {round_num}")
             if tool_calls:
                 for call in tool_calls:
@@ -566,7 +568,7 @@ def run_chat(
 
             final_text = text or "The model returned an empty response."
 
-            if DEBUG_MODE:
+            if debug_enabled:
                 return final_text + _format_debug_block(debug_log)
 
             return final_text
@@ -608,6 +610,6 @@ def run_chat(
     logger.warning("Tool loop limit reached")
 
     result = "Tool loop limit reached; please try a simpler question."
-    if DEBUG_MODE:
+    if debug_enabled:
         return result + _format_debug_block(debug_log)
     return result

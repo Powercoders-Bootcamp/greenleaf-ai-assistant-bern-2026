@@ -1076,6 +1076,35 @@
   justify-content: flex-start;
 }
 
+.admin-panel__controls {
+  width: 100%;
+}
+
+.admin-mode-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.admin-mode-card__eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(31, 41, 55, 0.56);
+}
+
+.admin-mode-card strong {
+  color: #0f172a;
+  font-size: 0.92rem;
+}
+
 @media (max-width: 640px) {
   .admin-panel {
     gap: 14px;
@@ -1083,6 +1112,11 @@
 
   .admin-panel__header--compact {
     margin-bottom: 2px;
+  }
+
+  .admin-mode-card {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .admin-tabs {
