@@ -251,6 +251,7 @@ def _build_vectorstore(embeddings: OpenAIEmbeddings) -> FAISS:
 def _format_debug_block(debug_log: list[str]) -> str:
     if not debug_log:
         return "\n\n[DEBUG]\nLogic"
+
     return "\n\n[DEBUG]\n" + "\n".join(debug_log)
 
 
@@ -528,7 +529,10 @@ def run_chat(
     ]
 
     if conversation_messages:
-        logger.info("Loading conversation history | messages=%s", len(conversation_messages))
+        logger.info(
+            "Loading conversation history | messages=%s",
+            len(conversation_messages),
+        )
         messages.extend(_convert_history(conversation_messages))
 
     messages.append(HumanMessage(content=user_message))
@@ -539,14 +543,22 @@ def run_chat(
     for round_num in range(1, MAX_TOOL_ROUNDS + 1):
         logger.info("LLM round %s/%s", round_num, MAX_TOOL_ROUNDS)
 
-        if DEBUG_MODE:
-            debug_log.append(f"Round {round_num}")
-
         ai_msg = llm_with_tools.invoke(messages)
         messages.append(ai_msg)
 
         tool_calls = getattr(ai_msg, "tool_calls", None) or []
         logger.info("Tool calls in this round: %s", len(tool_calls))
+
+        if DEBUG_MODE:
+            debug_log.append(f"Round {round_num}")
+            if tool_calls:
+                for call in tool_calls:
+                    tool_name = call["name"]
+                    debug_type = TOOL_DEBUG_TYPE.get(tool_name, "Unknown")
+                    debug_log.append(f"Tool: {debug_type} ({tool_name})")
+            else:
+                debug_log.append("Final answer")
+            debug_log.append("")
 
         if not tool_calls:
             text = _stringify_content(ai_msg.content)
@@ -555,8 +567,6 @@ def run_chat(
             final_text = text or "The model returned an empty response."
 
             if DEBUG_MODE:
-                if not used_any_tool:
-                    debug_log.append("Tool: Logic")
                 return final_text + _format_debug_block(debug_log)
 
             return final_text
@@ -569,10 +579,6 @@ def run_chat(
             logger.info("Executing tool | name=%s | args=%s", tool_name, tool_args)
 
             used_any_tool = True
-
-            if DEBUG_MODE:
-                debug_type = TOOL_DEBUG_TYPE.get(tool_name, "Unknown")
-                debug_log.append(f"Tool: {debug_type} ({tool_name})")
 
             selected_tool = tool_registry.get(tool_name)
             if selected_tool is None:
