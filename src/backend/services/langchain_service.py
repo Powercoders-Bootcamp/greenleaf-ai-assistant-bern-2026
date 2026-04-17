@@ -68,7 +68,6 @@ HANDBOOK_RETRIEVAL_K = int(os.getenv("HANDBOOK_RETRIEVAL_K", "3"))
 MAX_TOOL_ROUNDS = int(os.getenv("MAX_TOOL_ROUNDS", "6"))
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
 SERVICE_FILE = Path(__file__).resolve()
 
