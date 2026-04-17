@@ -79,6 +79,12 @@ def chat(
             detail="OPENAI_API_KEY is not configured on the server.",
         )
 
+    if body.mode == "debug" and auth_context.role != "Admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Debug mode is only available for admin users.",
+        )
+
     chat_record = get_or_create_active_chat(
         db,
         auth_context,
@@ -100,6 +106,7 @@ def chat(
         reply = run_chat(
             user_message.content_masked,
             conversation_messages=prior_messages,
+            mode=body.mode,
         )
     except RuntimeError as exc:
         raise HTTPException(

@@ -100,12 +100,26 @@ class ChatTurnRequest(BaseModel):
             "Ephemeral frontend chat session id. Omit it to start a new anonymous chat."
         ),
     )
+    mode: Literal["production", "debug"] = Field(
+        default="production",
+        description=(
+            "Request-scoped execution mode. Debug mode is only available to admin users."
+        ),
+    )
 
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {"message": "Hello"},
-                {"chat_id": 12, "message": "What about the Friday after that?"},
+                {
+                    "chat_id": 12,
+                    "message": "What about the Friday after that?",
+                    "mode": "production",
+                },
+                {
+                    "message": "Show me the debug path for this answer.",
+                    "mode": "debug",
+                },
             ],
         }
     }

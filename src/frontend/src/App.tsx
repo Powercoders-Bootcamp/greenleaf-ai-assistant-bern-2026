@@ -19,8 +19,10 @@ import type { Message } from './types/chat'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:10000'
 const CHAT_API_URL = `${API_BASE_URL}/chat`
 const LOGIN_API_URL = `${API_BASE_URL}/auth/login`
+const ADMIN_CHAT_MODE_SESSION_KEY = 'greenleaf:admin-chat-mode'
 
 type ViewMode = 'chat' | 'admin' | 'history'
+type ChatMode = 'production' | 'debug'
 
 type LogoutModalProps = {
   open: boolean
@@ -142,16 +144,22 @@ export default function App() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
   const [view, setView] = useState<ViewMode>('chat')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [chatMode, setChatMode] = useState<ChatMode>('production')
 
   const endRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const storedToken = getStoredToken()
     const storedUser = getStoredUser()
+    const storedChatMode = sessionStorage.getItem(ADMIN_CHAT_MODE_SESSION_KEY)
 
     if (storedToken && storedUser) {
       setToken(storedToken)
       setAuthUser(storedUser)
+    }
+
+    if (storedChatMode === 'debug' || storedChatMode === 'production') {
+      setChatMode(storedChatMode)
     }
   }, [])
 
@@ -161,6 +169,13 @@ export default function App() {
 
   const isAuthenticated = Boolean(token && authUser)
   const isAdmin = authUser?.role?.toLowerCase() === 'admin'
+
+  useEffect(() => {
+    if (!isAdmin && chatMode !== 'production') {
+      sessionStorage.setItem(ADMIN_CHAT_MODE_SESSION_KEY, 'production')
+      setChatMode('production')
+    }
+  }, [chatMode, isAdmin])
 
   const headerContent = useMemo(() => getHeaderContent(view), [view])
 
@@ -233,6 +248,7 @@ export default function App() {
 
   const handleLogout = useCallback(() => {
     clearAuthSession()
+    sessionStorage.removeItem(ADMIN_CHAT_MODE_SESSION_KEY)
     setToken(null)
     setAuthUser(null)
     setAuthEmail('')
@@ -241,7 +257,18 @@ export default function App() {
     setMessages([])
     setView('chat')
     setShowLogoutModal(false)
+    setChatMode('production')
   }, [])
+
+  const handleToggleChatMode = useCallback(() => {
+    if (!isAdmin) return
+
+    setChatMode((currentMode) => {
+      const nextMode: ChatMode = currentMode === 'debug' ? 'production' : 'debug'
+      sessionStorage.setItem(ADMIN_CHAT_MODE_SESSION_KEY, nextMode)
+      return nextMode
+    })
+  }, [isAdmin])
 
   useEffect(() => {
     const handleAuthExpired = () => {
@@ -280,6 +307,7 @@ export default function App() {
           body: JSON.stringify({
             message: textToSend,
             ...(chatId ? { chat_id: chatId } : {}),
+            ...(isAdmin ? { mode: chatMode } : {}),
           }),
         })
 
@@ -309,6 +337,11 @@ export default function App() {
             setChatId(null)
           }
 
+          if (response.status === 403) {
+            sessionStorage.setItem(ADMIN_CHAT_MODE_SESSION_KEY, 'production')
+            setChatMode('production')
+          }
+
           throw new Error(
             safeData.detail || `Request failed with status ${response.status}`,
           )
@@ -334,7 +367,7 @@ export default function App() {
         setLoading(false)
       }
     },
-    [chatId, input, loading, token],
+    [chatId, chatMode, input, isAdmin, loading, token],
   )
 
   const handleSend = useCallback(() => {
@@ -425,7 +458,11 @@ export default function App() {
       return (
         <section className="admin-card">
           <div className="admin-card__body">
-            <AdminPanel token={token} />
+            <AdminPanel
+              token={token}
+              chatMode={chatMode}
+              onToggleChatMode={handleToggleChatMode}
+            />
           </div>
         </section>
       )
@@ -448,7 +485,7 @@ export default function App() {
             <div className="chat-card__heading-row">
               <h2>Chat</h2>
               <span className="chat-card__mode-badge">
-                {isAdmin ? 'Admin access' : 'User access'}
+                {isAdmin ? `Admin access · ${chatMode}` : 'User access'}
               </span>
             </div>
 
