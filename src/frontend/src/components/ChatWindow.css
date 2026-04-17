@@ -228,7 +228,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  align-items: center;
+  align-items: start;
 }
 
 .chat-input__field-wrap {
@@ -250,6 +250,7 @@
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.5);
   box-shadow: none;
+  box-sizing: border-box;
   backdrop-filter: blur(10px);
   color: #111827;
   outline: none;
@@ -286,8 +287,9 @@
 
 .chat-input__button {
   min-width: 112px;
-  min-height: 52px;
-  align-self: center;
+  height: 52px;
+  align-self: start;
+  margin-top: 0;
   border: 1px solid rgba(34, 197, 94, 0.14);
   border-radius: 20px;
   background: rgba(220, 252, 231, 0.72);
@@ -295,6 +297,7 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: none;
+  box-sizing: border-box;
   transition:
     transform 0.18s ease,
     background 0.18s ease,
