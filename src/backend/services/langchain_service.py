@@ -49,6 +49,13 @@ from .holidays_checker import HolidayAPIError, is_day_a_holiday, get_basel_holid
 
 load_dotenv()
 
+TOOL_DEBUG_TYPE = {
+    "search_handbook": "RAG",
+    "check_holiday": "API",
+    "list_basel_holidays": "API",
+    "check_expenses": "Logic",
+}
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
@@ -61,6 +68,7 @@ HANDBOOK_RETRIEVAL_K = int(os.getenv("HANDBOOK_RETRIEVAL_K", "3"))
 MAX_TOOL_ROUNDS = int(os.getenv("MAX_TOOL_ROUNDS", "6"))
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
 SERVICE_FILE = Path(__file__).resolve()
 
@@ -240,6 +248,12 @@ def _build_vectorstore(embeddings: OpenAIEmbeddings) -> FAISS:
     logger.info("FAISS vectorstore saved to %s", FAISS_DIR)
     return vectorstore
 
+def _format_debug_block(debug_log: list[str]) -> str:
+    if not debug_log:
+        return "\n\n[DEBUG]\nLogic"
+
+    return "\n\n[DEBUG]\n" + "\n".join(debug_log)
+
 
 @lru_cache(maxsize=1)
 def get_embeddings() -> OpenAIEmbeddings:
@@ -410,6 +424,61 @@ def list_basel_holidays(year: int) -> str:
         )
 
 
+@tool
+def check_expenses(persons: int, total: float, max_per_person: float) -> str:
+    """
+    Check whether the total expense stays below the allowed maximum.
+    Rule: total < persons * max_per_person
+    """
+    logger.info(
+        "check_expenses called | persons=%r | total=%r | max_per_person=%r",
+        persons,
+        total,
+        max_per_person,
+    )
+
+    if not isinstance(persons, int) or persons <= 0:
+        return json.dumps(
+            {
+                "error": "Invalid persons value. Provide a positive integer.",
+                "received": persons,
+            },
+            ensure_ascii=False,
+        )
+
+    if not isinstance(total, (int, float)) or total < 0:
+        return json.dumps(
+            {
+                "error": "Invalid total value. Provide a non-negative number.",
+                "received": total,
+            },
+            ensure_ascii=False,
+        )
+
+    if not isinstance(max_per_person, (int, float)) or max_per_person < 0:
+        return json.dumps(
+            {
+                "error": "Invalid max_per_person value. Provide a non-negative number.",
+                "received": max_per_person,
+            },
+            ensure_ascii=False,
+        )
+
+    allowed_total = persons * max_per_person
+    is_within_limit = total < allowed_total
+
+    return json.dumps(
+        {
+            "persons": persons,
+            "total": total,
+            "max_per_person": max_per_person,
+            "allowed_total": allowed_total,
+            "within_limit": is_within_limit,
+        },
+        ensure_ascii=False,
+    )
+
+
 def get_llm() -> ChatOpenAI:
     llm_api_key = OPENAI_API_KEY
     if not llm_api_key:
@@ -445,11 +514,12 @@ def _convert_history(conversation_messages: list[dict[str, str]]) -> list[Any]:
     return result
 
 
-def run_chat(user_message: str,
-             conversation_messages: list[dict[str, str]] | None = None,
-             ) -> str:
+def run_chat(
+    user_message: str,
+    conversation_messages: list[dict[str, str]] | None = None,
+) -> str:
     llm = get_llm()
-    tools = [check_holiday, search_handbook, list_basel_holidays]
+    tools = [check_holiday, search_handbook, list_basel_holidays, check_expenses]
     llm_with_tools = llm.bind_tools(tools)
 
     tool_registry = {tool.name: tool for tool in tools}
@@ -459,10 +529,16 @@ def run_chat(user_message: str,
     ]
 
     if conversation_messages:
-        logger.info("Loading conversation history | messages=%s", len(conversation_messages))
+        logger.info(
+            "Loading conversation history | messages=%s",
+            len(conversation_messages),
+        )
         messages.extend(_convert_history(conversation_messages))
 
     messages.append(HumanMessage(content=user_message))
+
+    debug_log: list[str] = []
+    used_any_tool = False
 
     for round_num in range(1, MAX_TOOL_ROUNDS + 1):
         logger.info("LLM round %s/%s", round_num, MAX_TOOL_ROUNDS)
@@ -473,10 +549,27 @@ def run_chat(user_message: str,
         tool_calls = getattr(ai_msg, "tool_calls", None) or []
         logger.info("Tool calls in this round: %s", len(tool_calls))
 
+        if DEBUG_MODE:
+            debug_log.append(f"Round {round_num}")
+            if tool_calls:
+                for call in tool_calls:
+                    tool_name = call["name"]
+                    debug_type = TOOL_DEBUG_TYPE.get(tool_name, "Unknown")
+                    debug_log.append(f"Tool: {debug_type} ({tool_name})")
+            else:
+                debug_log.append("Final answer")
+            debug_log.append("")
+
         if not tool_calls:
             text = _stringify_content(ai_msg.content)
             logger.info("Final assistant response produced")
-            return text or "The model returned an empty response."
+
+            final_text = text or "The model returned an empty response."
+
+            if DEBUG_MODE:
+                return final_text + _format_debug_block(debug_log)
+
+            return final_text
 
         for call in tool_calls:
             tool_name = call["name"]
@@ -484,6 +577,8 @@ def run_chat(user_message: str,
             tool_call_id = call["id"]
 
             logger.info("Executing tool | name=%s | args=%s", tool_name, tool_args)
+
+            used_any_tool = True
 
             selected_tool = tool_registry.get(tool_name)
             if selected_tool is None:
@@ -494,10 +589,9 @@ def run_chat(user_message: str,
                 )
             else:
                 try:
-                    # LangChain tools accept dict input for structured args
                     tool_result = selected_tool.invoke(tool_args)
                     logger.info("Tool %s executed successfully", tool_name)
-                except Exception as exep:  # defensive: keep the loop alive
+                except Exception as exep:
                     logger.exception("Tool execution failed | tool=%s", tool_name)
                     tool_result = json.dumps(
                         {"error": f"Tool execution failed: {exep}"},
@@ -512,4 +606,8 @@ def run_chat(user_message: str,
             )
 
     logger.warning("Tool loop limit reached")
-    return "Tool loop limit reached; please try a simpler question."
+
+    result = "Tool loop limit reached; please try a simpler question."
+    if DEBUG_MODE:
+        return result + _format_debug_block(debug_log)
+    return result
